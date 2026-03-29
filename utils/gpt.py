@@ -137,6 +137,7 @@ async def generate_comment(
     today_calories: int,
     recent_meals: str,
     weather_info: dict | None = None,
+    extra_context=""
 ) -> str:
     weather_text = weather_info.get("weather", "알 수 없음") if weather_info else "알 수 없음"
     temp_text    = weather_info.get("temp", "?") if weather_info else "?"

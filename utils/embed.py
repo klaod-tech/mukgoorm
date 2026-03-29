@@ -11,6 +11,7 @@ import asyncio
 import discord
 from datetime import date, timedelta
 from utils.image import select_image, IMAGE_DESCRIPTIONS
+from utils.gpt_ml_bridge import get_corrected_calories  # ✅ ML 보정 import
 
 IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images")
 
@@ -141,12 +142,21 @@ class MealInputModal(discord.ui.Modal, title="🍽️ 식사 입력"):
             else:
                 date_label = f"그저께({target_date.strftime('%m/%d')})"
 
+            # GPT로 영양 분석
             result   = await analyze_meal_text(food_name)
             calories = result.get("calories", 0)
             protein  = result.get("protein", 0)
             carbs    = result.get("carbs", 0)
             fat      = result.get("fat", 0)
             fiber    = result.get("fiber", 0)
+
+            # ✅ ML 칼로리 보정 (양 표현 + 개인화 모델)
+            calories = get_corrected_calories(
+                user_id=user_id,
+                food_name=food_name,
+                meal_type=meal_type,
+                gpt_calories=calories,
+            )
 
             today_cal_before = get_calories_by_date(user_id, target_date)
 
