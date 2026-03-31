@@ -23,13 +23,41 @@ async def calculate_daily_calories(
     age: int,
     height: float,
     weight: float,
-    activity: str,
-    goal: str,
+    goal_weight: float,
+    activity: str = "보통",
 ) -> int:
+    """
+    Mifflin-St Jeor 공식 기반으로 목표 체중 달성을 위한
+    일일 권장 칼로리를 계산.
+
+    - 체중 감량 목표: TDEE에서 300~500kcal 감소
+    - 체중 증량 목표: TDEE에서 300~500kcal 증가
+    - 유지 목표: TDEE 그대로
+    - 최소 칼로리: 여성 1200kcal / 남성 1500kcal (건강 하한선)
+    """
     prompt = (
-        f"사용자 정보: 성별={gender}, 나이={age}세, 키={height}cm, "
-        f"체중={weight}kg, 활동량={activity}, 목표={goal}.\n"
-        "이 사람의 하루 권장 섭취 칼로리를 정수로만 답해줘. 단위 없이 숫자만."
+        f"다음 사용자의 하루 권장 섭취 칼로리를 계산해줘.\n\n"
+        f"[사용자 정보]\n"
+        f"- 성별: {gender}\n"
+        f"- 나이: {age}세\n"
+        f"- 키: {height}cm\n"
+        f"- 현재 체중: {weight}kg\n"
+        f"- 목표 체중: {goal_weight}kg\n"
+        f"- 활동량: {activity}\n\n"
+        f"[계산 규칙]\n"
+        f"1. Mifflin-St Jeor 공식으로 기초대사량(BMR) 계산\n"
+        f"   - 남성: BMR = 10×체중 + 6.25×키 - 5×나이 + 5\n"
+        f"   - 여성: BMR = 10×체중 + 6.25×키 - 5×나이 - 161\n"
+        f"2. 활동량 계수 적용 → TDEE 계산\n"
+        f"   - 거의 없음: ×1.2 / 가벼운 활동: ×1.375 / 보통: ×1.55 / 활동적: ×1.725\n"
+        f"3. 목표에 따른 칼로리 조정\n"
+        f"   - 현재 체중 > 목표 체중 (감량): TDEE - 400kcal\n"
+        f"   - 현재 체중 < 목표 체중 (증량): TDEE + 300kcal\n"
+        f"   - 현재 체중 = 목표 체중 (유지): TDEE 그대로\n"
+        f"4. 최소 칼로리 보장\n"
+        f"   - 남성: 최소 1500kcal\n"
+        f"   - 여성: 최소 1200kcal\n\n"
+        f"최종 권장 칼로리를 정수로만 답해줘. 단위 없이 숫자만."
     )
     resp = await _client.chat.completions.create(
         model=MODEL,
@@ -39,9 +67,13 @@ async def calculate_daily_calories(
     )
     text = resp.choices[0].message.content.strip().replace(",", "")
     try:
-        return int(text)
+        cal = int(text)
+        # 안전 범위 보정 (GPT가 이상한 값을 반환할 경우 대비)
+        min_cal = 1500 if gender in ("남", "남성", "male") else 1200
+        max_cal = 3500
+        return max(min_cal, min(cal, max_cal))
     except ValueError:
-        return 2000
+        return 1800
 
 
 # ── 자연어 식사 입력 파싱 ─────────────────────────────
@@ -117,17 +149,25 @@ async def analyze_meal_text(food_name: str) -> dict:
 
 # ── 다마고치 대사 생성 ─────────────────────────────────
 _SYSTEM_TEMPLATE = """
-너는 '{tamagotchi_name}'이라는 이름의 AI 다마고치야.
-성격은 밝고 긍정적이야. 짧고 친근하게 말해줘.
+너는 '{tamagotchi_name}'이라는 이름의 귀여운 AI 다마고치야.
+주인을 진심으로 아끼고 걱정하는 친한 친구 같은 존재야.
 
-[사용자 정보]
-- 시작 체중: {init_weight}kg, 목표 체중: {goal_weight}kg
-- 권장 칼로리: {daily_cal_target} kcal
-- 오늘 섭취 칼로리: {today_calories} / {daily_cal_target} kcal
+[말투 규칙]
+- 항상 반말로, 친근하고 귀엽게 말해줘
+- 1~2문장으로 짧게 말해줘
+- 이모지를 1~2개 자연스럽게 써줘
+- 수치(kg, kcal)는 절대 직접 언급하지 말고 느낌으로 표현해줘
+  예) 칼로리가 높아 (X) → 오늘 좀 많이 먹은 것 같은데? (O)
+  예) 0.3kg 줄었어 (X) → 살이 조금씩 빠지고 있어! (O)
+- 체중이 늘었을 땐 걱정하되 절대 비난하지 말고 부드럽게
+- 체중이 줄었을 땐 신나게 칭찬해줘
+- 잘 먹었을 땐 기뻐하고, 못 먹었을 땐 걱정해줘
+
+[사용자 현황]
+- 시작 체중: {init_weight}kg → 목표: {goal_weight}kg
+- 오늘 먹은 양: {today_calories} / {daily_cal_target} kcal
 - 최근 식사: {recent_meals}
 - 오늘 날씨: {weather}, {temp}°C
-
-건강 조언은 부드럽게, 수치는 직접 언급하지 말고 느낌으로 표현해줘.
 """.strip()
 
 
@@ -137,21 +177,26 @@ async def generate_comment(
     today_calories: int,
     recent_meals: str,
     weather_info: dict | None = None,
-    extra_context=""
+    extra_context: str = "",
 ) -> str:
     weather_text = weather_info.get("weather", "알 수 없음") if weather_info else "알 수 없음"
     temp_text    = weather_info.get("temp", "?") if weather_info else "?"
 
     system = _SYSTEM_TEMPLATE.format(
-        tamagotchi_name=user.get("tamagotchi_name", "타마"),
-        init_weight=user.get("init_weight", "?"),
-        goal_weight=user.get("goal_weight", "?"),
-        daily_cal_target=user.get("daily_cal_target", 2000),
-        today_calories=today_calories,
-        recent_meals=recent_meals or "없음",
-        weather=weather_text,
-        temp=temp_text,
+        tamagotchi_name  = user.get("tamagotchi_name", "타마"),
+        init_weight      = user.get("init_weight", "?"),
+        goal_weight      = user.get("goal_weight", "?"),
+        daily_cal_target = user.get("daily_cal_target", 2000),
+        today_calories   = today_calories,
+        recent_meals     = recent_meals or "없음",
+        weather          = weather_text,
+        temp             = temp_text,
     )
+
+    # ✅ ML 패턴 + 체중 변화 컨텍스트 주입
+    if extra_context:
+        system += f"\n\n[식습관 & 체중 패턴 참고]\n{extra_context}"
+
     resp = await _client.chat.completions.create(
         model=MODEL,
         messages=[

@@ -355,6 +355,9 @@ class MainView(discord.ui.View):
         await interaction.response.defer(ephemeral=True)
         try:
             from utils.db import get_user, get_latest_weather, get_today_calories
+            from utils.gpt import generate_comment
+            from utils.pattern import analyze_eating_patterns
+            from cogs.weight import get_weight_history, get_latest_weight
 
             user_id = str(interaction.user.id)
             user    = get_user(user_id)
@@ -394,6 +397,24 @@ class MainView(discord.ui.View):
 
             today_str = date.today().strftime("%Y년 %m월 %d일")
 
+            # ✅ ML 패턴 분석 → GPT 다마고치 멘트 생성
+            pattern_result = analyze_eating_patterns(user_id, target_cal)
+            pattern_context = pattern_result.get("gpt_context", "")
+
+            ml_comment = await generate_comment(
+                context=(
+                    f"오늘 일정을 확인하러 왔어. "
+                    f"오늘 목표는 {target_cal}kcal인데 지금까지 {today_cal}kcal 먹었어. "
+                    f"날씨는 {weather_text}야. "
+                    f"짧고 귀엽게 오늘 하루 응원 한마디 해줘!"
+                ),
+                user=user,
+                today_calories=today_cal,
+                recent_meals="",
+                weather_info=weather_log,
+                extra_context=pattern_context,  # ✅ ML 패턴 주입
+            )
+
             embed = discord.Embed(
                 title=f"📅 오늘 일정 — {today_str}",
                 color=0x5865F2,
@@ -411,6 +432,12 @@ class MainView(discord.ui.View):
             embed.add_field(
                 name="🌤️ 현재 날씨",
                 value=weather_text,
+                inline=False,
+            )
+            # ✅ ML 패턴이 녹아든 다마고치 멘트
+            embed.add_field(
+                name=f"🐣 {tama_name}의 한마디",
+                value=f"*{ml_comment}*",
                 inline=False,
             )
             embed.set_footer(text=f"이 메시지는 {tama_name}만 볼 수 있어요 👀")
@@ -441,6 +468,18 @@ class MainView(discord.ui.View):
             )
             return
         await interaction.response.send_modal(SettingsModal(user=user))
+
+    @discord.ui.button(
+        label="⚖️ 체중 기록",
+        style=discord.ButtonStyle.secondary,
+        custom_id="btn_weight",
+    )
+    async def weight_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        print(f"[weight_button] 클릭 — user: {interaction.user}")
+        from cogs.weight import WeightInputModal
+        await interaction.response.send_modal(WeightInputModal())
 
 
 # ══════════════════════════════════════════════════════

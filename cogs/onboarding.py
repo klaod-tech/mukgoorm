@@ -75,14 +75,14 @@ class OnboardingModal(discord.ui.Modal, title="다마고치 시작하기"):
             lunch     = times[1] if len(times) > 1 else "12:00"
             dinner    = times[2] if len(times) > 2 else "18:00"
 
-            # GPT 권장 칼로리 계산
+            # GPT 권장 칼로리 계산 (목표 체중 기반 동적 산출)
             daily_cal = await calculate_daily_calories(
                 gender=gender,
                 age=age,
                 height=height,
                 weight=init_weight,
+                goal_weight=goal_weight,
                 activity="보통",
-                goal="체중 감량" if goal_weight < init_weight else "체중 유지",
             )
 
             user_id   = str(interaction.user.id)

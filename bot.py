@@ -25,6 +25,7 @@ COGS = [
     "cogs.scheduler",
     "cogs.weather",
     "cogs.meal",
+    "cogs.weight",
 ]
 
 # 봇이 디스코드에 로그인 완료됐을 때, 딱 한번만 작동하는 코드

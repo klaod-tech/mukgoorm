@@ -53,11 +53,14 @@ CITY_GRID: dict[str, tuple[int, int]] = {
 
 def _find_grid(city: str) -> tuple[int, int]:
     city = city.strip()
+    # 완전 일치 우선
     if city in CITY_GRID:
         return CITY_GRID[city]
-    for key in CITY_GRID:
-        if key in city or city in key:
-            return CITY_GRID[key]
+    # 부분 일치 - 가장 긴 키 우선 ("아산"이 "안산"으로 잘못 매칭되는 문제 방지)
+    matches = [(key, CITY_GRID[key]) for key in CITY_GRID if key in city or city in key]
+    if matches:
+        best = max(matches, key=lambda x: len(x[0]))
+        return best[1]
     return CITY_GRID["서울"]
 
 def _pm_grade(pm10: int, pm25: int) -> str:
@@ -163,8 +166,13 @@ async def fetch_air(city: str) -> dict:
         items = data["response"]["body"]["items"]
         if items:
             item = items[0]
-            pm10 = int(item.get("pm10Value") or 0)
-            pm25 = int(item.get("pm25Value") or 0)
+            def safe_int(val):
+                try:
+                    return int(val)
+                except (TypeError, ValueError):
+                    return 0
+            pm10 = safe_int(item.get("pm10Value"))
+            pm25 = safe_int(item.get("pm25Value"))
             return {"pm10": pm10, "pm25": pm25}
 
     except Exception as e:
