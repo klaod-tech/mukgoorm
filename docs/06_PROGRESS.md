@@ -29,8 +29,8 @@
 - `cogs/scheduler.py`에 오후 10시 칼로리 판정만 있음
 - **추가 필요**: 각 유저의 breakfast/lunch/dinner 3단계 알림 Job
   - 식사시간 -30분 → 쓰레드 알림 메시지
-  - 식사시간 정각 → Embed hungry.png 교체
-  - 식사시간 +1시간 (미입력 시) → Embed hungry_cry.png 교체
+  - 식사시간 정각 → Embed upset.png 교체
+  - 식사시간 +1시간 (미입력 시) → Embed upset.png 교체 (배고픔 통합)
 - 참고: `docs/02_FLOWS.md` → 식사 알림 흐름 섹션
 
 ### P2 — settings.py 버그
