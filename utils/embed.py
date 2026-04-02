@@ -349,6 +349,7 @@ class MainView(discord.ui.View):
         label="📅 오늘 일정",
         style=discord.ButtonStyle.secondary,
         custom_id="btn_today",
+        row=0,
     )
     async def today_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -527,6 +528,7 @@ class MainView(discord.ui.View):
         label="⚙️ 설정 변경",
         style=discord.ButtonStyle.secondary,
         custom_id="btn_settings",
+        row=1,
     )
     async def settings_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -543,9 +545,27 @@ class MainView(discord.ui.View):
         await interaction.response.send_modal(SettingsModal(user=user))
 
     @discord.ui.button(
+        label="⏰ 시간 설정",
+        style=discord.ButtonStyle.secondary,
+        custom_id="btn_time_settings",
+        row=1,
+    )
+    async def time_settings_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        print(f"[time_settings_button] 클릭 — user: {interaction.user}")
+        from cogs.time_settings import TimeStep1View
+        await interaction.response.send_message(
+            "⏰ 시간 설정을 시작할게!\n기상 시간과 아침 알림 시간을 설정해줘.",
+            view=TimeStep1View(user_id=str(interaction.user.id)),
+            ephemeral=True,
+        )
+
+    @discord.ui.button(
         label="⚖️ 체중 기록",
         style=discord.ButtonStyle.secondary,
         custom_id="btn_weight",
+        row=1,
     )
     async def weight_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
