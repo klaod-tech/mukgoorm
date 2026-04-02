@@ -25,12 +25,7 @@
 
 ## 미구현 / 버그
 
-### P1 — 이미지 파일 정리 (현재 작업 중)
-- `images/` 폴더에 11개 이미지 있으나 파일명이 `image.py` 기대값과 불일치
-- 전체 17종 필요 (현재 8종 누락: hungry, hungry_cry, overfed, underfed, sick, cold, cloudy, goal_achieved)
-- **담당**: 파일명 최종 결정은 본인이 직접 진행 중
-
-### P2 — 식사 알림 스케줄러 미구현
+### P1 — 식사 알림 스케줄러 미구현
 - `cogs/scheduler.py`에 오후 10시 칼로리 판정만 있음
 - **추가 필요**: 각 유저의 breakfast/lunch/dinner 3단계 알림 Job
   - 식사시간 -30분 → 쓰레드 알림 메시지
@@ -38,7 +33,7 @@
   - 식사시간 +1시간 (미입력 시) → Embed hungry_cry.png 교체
 - 참고: `docs/02_FLOWS.md` → 식사 알림 흐름 섹션
 
-### P3 — settings.py 버그
+### P2 — settings.py 버그
 - 목표 체중 변경 시 권장 칼로리 재계산 함수에 성별/나이/키/활동량이 하드코딩됨
   ```python
   # cogs/settings.py:122~129 — 현재 (버그)
@@ -52,11 +47,11 @@
   ```
 - **수정 필요**: 온보딩 시 성별/나이/키/활동량을 DB에 저장하거나 GPT에 위임하는 방식으로 변경
 
-### P4 — psycopg2 requirements.txt 누락
+### P3 — psycopg2 requirements.txt 누락
 - `utils/db.py`가 psycopg2를 사용하지만 requirements.txt에 없음
 - **수정 필요**: `requirements.txt`에 `psycopg2-binary>=2.9.0` 추가
 
-### P5 — ML 재학습 스케줄러 미등록
+### P4 — ML 재학습 스케줄러 미등록
 - `utils/ml.py`의 `retrain_all_users()`가 주 1회 APScheduler로 실행되어야 하나 아직 등록 안 됨
 - CONTEXT.md scheduler jobs: `{user_id}_ml_retrain` 매주 일요일 03:00
 
