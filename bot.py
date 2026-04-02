@@ -20,8 +20,9 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 COGS = [
     "cogs.onboarding",
-    "cogs.summary", 
+    "cogs.summary",
     "cogs.settings",
+    "cogs.time_settings",
     "cogs.scheduler",
     "cogs.weather",
     "cogs.meal",
