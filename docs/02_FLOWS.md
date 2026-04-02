@@ -6,7 +6,8 @@
 [다마고치 이미지 (thumbnail)]
 {tamagotchi_name}의 하루 · "GPT 대사"
 
-[ 🍽️ 식사 입력 ] [ 📊 오늘 요약 ] [ 📅 오늘 일정 ] [ ⚙️ 설정 변경 ] [ ⚖️ 체중 기록 ]
+Row 0: [ 🍽️ 식사 입력 ] [ 📊 오늘 요약 ] [ 📅 오늘 일정 ]
+Row 1: [ ⚙️ 설정 변경 ] [ ⏰ 시간 설정 ] [ ⚖️ 체중 기록 ]
 ```
 
 ### 버튼 동작
@@ -16,7 +17,8 @@
 | 🍽️ 식사 입력 | MealInputModal 팝업 | 텍스트 자연어 입력 → GPT 분석 → DB 저장 → Embed 갱신 |
 | 📊 오늘 요약 | Ephemeral | 총칼로리/탄단지/끼니별 내역/GPT 코멘트 |
 | 📅 오늘 일정 | Ephemeral | 목표칼로리/체중현황(ML)/식사알림시간/날씨/GPT 코멘트 |
-| ⚙️ 설정 변경 | SettingsModal | 이름/도시/기상시간/식사알림/목표체중 변경 |
+| ⚙️ 설정 변경 | SettingsModal | 이름/도시/목표체중 변경 |
+| ⏰ 시간 설정 | TimeStep1View | Select Menu 2단계 → 기상/식사 알림 시간 변경 |
 | ⚖️ 체중 기록 | WeightInputModal | 체중 입력 → DB 저장 → 목표 달성 판정 → Embed 갱신 |
 
 ---
@@ -25,15 +27,18 @@
 
 ```
 [🐣 다마고치 시작하기] 클릭
-  → Modal (1단계, 8개 필드 통합)
-    fields: tamagotchi_name, city, init_weight, goal_weight,
-            wake_time, breakfast_time, lunch_time, dinner_time
+  → OnboardingModal (4개 필드)
+    fields: tamagotchi_name, city, weight_info(현재/목표),
+            body_info(성별/나이/키)
+    ※ 시간 설정은 완료 후 별도 단계로 분리
   → GPT-4o: daily_cal_target 계산 (Mifflin-St Jeor)
   → DB users + tamagotchi 저장 (hp=100, hunger=100, mood=100)
+    ※ 시간 기본값: wake=07:00 / 아침=08:00 / 점심=12:00 / 저녁=18:00
   → #다마고치 채널에 유저 전용 쓰레드 생성
   → 쓰레드에 메인 Embed 전송 + embed_message_id 저장
-  → APScheduler에 날씨 Job 자동 등록 (WeatherCog)
-  → Ephemeral: "✅ 설정 완료!"
+  → APScheduler에 날씨 Job 자동 등록 (07:00 기본값)
+  → Ephemeral: "✅ 설정 완료! 이제 시간을 설정해줘 ⏰"
+  → Ephemeral: TimeStep1View (시간 설정 1단계 Select Menu)
 
 기존 유저가 버튼 클릭 시:
   → Ephemeral: "이미 등록되어 있어! 쓰레드 확인해봐 😊"
