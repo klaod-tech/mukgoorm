@@ -57,8 +57,7 @@ fat           REAL        -- g
 fiber         REAL        -- g
 input_method  TEXT        -- text | photo
 gpt_comment   TEXT        -- GPT 대사 캐싱 (nullable)
-recorded_at   TIMESTAMP DEFAULT NOW()
-recorded_date DATE        -- 소급 입력용 날짜 (어제/그저께 지원)
+recorded_at   TIMESTAMP DEFAULT NOW()  -- UTC 저장 (Supabase 기본값)
 ```
 
 ---
@@ -108,5 +107,9 @@ recorded_at TIMESTAMP DEFAULT NOW()
 | `get_meals_by_date(user_id, date)` | 특정 날짜 식사 목록 |
 | `get_today_calories(user_id)` | 오늘 총 칼로리 |
 | `get_calories_by_date(user_id, date)` | 특정 날짜 총 칼로리 |
+
+> **타임존 주의**: `recorded_at`은 UTC로 저장됨 (Supabase 기본값). 날짜 비교 쿼리는  
+> `(recorded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::date = %s` 형태로  
+> UTC → KST 이중 변환 후 비교. `AT TIME ZONE` 단일 사용 시 역방향 해석 버그 발생.
 | `create_weather_log(...)` | 날씨 기록 저장 |
 | `get_latest_weather(user_id)` | 최신 날씨 조회 |

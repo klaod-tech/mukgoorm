@@ -40,9 +40,6 @@ def build_main_embed(
     embed.set_footer(text="밥을 챙겨줘야 건강하게 자라요 🌱")
 
     img_file = _image_file(image_filename)
-    if img_file:
-        embed.set_thumbnail(url=f"attachment://{image_filename}")
-
     return embed, img_file
 
 
@@ -157,6 +154,13 @@ class MealInputModal(discord.ui.Modal, title="🍽️ 식사 입력"):
                 meal_type=meal_type,
                 gpt_calories=calories,
             )
+
+            if calories == 0:
+                await interaction.followup.send(
+                    f"❌ **{food_name}**의 칼로리를 분석하지 못했어. 음식 이름을 더 구체적으로 입력해줘!",
+                    ephemeral=True,
+                )
+                return
 
             today_cal_before = get_calories_by_date(user_id, target_date)
 

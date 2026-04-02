@@ -43,6 +43,7 @@ class OnboardingModal(discord.ui.Modal, title="먹구름 시작하기"):
     )
 
     async def on_submit(self, interaction: discord.Interaction):
+        print(f"[MODAL] OnboardingModal 제출 — {interaction.user}")
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
             # 체중 파싱
@@ -172,6 +173,7 @@ class StartView(discord.ui.View):
         button: discord.ui.Button,
     ):
         user_id  = str(interaction.user.id)
+        print(f"[BTN] 시작하기 — {interaction.user}")
         existing = get_user(user_id)
         if existing and existing.get("thread_id"):
             guild  = interaction.guild
@@ -195,6 +197,7 @@ class OnboardingCog(commands.Cog):
     @app_commands.command(name="start", description="다마고치 봇 시작 메시지를 채널에 고정합니다.")
     @app_commands.checks.has_permissions(manage_messages=True)
     async def start_cmd(self, interaction: discord.Interaction):
+        print(f"[CMD] /start — {interaction.user}")
         embed = discord.Embed(
             title="🌧️ 먹구름을 시작해봐요!",
             description=(

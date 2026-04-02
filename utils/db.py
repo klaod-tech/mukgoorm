@@ -35,6 +35,12 @@ def init_db():
         )
     """)
 
+    # 기존 users 테이블에 컬럼 누락 시 추가 (마이그레이션)
+    for col, col_type in [("gender", "TEXT"), ("age", "INTEGER"), ("height", "REAL")]:
+        cur.execute(f"""
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}
+        """)
+
     cur.execute("""
         CREATE TABLE IF NOT EXISTS tamagotchi (
             user_id          TEXT PRIMARY KEY REFERENCES users(user_id),
@@ -252,7 +258,7 @@ def get_meals_by_date(user_id, target_date: date):
     cur.execute("""
         SELECT * FROM meals
         WHERE user_id = %s
-        AND recorded_at::date = %s
+        AND (recorded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::date = %s
         ORDER BY recorded_at ASC
     """, (user_id, target_date))
     rows = cur.fetchall()
@@ -271,7 +277,7 @@ def get_calories_by_date(user_id, target_date: date) -> int:
         SELECT COALESCE(SUM(calories), 0) as total
         FROM meals
         WHERE user_id = %s
-        AND recorded_at::date = %s
+        AND (recorded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::date = %s
     """, (user_id, target_date))
     row = cur.fetchone()
     cur.close()
@@ -289,7 +295,7 @@ def has_meal_type_on_date(user_id, meal_type: str, target_date: date) -> bool:
         SELECT COUNT(*) as cnt FROM meals
         WHERE user_id = %s
         AND meal_type = %s
-        AND recorded_at::date = %s
+        AND (recorded_at AT TIME ZONE 'UTC' AT TIME ZONE 'Asia/Seoul')::date = %s
     """, (user_id, meal_type, target_date))
     row = cur.fetchone()
     cur.close()

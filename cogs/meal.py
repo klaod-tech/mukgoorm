@@ -156,6 +156,13 @@ class MealPhotoConfirmView(discord.ui.View):
                 gpt_calories = a["calories"],
             )
 
+            if calories == 0:
+                await interaction.followup.send(
+                    f"❌ **{a['food_name']}**의 칼로리를 분석하지 못했어. 다시 시도해줘!",
+                    ephemeral=True,
+                )
+                return
+
             today_cal_before = get_calories_by_date(self.user_id, today)
 
             # GPT 다마고치 대사 생성

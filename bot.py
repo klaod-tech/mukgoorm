@@ -53,6 +53,7 @@ async def on_error(event, *args, **kwargs):
 @bot.command(name="sync")
 @commands.is_owner()
 async def force_sync(ctx):
+    print(f"[CMD] !sync — {ctx.author}")
     synced = await bot.tree.sync()
     await ctx.send(f"커맨드 {len(synced)}개 동기화 완료")
 
@@ -60,6 +61,7 @@ async def force_sync(ctx):
 @bot.command(name="setup")
 @commands.has_permissions(administrator=True)
 async def setup(ctx: commands.Context):
+    print(f"[CMD] !setup — {ctx.author}")
     channel = bot.get_channel(TAMAGOTCHI_CHANNEL_ID)
     if channel is None:
         await ctx.send("❌ TAMAGOTCHI_CHANNEL_ID를 확인해주세요.")
@@ -78,6 +80,7 @@ async def setup(ctx: commands.Context):
 
 @bot.command(name="소환")
 async def recall_embed(ctx: commands.Context):
+    print(f"[CMD] !소환 — {ctx.author}")
     from utils.db import get_user, get_tamagotchi, get_latest_weather, update_tamagotchi
     from utils.gpt import generate_comment
     from utils.embed import create_or_update_embed

@@ -73,6 +73,7 @@ TAMAGOTCHI_CHANNEL_ID  # #다마고치 채널 ID
 | v2.0 | 2026-04-02 | P2 수정: gender/age/height DB 저장, settings.py 하드코딩 제거, psycopg2-binary requirements 추가, weight_log init_db 등록 |
 | v2.1 | 2026-04-02 | 프로젝트명 먹구름(mukgoorm) 확정, GPT 캐릭터 프롬프트 수정 (다마고치 정체성 → 범용 캐릭터), utils/cogs/ 데드코드 삭제 |
 | v2.2 | 2026-04-02 | 식사 알림 스케줄러 구현 (3단계 Job + hourly hunger decay), bot.py on_ready 시 전체 유저 Job 등록 |
+| v2.3 | 2026-04-03 | DB 타임존 버그 수정 (UTC→KST 이중변환), 메인 Embed 이미지 크게 표시 (set_thumbnail 제거), 칼로리 0 식사 저장 차단, 커맨드 로깅 추가 |
 
 ---
 

@@ -3,12 +3,16 @@
 ## 메인 Embed UI
 
 ```
-[다마고치 이미지 (thumbnail)]
-{tamagotchi_name}의 하루 · "GPT 대사"
+[다마고치 이미지 — 파일 첨부로 크게 표시]
+──────────────────────────────────────
+[Embed] {tamagotchi_name}의 하루 · "GPT 대사"
 
 Row 0: [ 🍽️ 식사 입력 ] [ 📊 오늘 요약 ] [ 📅 오늘 일정 ]
 Row 1: [ ⚙️ 설정 변경 ] [ ⏰ 시간 설정 ] [ ⚖️ 체중 기록 ]
 ```
+
+> 이미지는 `file=img_file`로 첨부 전송되어 embed 위에 크게 표시됨.  
+> embed 내부에는 `set_thumbnail()` 미사용.
 
 ### 버튼 동작
 
