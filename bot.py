@@ -41,7 +41,7 @@ async def on_ready():
     scheduler_cog = bot.cogs.get("SchedulerCog")
     if scheduler_cog:
         scheduler_cog.register_all_users()
-    print(f"[✅] {bot.user} 로그인 완료 — 슬래시 커맨드 동기화 완료")
+    print(f"[OK] {bot.user} 로그인 완료 - 슬래시 커맨드 동기화 완료")
 
 # 에러 로깅
 @bot.event
