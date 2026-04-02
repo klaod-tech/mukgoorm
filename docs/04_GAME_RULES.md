@@ -9,7 +9,7 @@
 | 과식 (800 kcal 이상) | +50 |
 | 소식 (400 kcal 미만) | +15 |
 | 시간 경과 | -5/시간 |
-| hunger = 0 | 유지 (사망 없음, hungry_cry 이미지 유지) |
+| hunger = 0 | 유지 (사망 없음, upset.png 이미지 유지) |
 
 > **구현 위치**: `utils/embed.py` → `_hunger_gain(calories)`
 
@@ -41,11 +41,11 @@ EVENT_EFFECTS = {
 ## 이미지 선택 우선순위
 
 ```
-1순위: 특별 이벤트    goal_achieved, birthday
-2순위: 식사 상태      eating, overfed, underfed
-3순위: 배고픔         hungry_cry, hungry
-4순위: 날씨           dusty > rainy/snowy > hot/cold > sunny/cloudy
-5순위: 기본 감정      sick < tired < normal < happy
+1순위: 특별 이벤트    cheer.png (목표 달성)
+2순위: 식사 직후      eat.png (last_fed_at 기준 3분 이내)
+3순위: 배고픔         upset.png (hunger < 40)
+4순위: 날씨           wear mask > rainy/snow > hot/warm > (맑음/흐림 → 없음)
+5순위: 기본 감정      tired < normal < smile
 ```
 
 > **구현 위치**: `utils/image.py` → `select_image()`

@@ -112,17 +112,17 @@ APScheduler → 유저별 wake_time 도달
   → 쓰레드 알림: "{tamagotchi_name}이(가) 슬슬 배가 고파지고 있어요!"
 
 [식사시간 정각] (미입력 시)
-  → Embed 이미지: hungry.png
+  → Embed 이미지: upset.png
   → 대사: "배고파! 빨리 밥 줘!"
 
 [식사시간 +1시간] (미입력 시)
-  → Embed 이미지: hungry_cry.png
+  → Embed 이미지: upset.png (동일, 배고픔 통합)
   → 대사: "엉엉... 밥을 안 주다니..."
 
 [밥 주기 입력 감지]
   → 해당 식사 미실행 Job 취소
-  → eating.png 3분 표시 → 자동 복구
-  ※ 패널티 없음. hungry_cry 상태에서도 밥 주면 즉시 정상 복구.
+  → eat.png 3분 표시 → 자동 복구
+  ※ 패널티 없음. upset 상태에서도 밥 주면 즉시 정상 복구.
 ```
 
 ---
@@ -167,5 +167,5 @@ APScheduler → 유저별 wake_time 도달
   → DB weight_log 저장
   → 목표 체중 달성 여부 판정
   → 체중 변화 + 달성률 바 + GPT 대사 → Ephemeral Embed
-  → 목표 달성 시: Embed 이미지 goal_achieved.png로 교체
+  → 목표 달성 시: Embed 이미지 cheer.png로 교체
 ```
