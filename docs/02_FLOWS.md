@@ -105,24 +105,32 @@ APScheduler → 유저별 wake_time 도달
 
 ---
 
-## 식사 알림 흐름 (미구현 — scheduler.py에 추가 필요)
+## 식사 알림 흐름
 
 ```
-[식사시간 -30분]
-  → 쓰레드 알림: "{tamagotchi_name}이(가) 슬슬 배가 고파지고 있어요!"
+[식사시간 -30분] → _meal_reminder()
+  → 쓰레드 알림: "{tamagotchi_name}이(가) 슬슬 배가 고파지고 있어!"
 
-[식사시간 정각] (미입력 시)
-  → Embed 이미지: upset.png
-  → 대사: "배고파! 빨리 밥 줘!"
+[식사시간 정각] → _meal_upset() (미입력 시)
+  → GPT 대사 생성 (배고파서 말해줘)
+  → create_or_update_embed() → upset.png 교체
 
-[식사시간 +1시간] (미입력 시)
-  → Embed 이미지: upset.png (동일, 배고픔 통합)
-  → 대사: "엉엉... 밥을 안 주다니..."
+[식사시간 +1시간] → _meal_late() (미입력 시)
+  → GPT 대사 생성 (1시간 넘게 못 먹어서 슬퍼)
+  → 쓰레드에 대사 메시지 전송
 
 [밥 주기 입력 감지]
-  → 해당 식사 미실행 Job 취소
   → eat.png 3분 표시 → 자동 복구
   ※ 패널티 없음. upset 상태에서도 밥 주면 즉시 정상 복구.
+
+[매 시간 정각] → _hourly_hunger_decay()
+  → 전체 유저 hunger -5 (최소 0)
+  → hunger < 40 이 되면 자연스럽게 upset.png 트리거
+
+[Job 등록 시점]
+  → 봇 시작 (on_ready): register_all_users() — 전체 유저 일괄 등록
+  → 온보딩 완료: register_meal_jobs(user_id) — 기본 시간 기준 등록
+  → 시간 설정 저장: register_meal_jobs(user_id) — 새 시간으로 재등록
 ```
 
 ---
