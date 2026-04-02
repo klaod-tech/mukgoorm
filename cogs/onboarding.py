@@ -96,6 +96,10 @@ class OnboardingModal(discord.ui.Modal, title="먹구름 시작하기"):
             if weather_cog:
                 weather_cog.register_user_job(wake_time)
                 print(f"[온보딩] {user_id} 날씨 스케줄러 등록 — wake_time: {wake_time}")
+            # 식사 알림 Job 등록 (기본 시간 기준, 이후 시간 설정에서 재등록)
+            scheduler_cog = interaction.client.cogs.get("SchedulerCog")
+            if scheduler_cog:
+                scheduler_cog.register_meal_jobs(user_id)
 
             # 전용 쓰레드 생성
             channel = interaction.guild.get_channel(TAMAGOTCHI_CHANNEL_ID)

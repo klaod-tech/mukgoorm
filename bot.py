@@ -37,6 +37,10 @@ async def on_ready():
     bot.add_view(MainView())
     bot.add_view(StartView())   # 시작하기 버튼 영구 등록
     await bot.tree.sync()
+    # 전체 유저 식사 알림 Job 등록
+    scheduler_cog = bot.cogs.get("SchedulerCog")
+    if scheduler_cog:
+        scheduler_cog.register_all_users()
     print(f"[✅] {bot.user} 로그인 완료 — 슬래시 커맨드 동기화 완료")
 
 # 에러 로깅

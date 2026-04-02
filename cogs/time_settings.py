@@ -206,6 +206,10 @@ class TimeStep2View(discord.ui.View):
         weather_cog = interaction.client.cogs.get("WeatherCog")
         if weather_cog:
             weather_cog.register_user_job(self.wake_time)
+        # 식사 알림 Job 재등록
+        scheduler_cog = interaction.client.cogs.get("SchedulerCog")
+        if scheduler_cog:
+            scheduler_cog.register_meal_jobs(self.user_id)
 
         tail = "\n\n이제 다마고치와 함께 건강한 식습관을 만들어봐! 🐣" if self.from_onboarding else ""
 
