@@ -178,7 +178,7 @@ class WeightInputModal(discord.ui.Modal, title="⚖️ 체중 기록"):
             )
             embed.add_field(
                 name="🎯 목표 체중",
-                value=f"**{goal_weight}kg** (남은 거리: {max(diff_from_goal, 0)}kg)",
+                value=f"**{goal_weight}kg** (남은 몸무게: {max(diff_from_goal, 0)}kg)",
                 inline=True,
             )
             embed.add_field(

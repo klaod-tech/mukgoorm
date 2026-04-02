@@ -1,4 +1,4 @@
-# 진행 상황 (v2.4 기준 — 2026-04-03)
+# 진행 상황 (v2.5 기준 — 2026-04-03)
 
 ## 구현 완료
 
@@ -7,13 +7,13 @@
 | `utils/db.py` | Supabase CRUD (users/tamagotchi/meals/weather_log/weight_log), gender/age/height 컬럼 추가 | ✅ 완료 |
 | `utils/gpt.py` | GPT-4o 래퍼 (칼로리 계산, 식사 분석, 자연어 파싱, 대사 생성), 캐릭터 프롬프트 일반화 | ✅ 완료 |
 | `utils/image.py` | 이미지 선택 로직 (우선순위 5단계, 11종 이미지) | ✅ 완료 |
-| `utils/embed.py` | 메인 Embed + 6개 버튼 (2행) + MealInputModal + _send_daily_analysis, 칼로리 0 저장 차단 | ✅ 완료 |
+| `utils/embed.py` | 메인 Embed + 6개 버튼 (2행) + MealInputSelectView (텍스트/사진 선택) + MealInputModal + _send_daily_analysis, 칼로리 0 저장 차단 | ✅ 완료 |
 | `utils/ml.py` | 칼로리 보정 모델 (양 표현 즉시 + Ridge/RF 개인화) | ✅ 완료 |
 | `utils/pattern.py` | 식습관 패턴 분석 (5가지 패턴 탐지) | ✅ 완료 |
 | `utils/gpt_ml_bridge.py` | ML 결과 → GPT 주입 브릿지 | ✅ 완료 |
 | `cogs/onboarding.py` | 4필드 Modal, 쓰레드 생성, 첫 Embed 전송, TimeStep1View 유도, gender/age/height 저장, 식사 알림 Job 등록 | ✅ 완료 |
 | `cogs/time_settings.py` | Select Menu 2단계 시간 설정, 분 10분 단위, 저장 시 식사 알림 Job 재등록 | ✅ 완료 |
-| `cogs/meal.py` | 사진 입력 (on_message → GPT Vision → DB 저장), 칼로리 0 저장 차단 | ✅ 완료 |
+| `cogs/meal.py` | 사진 입력 2경로 (버튼 60초 대기 / 직접 업로드), _build_analysis_embed 헬퍼, MealPhotoCog.waiting 상태 관리, 칼로리 0 저장 차단 | ✅ 완료 |
 | `cogs/summary.py` | 오늘 요약 (칼로리/탄단지/끼니별/GPT 코멘트) | ✅ 완료 |
 | `cogs/weather.py` | 기상청+에어코리아 API, wake_time 기반 스케줄러 | ✅ 완료 |
 | `cogs/settings.py` | 설정 변경 Modal (이름/도시/목표체중), 칼로리 재계산 시 DB 값 사용 | ✅ 완료 |
@@ -46,6 +46,9 @@
 | 메인 Embed 이미지 작게 표시됨 | set_thumbnail() 제거, 파일 첨부로 이미지 크게 표시되도록 변경 | v2.3 |
 | 오늘 요약 footer 불필요 | 개인 쓰레드에서 ephemeral footer 제거 | v2.4 |
 | 시간 설정 분 단위 30분 → 10분 | _minute_options 10분 단위 6개로 변경, placeholder 구역 레이블 추가 | v2.4 |
+| 식사 입력 사진 경로 버튼 미연결 | MealInputSelectView 추가, 버튼 클릭 → 60초 대기 → on_message 즉시 분석 | v2.5 |
+| "남은 거리" 용어 부자연스러움 | embed.py, weight.py → "남은 몸무게"로 수정 | v2.5 |
+| 오늘 일정 날씨 지역 미표시 | 날씨 텍스트에 📍 도시명 추가 | v2.5 |
 | psycopg2-binary requirements 누락 | requirements.txt에 추가 | v2.0 |
 | weight_log 테이블 init_db 미등록 | init_db()에 CREATE TABLE 추가 | v2.0 |
 | image.py 파일명 불일치 | 실제 이미지 파일명 기준으로 전면 수정 | v1.8 |

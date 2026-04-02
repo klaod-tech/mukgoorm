@@ -249,6 +249,29 @@ class MealInputModal(discord.ui.Modal, title="🍽️ 식사 입력"):
             await interaction.followup.send(f"❌ 오류가 발생했어: {e}", ephemeral=True)
 
 
+# ══════════════════════════════════════════════════════
+# 식사 입력 방식 선택 View (텍스트 / 사진)
+# ══════════════════════════════════════════════════════
+class MealInputSelectView(discord.ui.View):
+    def __init__(self):
+        super().__init__(timeout=60)
+
+    @discord.ui.button(label="📝 텍스트로 입력", style=discord.ButtonStyle.primary, row=0)
+    async def text_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(MealInputModal())
+
+    @discord.ui.button(label="📸 사진으로 입력", style=discord.ButtonStyle.secondary, row=0)
+    async def photo_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        import time
+        cog = interaction.client.cogs.get("MealPhotoCog")
+        if cog is not None:
+            cog.waiting[str(interaction.user.id)] = time.time() + 60
+        await interaction.response.edit_message(
+            content="📸 지금 이 채팅에 음식 사진을 올려줘! (60초 안에)",
+            view=None,
+        )
+
+
 async def _send_daily_analysis(thread, user, tama, meals, total_cal, target_cal, target_date):
     from utils.gpt import generate_comment
     from utils.db import get_tamagotchi
@@ -333,7 +356,11 @@ class MainView(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         print(f"[meal_button] 클릭 — user: {interaction.user}")
-        await interaction.response.send_modal(MealInputModal())
+        await interaction.response.send_message(
+            "어떻게 입력할까?",
+            view=MealInputSelectView(),
+            ephemeral=True,
+        )
 
     @discord.ui.button(
         label="📊 오늘 요약",
@@ -419,6 +446,7 @@ class MainView(discord.ui.View):
 
             # 날씨 정보
             weather_log = get_latest_weather(user_id)
+            city = user.get("city", "")
             if weather_log:
                 weather  = weather_log.get("weather", "알 수 없음")
                 temp     = weather_log.get("temp", 0)
@@ -427,7 +455,7 @@ class MainView(discord.ui.View):
                 icon     = _weather_icon(weather, temp)
                 pm_grade = _pm_grade(pm10, pm25)
                 weather_text = (
-                    f"{icon} {weather} / {temp}°C\n"
+                    f"{icon} {weather} / {temp}°C  📍 {city}\n"
                     f"미세먼지 PM10: {pm10} | PM2.5: {pm25} ({pm_grade})"
                 )
             else:
@@ -476,7 +504,7 @@ class MainView(discord.ui.View):
 
                 weight_text = (
                     f"현재: **{current_weight}kg** ({w_change})\n"
-                    f"목표: **{goal_weight}kg** (남은 거리: {w_remain}kg)\n"
+                    f"목표: **{goal_weight}kg** (남은 몸무게: {w_remain}kg)\n"
                     f"`{w_bar}` {w_pct}%"
                 )
             else:

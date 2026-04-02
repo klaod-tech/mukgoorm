@@ -15,6 +15,7 @@ from discord.ext import commands
 from datetime import date
 import aiohttp
 import base64
+import time
 
 from utils.db import (
     get_user, get_tamagotchi, create_meal,
@@ -23,6 +24,29 @@ from utils.db import (
 from utils.gpt import generate_comment
 from utils.gpt_ml_bridge import get_corrected_calories
 from utils.embed import create_or_update_embed, _hunger_gain
+
+
+# ──────────────────────────────────────────────
+# 분석 결과 Embed 빌드 helper
+# ──────────────────────────────────────────────
+
+def _build_analysis_embed(analysis: dict) -> discord.Embed:
+    embed = discord.Embed(
+        title="🔍 음식 분석 결과",
+        description=analysis.get("description", ""),
+        color=0x57F287,
+    )
+    embed.add_field(
+        name="🍽️ 음식",
+        value=f"{analysis['food_name']} ({analysis['meal_type']})",
+        inline=False,
+    )
+    embed.add_field(name="🔥 칼로리",   value=f"**{analysis['calories']} kcal**", inline=True)
+    embed.add_field(name="💪 단백질",   value=f"{analysis['protein']}g",          inline=True)
+    embed.add_field(name="🌾 탄수화물", value=f"{analysis['carbs']}g",            inline=True)
+    embed.add_field(name="🥑 지방",     value=f"{analysis['fat']}g",              inline=True)
+    embed.set_footer(text="기록하면 다마고치 수치에 반영돼요!")
+    return embed
 
 
 # ──────────────────────────────────────────────
@@ -287,37 +311,7 @@ class MealPhotoDetectView(discord.ui.View):
             analysis = await analyze_food_image(self.image_url)
 
             # 결과 Embed 생성
-            embed = discord.Embed(
-                title="🔍 음식 분석 결과",
-                description=analysis.get("description", ""),
-                color=0x57F287,
-            )
-            embed.add_field(
-                name="🍽️ 음식",
-                value=f"{analysis['food_name']} ({analysis['meal_type']})",
-                inline=False,
-            )
-            embed.add_field(
-                name="🔥 칼로리",
-                value=f"**{analysis['calories']} kcal**",
-                inline=True,
-            )
-            embed.add_field(
-                name="💪 단백질",
-                value=f"{analysis['protein']}g",
-                inline=True,
-            )
-            embed.add_field(
-                name="🌾 탄수화물",
-                value=f"{analysis['carbs']}g",
-                inline=True,
-            )
-            embed.add_field(
-                name="🥑 지방",
-                value=f"{analysis['fat']}g",
-                inline=True,
-            )
-            embed.set_footer(text="기록하면 다마고치 수치에 반영돼요!")
+            embed = _build_analysis_embed(analysis)
 
             # 확인 버튼 View
             confirm_view = MealPhotoConfirmView(
@@ -363,6 +357,7 @@ class MealPhotoDetectView(discord.ui.View):
 class MealPhotoCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+        self.waiting: dict[str, float] = {}  # user_id -> expiry timestamp (60초)
         print("[MealPhotoCog] 로드 완료")
 
     @commands.Cog.listener()
@@ -403,6 +398,24 @@ class MealPhotoCog(commands.Cog):
 
         # 첫 번째 이미지만 처리
         image_url = image_attachments[0].url
+
+        # 사진 입력 대기 중인 유저인지 확인
+        expiry = self.waiting.get(user_id)
+        if expiry and time.time() < expiry:
+            del self.waiting[user_id]
+            thinking_msg = await message.channel.send("📸 사진 분석 중... 잠깐만 기다려줘!")
+            try:
+                analysis = await analyze_food_image(image_url)
+                embed = _build_analysis_embed(analysis)
+                confirm_view = MealPhotoConfirmView(user_id=user_id, analysis=analysis)
+                await thinking_msg.delete()
+                await message.channel.send(embed=embed, view=confirm_view)
+            except Exception as e:
+                print(f"[on_message 사진 분석 오류] {e}")
+                import traceback
+                traceback.print_exc()
+                await thinking_msg.edit(content=f"❌ 음식 인식에 실패했어: {e}\n텍스트로 직접 입력해줘!")
+            return
 
         await message.channel.send(
             f"📸 음식 사진이에요?",

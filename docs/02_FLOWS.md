@@ -18,9 +18,9 @@ Row 1: [ ⚙️ 설정 변경 ] [ ⏰ 시간 설정 ] [ ⚖️ 체중 기록 ]
 
 | 버튼 | 동작 | 출력 |
 |------|------|------|
-| 🍽️ 식사 입력 | MealInputModal 팝업 | 텍스트 자연어 입력 → GPT 분석 → DB 저장 → Embed 갱신 |
+| 🍽️ 식사 입력 | MealInputSelectView (텍스트/사진 선택) | 텍스트 → MealInputModal / 사진 → 60초 대기 후 GPT Vision 분석 |
 | 📊 오늘 요약 | Ephemeral | 총칼로리/탄단지/끼니별 내역/GPT 코멘트 |
-| 📅 오늘 일정 | Ephemeral | 목표칼로리/체중현황(ML)/식사알림시간/날씨/GPT 코멘트 |
+| 📅 오늘 일정 | Ephemeral | 목표칼로리/체중현황(ML)/식사알림시간/날씨(도시명 포함)/GPT 코멘트 |
 | ⚙️ 설정 변경 | SettingsModal | 이름/도시/목표체중 변경 |
 | ⏰ 시간 설정 | TimeStep1View | Select Menu 2단계 → 기상/식사 알림 시간 변경 |
 | ⚖️ 체중 기록 | WeightInputModal | 체중 입력 → DB 저장 → 목표 달성 판정 → Embed 갱신 |
@@ -52,32 +52,50 @@ Row 1: [ ⚙️ 설정 변경 ] [ ⏰ 시간 설정 ] [ ⚖️ 체중 기록 ]
 
 ## 식사 입력 흐름
 
-### 텍스트 입력 (🍽️ 식사 입력 버튼)
+### 텍스트 입력 (🍽️ 식사 입력 → 📝 텍스트로 입력)
 ```
-MealInputModal → 자유 텍스트 입력
-  → GPT parse_meal_input(): days_ago, meal_type, food_name 추출
-    - "어제 저녁에 치킨 먹었어" → days_ago=1, meal_type=저녁, food_name=치킨
-    - 소급 입력 지원 (1~2일 전)
-  → GPT analyze_meal_text(): 칼로리 + 영양소 분석
-  → ML 칼로리 보정 (get_corrected_calories)
-  → DB meals 저장
-  → hunger/mood/hp 수치 갱신 (오늘 입력 시만)
-  → Ephemeral: 분석 결과 표시
-  → Embed: eating.png로 교체 → 3분 후 자동 복구
+[식사 입력] 클릭 → MealInputSelectView (텍스트/사진 선택 Ephemeral)
+  → [📝 텍스트로 입력] 클릭 → MealInputModal 팝업
+    → GPT parse_meal_input(): days_ago, meal_type, food_name 추출
+      - "어제 저녁에 치킨 먹었어" → days_ago=1, meal_type=저녁, food_name=치킨
+      - 소급 입력 지원 (1~2일 전)
+    → GPT analyze_meal_text(): 칼로리 + 영양소 분석
+    → ML 칼로리 보정 (get_corrected_calories)
+    → 칼로리 = 0이면 저장 차단 (오류 안내 반환)
+    → DB meals 저장
+    → hunger/mood/hp 수치 갱신 (오늘 입력 시만)
+    → Ephemeral: 분석 결과 표시
+    → Embed: eat.png로 교체 → 3분 후 자동 복구
 ```
 
-### 사진 입력 (쓰레드에 이미지 첨부)
+### 사진 입력 경로 A — 버튼 (🍽️ 식사 입력 → 📸 사진으로 입력)
 ```
-on_message 이벤트로 사진 감지 (본인 전용 쓰레드에서만)
-  → "📸 음식 사진이에요? [✅ 분석하기] [❌ 아니야]" 버튼 전송
-  → [✅ 분석하기] 클릭
-    → GPT-4o Vision API 호출 (image_url)
+[식사 입력] 클릭 → MealInputSelectView
+  → [📸 사진으로 입력] 클릭
+    → MealPhotoCog.waiting[user_id] = now + 60초 등록
+    → Ephemeral 메시지: "지금 이 채팅에 음식 사진을 올려줘! (60초 안에)"
+  → 유저가 60초 내 이미지 업로드
+    → on_message: waiting 상태 확인 → 즉시 분석 시작
+    → "📸 사진 분석 중..." 메시지 전송
+    → GPT-4o Vision API 호출
     → 분석 결과 Embed + [✅ 기록하기] [❌ 취소]
   → [✅ 기록하기] 클릭
     → ML 칼로리 보정
+    → 칼로리 = 0이면 저장 차단
     → DB meals 저장 (input_method='photo')
     → hunger/mood/hp 수치 갱신
     → Embed 갱신
+  ※ 60초 초과 후 사진 올리면 경로 B로 처리됨
+```
+
+### 사진 입력 경로 B — 직접 업로드 (기존 방식)
+```
+쓰레드에 이미지 직접 첨부 (waiting 상태 아닐 때)
+  → on_message 감지 → "📸 음식 사진이에요? [✅ 분석하기] [❌ 아니야]" 버튼 전송
+  → [✅ 분석하기] 클릭
+    → GPT-4o Vision API 호출
+    → 분석 결과 Embed + [✅ 기록하기] [❌ 취소]
+  → [✅ 기록하기]: 경로 A와 동일한 저장 흐름
 ```
 
 ### 오후 10시 칼로리 자동 판정 (SchedulerCog)
