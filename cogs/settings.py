@@ -30,17 +30,6 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
             default=user.get("city", ""),
             max_length=20,
         )
-        self.wake_and_meals = discord.ui.TextInput(
-            label="기상시간 / 식사알림 (HH:MM / 아침,점심,저녁)",
-            placeholder="예: 09:30 / 08:00,12:00,18:00",
-            default=(
-                f"{user.get('wake_time', '07:00')} / "
-                f"{user.get('breakfast_time', '08:00')},"
-                f"{user.get('lunch_time', '12:00')},"
-                f"{user.get('dinner_time', '18:00')}"
-            ),
-            max_length=30,
-        )
         self.goal_weight = discord.ui.TextInput(
             label="목표 체중 (kg)",
             default=str(user.get("goal_weight", "")),
@@ -49,7 +38,6 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
 
         self.add_item(self.tama_name)
         self.add_item(self.city)
-        self.add_item(self.wake_and_meals)
         self.add_item(self.goal_weight)
 
     async def on_submit(self, interaction: discord.Interaction):
@@ -80,39 +68,6 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
             if new_city != old.get("city", ""):
                 updates["city"] = new_city
                 messages.append(f"거주 도시: **{new_city}**")
-
-            # 기상 시간 + 식사 알림 파싱
-            raw = self.wake_and_meals.value.strip()
-            if "/" in raw:
-                wake_raw, meals_raw = raw.split("/", 1)
-            else:
-                wake_raw  = old.get("wake_time", "07:00")
-                meals_raw = raw
-
-            new_wake      = wake_raw.strip() or old.get("wake_time", "07:00")
-            times         = [t.strip() for t in meals_raw.strip().split(",")]
-            new_breakfast = times[0] if len(times) > 0 else old.get("breakfast_time", "08:00")
-            new_lunch     = times[1] if len(times) > 1 else old.get("lunch_time", "12:00")
-            new_dinner    = times[2] if len(times) > 2 else old.get("dinner_time", "18:00")
-
-            # 기상 시간 변경
-            if new_wake != old.get("wake_time"):
-                updates["wake_time"] = new_wake
-                messages.append(f"기상 시간: **{new_wake}**")
-                # 날씨 스케줄러 재등록
-                weather_cog = interaction.client.cogs.get("WeatherCog")
-                if weather_cog:
-                    weather_cog.register_user_job(new_wake)
-                    print(f"[설정] {user_id} 날씨 스케줄러 재등록 — wake_time: {new_wake}")
-
-            # 식사 시간 변경
-            if (new_breakfast != old.get("breakfast_time") or
-                new_lunch     != old.get("lunch_time") or
-                new_dinner    != old.get("dinner_time")):
-                updates["breakfast_time"] = new_breakfast
-                updates["lunch_time"]     = new_lunch
-                updates["dinner_time"]    = new_dinner
-                messages.append(f"식사 알림: **{new_breakfast} / {new_lunch} / {new_dinner}**")
 
             # 목표 체중 변경
             new_goal = float(self.goal_weight.value.strip())

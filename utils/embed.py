@@ -323,6 +323,7 @@ class MainView(discord.ui.View):
         label="🍽️ 식사 입력",
         style=discord.ButtonStyle.primary,
         custom_id="btn_meal",
+        row=0,
     )
     async def meal_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
@@ -334,6 +335,7 @@ class MainView(discord.ui.View):
         label="📊 오늘 요약",
         style=discord.ButtonStyle.secondary,
         custom_id="btn_summary",
+        row=0,
     )
     async def summary_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
