@@ -4,14 +4,15 @@ Embed 구조:
   - 상단: 다마고치 이미지 (thumbnail)
   - 제목: {tamagotchi_name}의 하루
   - 설명: GPT 한마디
-  - 버튼: [🍽️ 식사 입력] [📊 오늘 요약] [📅 오늘 일정] [⚙️ 설정 변경]
+  - 버튼 Row 0: [🍽️ 식사 입력] [📋 하루 정리] [🍜 뭐 먹고 싶어?]
+  - 버튼 Row 1: [⚙️ 설정] [⚖️ 체중 기록]
 """
 import os
 import asyncio
 import discord
 from datetime import date, datetime, timedelta
 from utils.image import select_image, IMAGE_DESCRIPTIONS
-from utils.gpt_ml_bridge import get_corrected_calories  # ✅ ML 보정 import
+from utils.gpt_ml_bridge import get_corrected_calories
 
 IMAGES_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "images")
 
@@ -87,6 +88,23 @@ def _weather_icon(weather: str, temp: float) -> str:
     return "☀️"
 
 
+def _build_weather_text(user: dict, weather_log: dict | None) -> str:
+    """날씨 정보 텍스트 생성 — 날씨 전용 쓰레드에서도 재사용 가능."""
+    city = user.get("city", "")
+    if not weather_log:
+        return "날씨 정보 없음 (기상 시간에 자동 갱신돼요)"
+    weather  = weather_log.get("weather", "알 수 없음")
+    temp     = weather_log.get("temp", 0)
+    pm10     = weather_log.get("pm10", 0)
+    pm25     = weather_log.get("pm25", 0)
+    icon     = _weather_icon(weather, temp)
+    pm_grade = _pm_grade(pm10, pm25)
+    return (
+        f"{icon} {weather} / {temp}°C  📍 {city}\n"
+        f"미세먼지 PM10: {pm10} | PM2.5: {pm25} ({pm_grade})"
+    )
+
+
 # ══════════════════════════════════════════════════════
 # 식사 입력 Modal — 자연어 방식 + 합산 처리
 # ══════════════════════════════════════════════════════
@@ -160,7 +178,7 @@ class MealInputModal(discord.ui.Modal, title="🍽️ 식사 입력"):
             fat      = result.get("fat", 0)
             fiber    = result.get("fiber", 0)
 
-            # ✅ ML 칼로리 보정 (양 표현 + 개인화 모델)
+            # ML 칼로리 보정 (양 표현 + 개인화 모델)
             calories = get_corrected_calories(
                 user_id=user_id,
                 food_name=food_name,
@@ -357,10 +375,14 @@ async def _send_daily_analysis(thread, user, tama, meals, total_cal, target_cal,
 
 # ══════════════════════════════════════════════════════
 # 메인 버튼 View
+# Row 0: [🍽️ 식사 입력] [📋 하루 정리] [🍜 뭐 먹고 싶어?]
+# Row 1: [⚙️ 설정] [⚖️ 체중 기록]
 # ══════════════════════════════════════════════════════
 class MainView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
+
+    # ── Row 0 ──────────────────────────────────────────
 
     @discord.ui.button(
         label="🍽️ 식사 입력",
@@ -379,35 +401,23 @@ class MainView(discord.ui.View):
         )
 
     @discord.ui.button(
-        label="📊 오늘 요약",
+        label="📋 하루 정리",
         style=discord.ButtonStyle.secondary,
-        custom_id="btn_summary",
+        custom_id="btn_daily",
         row=0,
     )
-    async def summary_button(
+    async def daily_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        print(f"[summary_button] 클릭 — user: {interaction.user}")
-        await interaction.response.defer(ephemeral=True)
-        from cogs.summary import send_summary
-        await send_summary(interaction)
-
-    @discord.ui.button(
-        label="📅 오늘 일정",
-        style=discord.ButtonStyle.secondary,
-        custom_id="btn_today",
-        row=0,
-    )
-    async def today_button(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        print(f"[today_button] 클릭 — user: {interaction.user}")
+        print(f"[daily_button] 클릭 — user: {interaction.user}")
         await interaction.response.defer(ephemeral=True)
         try:
-            from utils.db import get_user, get_latest_weather, get_today_calories
+            from utils.db import (
+                get_user, get_today_meals, get_today_calories, get_latest_weather,
+            )
             from utils.gpt import generate_comment
             from utils.pattern import analyze_eating_patterns
-            from cogs.weight import get_weight_history, get_latest_weight
+            from cogs.weight import get_weight_history
 
             user_id = str(interaction.user.id)
             user    = get_user(user_id)
@@ -421,88 +431,70 @@ class MainView(discord.ui.View):
             init_weight = float(user.get("init_weight") or 76)
             base_cal    = user.get("daily_cal_target") or 2000
             today_cal   = get_today_calories(user_id)
+            meals       = get_today_meals(user_id)
 
-            # ✅ ML 체중 기반 목표 칼로리 동적 조율
+            # 탄단지 합산
+            total_protein = sum(m.get("protein") or 0 for m in meals)
+            total_carbs   = sum(m.get("carbs") or 0 for m in meals)
+            total_fat     = sum(m.get("fat") or 0 for m in meals)
+
+            # 체중 기반 목표 칼로리 동적 조율
             weight_history = get_weight_history(user_id, limit=7)
             current_weight = weight_history[0]["weight"] if weight_history else None
-            target_cal     = base_cal  # 기본값
-            weight_context = ""        # GPT 주입용
+            target_cal     = base_cal
+            weight_context = ""
 
             if current_weight and len(weight_history) >= 2:
                 prev_weight  = weight_history[1]["weight"]
                 weight_diff  = round(current_weight - prev_weight, 1)
                 diff_to_goal = round(current_weight - goal_weight, 1)
 
-                # 체중 증가 중 → 칼로리 목표 5% 감소
                 if weight_diff > 0.3:
-                    target_cal   = int(base_cal * 0.95)
+                    target_cal     = int(base_cal * 0.95)
                     weight_context = (
                         f"최근 체중이 {weight_diff}kg 늘었어 ({prev_weight}kg → {current_weight}kg). "
-                        f"'어제 너무 많이 먹어서 좀 찐 거 같지 않아?' 같은 느낌으로 살짝 걱정해줘."
+                        f"살짝 걱정해줘."
                     )
-                # 체중 감소 중 → 칼로리 목표 유지 or 5% 증가 (너무 적게 먹으면)
                 elif weight_diff < -0.3:
-                    target_cal   = int(base_cal * 1.05) if diff_to_goal > 2 else base_cal
+                    target_cal     = int(base_cal * 1.05) if diff_to_goal > 2 else base_cal
                     weight_context = (
                         f"최근 체중이 {abs(weight_diff)}kg 줄었어 ({prev_weight}kg → {current_weight}kg). "
-                        f"'살이 조금씩 빠지고 있어!' 같은 느낌으로 신나게 칭찬해줘."
+                        f"신나게 칭찬해줘."
                     )
-                # 체중 유지
                 else:
                     weight_context = (
                         f"현재 체중 {current_weight}kg, 목표까지 {diff_to_goal}kg 남았어. "
-                        f"꾸준히 유지하고 있다고 응원해줘."
+                        f"꾸준히 응원해줘."
                     )
 
             # 칼로리 바
-            ratio  = min(today_cal / target_cal, 1.0) if target_cal > 0 else 0
-            filled = int(ratio * 10)
-            bar    = "█" * filled + "░" * (10 - filled)
+            ratio   = min(today_cal / target_cal, 1.0) if target_cal > 0 else 0
+            filled  = int(ratio * 10)
+            bar     = "█" * filled + "░" * (10 - filled)
             percent = int(ratio * 100)
 
-            # 날씨 정보
-            weather_log = get_latest_weather(user_id)
-            city = user.get("city", "")
-            if weather_log:
-                weather  = weather_log.get("weather", "알 수 없음")
-                temp     = weather_log.get("temp", 0)
-                pm10     = weather_log.get("pm10", 0)
-                pm25     = weather_log.get("pm25", 0)
-                icon     = _weather_icon(weather, temp)
-                pm_grade = _pm_grade(pm10, pm25)
-                weather_text = (
-                    f"{icon} {weather} / {temp}°C  📍 {city}\n"
-                    f"미세먼지 PM10: {pm10} | PM2.5: {pm25} ({pm_grade})"
-                )
-            else:
-                weather_text = "날씨 정보 없음 (기상 시간에 자동 갱신돼요)"
+            # 끼니별 내역
+            meal_icons = {"아침": "🌅", "점심": "☀️", "저녁": "🌙", "간식": "🌃", "식사": "🍽️"}
+            meal_lines = [
+                f"{meal_icons.get(m.get('meal_type', '식사'), '🍽️')} "
+                f"{m.get('meal_type', '식사')}: {m.get('food_name', '?')} — {m.get('calories', 0)} kcal"
+                for m in meals
+            ]
+            meal_text    = "\n".join(meal_lines) if meal_lines else "아직 아무것도 안 먹었어 🥺"
+            meal_summary = ", ".join(
+                f"{m.get('meal_type', '식사')} {m.get('food_name', '?')}" for m in meals
+            ) or "없음"
+
+            # 날씨 (독립 함수 — 날씨 쓰레드 분리 시 재사용)
+            weather_log  = get_latest_weather(user_id)
+            weather_text = _build_weather_text(user, weather_log)
 
             # 식사 알림 시간
             breakfast = user.get("breakfast_time", "08:00")
             lunch     = user.get("lunch_time", "12:00")
             dinner    = user.get("dinner_time", "18:00")
 
-            today_str = date.today().strftime("%Y년 %m월 %d일")
-
-            # ✅ ML 패턴 분석 + 체중 컨텍스트 → GPT 다마고치 멘트 생성
-            pattern_result  = analyze_eating_patterns(user_id, target_cal)
-            pattern_context = pattern_result.get("gpt_context", "")
-            full_context    = "\n".join(filter(None, [pattern_context, weight_context]))
-
-            ml_comment = await generate_comment(
-                context=(
-                    f"오늘 일정을 확인하러 왔어. "
-                    f"오늘 목표는 {target_cal}kcal인데 지금까지 {today_cal}kcal 먹었어. "
-                    f"짧고 귀엽게 한마디 해줘!"
-                ),
-                user=user,
-                today_calories=today_cal,
-                recent_meals="",
-                weather_info=weather_log,
-                extra_context=full_context,  # ✅ 패턴 + 체중 변화 주입
-            )
-
-            # ✅ 체중 현황 필드 텍스트 생성
+            # 체중 현황
             if current_weight:
                 w_total  = abs(init_weight - goal_weight)
                 w_done   = abs(init_weight - current_weight)
@@ -514,7 +506,10 @@ class MainView(discord.ui.View):
 
                 if len(weight_history) >= 2:
                     w_diff   = round(current_weight - weight_history[1]["weight"], 1)
-                    w_change = f"▲ {w_diff}kg" if w_diff > 0 else (f"▼ {abs(w_diff)}kg" if w_diff < 0 else "→ 유지")
+                    w_change = (
+                        f"▲ {w_diff}kg" if w_diff > 0
+                        else (f"▼ {abs(w_diff)}kg" if w_diff < 0 else "→ 유지")
+                    )
                 else:
                     w_change = "→ 첫 기록"
 
@@ -526,19 +521,50 @@ class MainView(discord.ui.View):
             else:
                 weight_text = "아직 체중 기록이 없어요!\n[⚖️ 체중 기록] 버튼으로 입력해줘 🐣"
 
-            # ✅ 목표 칼로리 조율 여부 표시
+            # 목표 칼로리 조율 여부 표시
             if target_cal != base_cal:
-                cal_adjust = f" (체중 변화로 {'+' if target_cal > base_cal else ''}{target_cal - base_cal}kcal 조정)"
+                diff_sign  = "+" if target_cal > base_cal else ""
+                cal_adjust = f" (체중 변화로 {diff_sign}{target_cal - base_cal}kcal 조정)"
             else:
                 cal_adjust = ""
 
+            # GPT 한마디 (패턴 + 체중 컨텍스트 통합)
+            pattern_result  = analyze_eating_patterns(user_id, target_cal)
+            pattern_context = pattern_result.get("gpt_context", "")
+            full_context    = "\n".join(filter(None, [pattern_context, weight_context]))
+
+            comment = await generate_comment(
+                context=(
+                    f"오늘 하루 기록을 확인하러 왔어. "
+                    f"목표 {target_cal}kcal 중 {today_cal}kcal 먹었어. "
+                    f"탄수화물 {total_carbs:.0f}g, 단백질 {total_protein:.0f}g, 지방 {total_fat:.0f}g. "
+                    f"짧고 따뜻하게 한마디 해줘! (2문장 이내)"
+                ),
+                user=user,
+                today_calories=today_cal,
+                recent_meals=meal_summary,
+                weather_info=weather_log,
+                extra_context=full_context,
+            )
+
+            today_str = date.today().strftime("%Y년 %m월 %d일")
             embed = discord.Embed(
-                title=f"📅 오늘 일정 — {today_str}",
+                title=f"📋 하루 정리 — {today_str}",
                 color=0x5865F2,
             )
             embed.add_field(
-                name="🔥 목표 칼로리",
+                name="🔥 칼로리 현황",
                 value=f"목표: `{target_cal}` kcal{cal_adjust}\n현재: `{today_cal}` kcal ({percent}%)\n`{bar}`",
+                inline=False,
+            )
+            embed.add_field(
+                name="🥗 탄단지 비율",
+                value=f"탄수화물 `{total_carbs:.1f}g`  |  단백질 `{total_protein:.1f}g`  |  지방 `{total_fat:.1f}g`",
+                inline=False,
+            )
+            embed.add_field(
+                name="🍽️ 끼니별 내역",
+                value=meal_text,
                 inline=False,
             )
             embed.add_field(
@@ -547,31 +573,47 @@ class MainView(discord.ui.View):
                 inline=False,
             )
             embed.add_field(
-                name="🍽️ 식사 알림 시간",
-                value=f"🌅 아침: {breakfast}  ☀️ 점심: {lunch}  🌙 저녁: {dinner}",
-                inline=False,
-            )
-            embed.add_field(
                 name="🌤️ 현재 날씨",
                 value=weather_text,
                 inline=False,
             )
-            # ✅ 패턴 + 체중 변화가 녹아든 다마고치 멘트
             embed.add_field(
-                name=f"🐣 {tama_name}의 한마디",
-                value=f"*{ml_comment}*",
+                name="🍽️ 식사 알림",
+                value=f"🌅 아침: {breakfast}  ☀️ 점심: {lunch}  🌙 저녁: {dinner}",
+                inline=False,
+            )
+            embed.add_field(
+                name=f"💬 {tama_name} 한마디",
+                value=f"*{comment}*",
                 inline=False,
             )
             await interaction.followup.send(embed=embed, ephemeral=True)
 
         except Exception as e:
-            print(f"[today_button 오류] {e}")
+            print(f"[daily_button 오류] {e}")
             import traceback
             traceback.print_exc()
             await interaction.followup.send(f"❌ 오류가 발생했어: {e}", ephemeral=True)
 
     @discord.ui.button(
-        label="⚙️ 설정 변경",
+        label="🍜 뭐 먹고 싶어?",
+        style=discord.ButtonStyle.secondary,
+        custom_id="btn_food_recommend",
+        row=0,
+    )
+    async def food_recommend_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        print(f"[food_recommend_button] 클릭 — user: {interaction.user}")
+        await interaction.response.send_message(
+            "🍜 음식 추천 기능은 곧 오픈돼요! 조금만 기다려줘 🐣",
+            ephemeral=True,
+        )
+
+    # ── Row 1 ──────────────────────────────────────────
+
+    @discord.ui.button(
+        label="⚙️ 설정",
         style=discord.ButtonStyle.secondary,
         custom_id="btn_settings",
         row=1,
@@ -581,31 +623,16 @@ class MainView(discord.ui.View):
     ):
         print(f"[settings_button] 클릭 — user: {interaction.user}")
         from utils.db import get_user
-        from cogs.settings import SettingsModal
+        from cogs.settings import SettingsSubView
         user = get_user(str(interaction.user.id))
         if not user:
             await interaction.response.send_message(
                 "❌ 등록된 유저가 아니야!", ephemeral=True
             )
             return
-        await interaction.response.send_modal(SettingsModal(user=user))
-
-    @discord.ui.button(
-        label="⏰ 시간 설정",
-        style=discord.ButtonStyle.secondary,
-        custom_id="btn_time_settings",
-        row=1,
-    )
-    async def time_settings_button(
-        self, interaction: discord.Interaction, button: discord.ui.Button
-    ):
-        print(f"[time_settings_button] 클릭 — user: {interaction.user}")
-        from cogs.time_settings import TimeStep1View
         await interaction.response.send_message(
-            "⏰ **시간 설정** — 1단계\n\n"
-            "🌅 **기상 시간** — 시 / 분\n"
-            "🍳 **아침 알림** — 시 / 분",
-            view=TimeStep1View(user_id=str(interaction.user.id)),
+            "⚙️ **설정** — 변경할 항목을 선택해줘",
+            view=SettingsSubView(user=user),
             ephemeral=True,
         )
 

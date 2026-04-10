@@ -29,13 +29,21 @@ COGS = [
     "cogs.weight",
 ]
 
-# 봇이 디스코드에 로그인 완료됐을 때, 딱 한번만 작동하는 코드
+# on_ready 중복 실행 방지 플래그 (Discord 재연결 시 on_ready가 재호출됨)
+_bot_ready = False
+
 @bot.event
 async def on_ready():
+    global _bot_ready
+    if _bot_ready:
+        print(f"[RECONNECT] {bot.user} 재연결됨 — 초기화 생략")
+        return
+    _bot_ready = True
+
     init_db()
     # 영구 View 등록 (봇 재시작 후에도 버튼 동작)
     bot.add_view(MainView())
-    bot.add_view(StartView())   # 시작하기 버튼 영구 등록
+    bot.add_view(StartView())
     await bot.tree.sync()
     # 전체 유저 식사 알림 Job 등록
     scheduler_cog = bot.cogs.get("SchedulerCog")

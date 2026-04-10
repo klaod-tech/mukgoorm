@@ -1,12 +1,9 @@
 """
 cogs/settings.py — 설정 변경
-동작: ⚙️ 설정 변경 버튼 클릭 → 현재 값이 미리 채워진 Modal 오픈
-변경 가능 항목:
-  - 다마고치 이름 → DB 업데이트 + 쓰레드 이름 변경
-  - 거주 도시 → DB 업데이트
-  - 기상 시간 → DB 업데이트 + 날씨 스케줄러 재등록
-  - 식사 알림 시간 (아침/점심/저녁) → DB 업데이트
-  - 목표 체중 → DB 업데이트 + GPT 권장 칼로리 재계산
+⚙️ 설정 버튼 클릭 → SettingsSubView (하위 메뉴)
+  [👤 내 정보]   → InfoModal (이름, 목표체중)
+  [📍 위치 설정] → CityModal (거주 도시)
+  [⏰ 시간 설정] → TimeStep1View
 """
 import discord
 from discord.ext import commands
@@ -14,7 +11,10 @@ from utils.db import get_user, update_user
 from utils.gpt import calculate_daily_calories
 
 
-class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
+# ══════════════════════════════════════════════════════
+# 내 정보 Modal — 이름 + 목표 체중
+# ══════════════════════════════════════════════════════
+class InfoModal(discord.ui.Modal, title="👤 내 정보 변경"):
 
     def __init__(self, user: dict, **kwargs):
         super().__init__(**kwargs)
@@ -25,11 +25,6 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
             default=user.get("tamagotchi_name", ""),
             max_length=20,
         )
-        self.city = discord.ui.TextInput(
-            label="거주 도시",
-            default=user.get("city", ""),
-            max_length=20,
-        )
         self.goal_weight = discord.ui.TextInput(
             label="목표 체중 (kg)",
             default=str(user.get("goal_weight", "")),
@@ -37,15 +32,14 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
         )
 
         self.add_item(self.tama_name)
-        self.add_item(self.city)
         self.add_item(self.goal_weight)
 
     async def on_submit(self, interaction: discord.Interaction):
         await interaction.response.defer(ephemeral=True, thinking=True)
         try:
-            user_id = str(interaction.user.id)
-            old     = self._user
-            updates = {}
+            user_id  = str(interaction.user.id)
+            old      = self._user
+            updates  = {}
             messages = []
 
             # 이름 변경
@@ -53,28 +47,19 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
             if new_name != old.get("tamagotchi_name", ""):
                 updates["tamagotchi_name"] = new_name
                 messages.append(f"다마고치 이름: **{new_name}**")
-                # 쓰레드 이름 변경
                 thread_id = old.get("thread_id")
                 if thread_id:
-                    guild  = interaction.guild
-                    thread = guild.get_thread(int(thread_id))
+                    thread = interaction.guild.get_thread(int(thread_id))
                     if thread:
                         await thread.edit(
                             name=f"{interaction.user.display_name}의 {new_name}"
                         )
-
-            # 도시 변경
-            new_city = self.city.value.strip()
-            if new_city != old.get("city", ""):
-                updates["city"] = new_city
-                messages.append(f"거주 도시: **{new_city}**")
 
             # 목표 체중 변경
             new_goal = float(self.goal_weight.value.strip())
             if new_goal != old.get("goal_weight"):
                 updates["goal_weight"] = new_goal
                 messages.append(f"목표 체중: **{new_goal}kg**")
-                # 권장 칼로리 재계산
                 new_cal = await calculate_daily_calories(
                     gender=old.get("gender", "남"),
                     age=old.get("age", 25),
@@ -86,25 +71,95 @@ class SettingsModal(discord.ui.Modal, title="⚙️ 설정 변경"):
                 messages.append(f"권장 칼로리: **{new_cal} kcal/일**")
 
             if not updates:
-                await interaction.followup.send(
-                    "변경된 항목이 없어요!", ephemeral=True
-                )
+                await interaction.followup.send("변경된 항목이 없어요!", ephemeral=True)
                 return
 
             update_user(user_id, **updates)
-
             await interaction.followup.send(
                 "✅ 설정이 저장됐어요!\n" + "\n".join(f"• {m}" for m in messages),
                 ephemeral=True,
             )
 
         except Exception as e:
-            print(f"[SettingsModal 오류] {e}")
+            print(f"[InfoModal 오류] {e}")
             import traceback
             traceback.print_exc()
+            await interaction.followup.send(f"❌ 오류가 발생했어: {e}", ephemeral=True)
+
+
+# ══════════════════════════════════════════════════════
+# 위치 설정 Modal — 거주 도시
+# ══════════════════════════════════════════════════════
+class CityModal(discord.ui.Modal, title="📍 위치 설정"):
+
+    def __init__(self, user: dict, **kwargs):
+        super().__init__(**kwargs)
+        self._user = user
+
+        self.city = discord.ui.TextInput(
+            label="거주 도시",
+            placeholder="예: 서울, 부산, 대구, 인천",
+            default=user.get("city", ""),
+            max_length=20,
+        )
+        self.add_item(self.city)
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            user_id  = str(interaction.user.id)
+            new_city = self.city.value.strip()
+
+            if new_city == self._user.get("city", ""):
+                await interaction.followup.send("변경된 항목이 없어요!", ephemeral=True)
+                return
+
+            update_user(user_id, city=new_city)
             await interaction.followup.send(
-                f"❌ 오류가 발생했어: {e}", ephemeral=True
+                f"✅ 거주 도시가 **{new_city}**(으)로 변경됐어요!\n"
+                f"다음 기상 시간부터 새 도시의 날씨로 갱신돼요 🌤️",
+                ephemeral=True,
             )
+
+        except Exception as e:
+            print(f"[CityModal 오류] {e}")
+            import traceback
+            traceback.print_exc()
+            await interaction.followup.send(f"❌ 오류가 발생했어: {e}", ephemeral=True)
+
+
+# ══════════════════════════════════════════════════════
+# 설정 하위 메뉴 View
+# ══════════════════════════════════════════════════════
+class SettingsSubView(discord.ui.View):
+    def __init__(self, user: dict):
+        super().__init__(timeout=60)
+        self._user = user
+
+    @discord.ui.button(label="👤 내 정보", style=discord.ButtonStyle.primary, row=0)
+    async def info_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(InfoModal(user=self._user))
+
+    @discord.ui.button(label="📍 위치 설정", style=discord.ButtonStyle.secondary, row=0)
+    async def city_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await interaction.response.send_modal(CityModal(user=self._user))
+
+    @discord.ui.button(label="⏰ 시간 설정", style=discord.ButtonStyle.secondary, row=0)
+    async def time_btn(self, interaction: discord.Interaction, button: discord.ui.Button):
+        from cogs.time_settings import TimeStep1View
+        await interaction.response.send_message(
+            "⏰ **시간 설정** — 1단계\n\n"
+            "🌅 **기상 시간** — 시 / 분\n"
+            "🍳 **아침 알림** — 시 / 분",
+            view=TimeStep1View(user_id=str(interaction.user.id)),
+            ephemeral=True,
+        )
+
+
+# ══════════════════════════════════════════════════════
+# 하위 호환 — 기존 코드에서 SettingsModal을 직접 import하는 경우 대비
+# ══════════════════════════════════════════════════════
+SettingsModal = InfoModal
 
 
 class SettingsCog(commands.Cog):
