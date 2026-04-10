@@ -208,3 +208,24 @@ async def generate_comment(
         temperature=0.8,
     )
     return resp.choices[0].message.content.strip()
+
+
+# ── 이메일 요약 ────────────────────────────────────────
+async def summarize_email(subject: str, body: str) -> str:
+    """
+    수신 이메일을 3줄 이내로 요약.
+    ML 학습 레이블로 저장되어 추후 자체 모델로 교체 예정.
+    """
+    prompt = (
+        f"다음 이메일을 한국어로 3줄 이내로 핵심만 요약해줘.\n\n"
+        f"제목: {subject}\n\n"
+        f"본문:\n{body[:1500]}\n\n"
+        f"요약 (3줄 이내, 번호 없이 자연스럽게):"
+    )
+    resp = await _client.chat.completions.create(
+        model=MODEL,
+        messages=[{"role": "user", "content": prompt}],
+        max_tokens=150,
+        temperature=0.3,
+    )
+    return resp.choices[0].message.content.strip()

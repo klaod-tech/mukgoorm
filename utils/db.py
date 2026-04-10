@@ -104,6 +104,35 @@ def init_db():
         )
     """)
 
+    # 이메일 컬럼 마이그레이션 (v3.0)
+    for col, col_type in [("naver_email", "TEXT"), ("naver_app_pw", "TEXT"), ("email_last_uid", "INTEGER")]:
+        cur.execute(f"ALTER TABLE users ADD COLUMN IF NOT EXISTS {col} {col_type}")
+
+    # 알림 받을 발신자 목록
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS email_senders (
+            sender_id    SERIAL PRIMARY KEY,
+            user_id      TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+            sender_email TEXT NOT NULL,
+            nickname     TEXT,
+            created_at   TIMESTAMP DEFAULT NOW(),
+            UNIQUE (user_id, sender_email)
+        )
+    """)
+
+    # 수신 이메일 로그 (ML 학습 데이터)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS email_log (
+            log_id       SERIAL PRIMARY KEY,
+            user_id      TEXT REFERENCES users(user_id) ON DELETE CASCADE,
+            sender_email TEXT,
+            subject      TEXT,
+            summary_gpt  TEXT,
+            is_spam      BOOLEAN DEFAULT FALSE,
+            received_at  TIMESTAMP DEFAULT NOW()
+        )
+    """)
+
     conn.commit()
     cur.close()
     conn.close()
@@ -395,6 +424,98 @@ def add_badges(user_id: str, badge_ids: list):
     cur.execute(
         "UPDATE users SET badges = %s WHERE user_id = %s",
         (_json.dumps(merged, ensure_ascii=False), user_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+
+# ===== Email CRUD =====
+
+def set_email_credentials(user_id: str, naver_email: str, naver_app_pw: str):
+    """네이버 이메일 계정 정보 저장"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE users SET naver_email = %s, naver_app_pw = %s, email_last_uid = 0 WHERE user_id = %s",
+        (naver_email, naver_app_pw, user_id),
+    )
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def get_email_users():
+    """이메일 설정된 전체 유저 조회 (모니터링 스케줄러용)"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM users WHERE naver_email IS NOT NULL AND naver_app_pw IS NOT NULL")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def update_email_last_uid(user_id: str, uid: int):
+    """마지막으로 처리한 이메일 UID 갱신"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("UPDATE users SET email_last_uid = %s WHERE user_id = %s", (uid, user_id))
+    conn.commit()
+    cur.close()
+    conn.close()
+
+def add_email_sender(user_id: str, sender_email: str, nickname: str) -> bool:
+    """발신자 등록 (중복 시 False 반환)"""
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO email_senders (user_id, sender_email, nickname) VALUES (%s, %s, %s)",
+            (user_id, sender_email.lower(), nickname),
+        )
+        conn.commit()
+        return True
+    except Exception:
+        conn.rollback()
+        return False
+    finally:
+        cur.close()
+        conn.close()
+
+def remove_email_sender(user_id: str, sender_email: str) -> bool:
+    """발신자 삭제 (존재하지 않으면 False 반환)"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "DELETE FROM email_senders WHERE user_id = %s AND sender_email = %s RETURNING sender_id",
+        (user_id, sender_email.lower()),
+    )
+    deleted = cur.fetchone()
+    conn.commit()
+    cur.close()
+    conn.close()
+    return deleted is not None
+
+def get_email_senders(user_id: str) -> list:
+    """등록된 발신자 목록 조회"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "SELECT * FROM email_senders WHERE user_id = %s ORDER BY created_at ASC",
+        (user_id,),
+    )
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+def save_email_log(user_id: str, sender_email: str, subject: str, summary_gpt: str, is_spam: bool = False):
+    """이메일 수신 로그 저장 (ML 학습 데이터)"""
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO email_log (user_id, sender_email, subject, summary_gpt, is_spam)
+           VALUES (%s, %s, %s, %s, %s)""",
+        (user_id, sender_email, subject, summary_gpt, is_spam),
     )
     conn.commit()
     cur.close()

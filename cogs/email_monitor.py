@@ -1,0 +1,277 @@
+"""
+cogs/email_monitor.py — 이메일 수신 모니터링
+
+스케줄: 5분마다 전체 이메일 설정 유저 폴링
+흐름:
+  IMAP 수신 → 스팸 필터 → 등록 발신자 확인
+  → GPT 요약 → Discord 쓰레드 알림 → email_log 저장
+
+슬래시 커맨드:
+  /이메일설정   — Naver 계정 + 앱 비밀번호 등록
+  /발신자추가   — 알림 받을 발신자 이메일 등록
+  /발신자목록   — 등록된 발신자 목록 조회
+  /발신자삭제   — 발신자 삭제
+"""
+import asyncio
+import discord
+from discord import app_commands
+from discord.ext import commands
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+
+from utils.db import (
+    get_email_users, get_email_senders,
+    set_email_credentials, add_email_sender,
+    remove_email_sender, update_email_last_uid,
+    save_email_log, get_user,
+)
+from utils.mail import fetch_new_emails
+from utils.gpt import summarize_email
+
+
+# ══════════════════════════════════════════════════════
+# 이메일 설정 Modal
+# ══════════════════════════════════════════════════════
+class EmailSetupModal(discord.ui.Modal, title="📧 이메일 설정"):
+    naver_id = discord.ui.TextInput(
+        label="네이버 아이디",
+        placeholder="예: klaod  (@naver.com 제외)",
+        max_length=30,
+    )
+    app_pw = discord.ui.TextInput(
+        label="앱 비밀번호",
+        placeholder="네이버 보안설정 → 2단계 인증 → 앱 비밀번호",
+        max_length=20,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True, thinking=True)
+        try:
+            user_id   = str(interaction.user.id)
+            naver_id  = self.naver_id.value.strip().replace("@naver.com", "")
+            app_pw    = self.app_pw.value.strip()
+
+            # IMAP 연결 테스트
+            import imaplib
+            try:
+                mail = imaplib.IMAP4_SSL("imap.naver.com", 993)
+                mail.login(naver_id, app_pw)
+                mail.logout()
+            except imaplib.IMAP4.error:
+                await interaction.followup.send(
+                    "❌ 로그인 실패!\n아이디 또는 앱 비밀번호를 확인해줘.\n"
+                    "앱 비밀번호는 네이버 **보안설정 → 2단계 인증 → 앱 비밀번호**에서 발급받을 수 있어.",
+                    ephemeral=True,
+                )
+                return
+
+            set_email_credentials(user_id, naver_id, app_pw)
+            await interaction.followup.send(
+                f"✅ **{naver_id}@naver.com** 연결 완료!\n"
+                f"이제 `/발신자추가`로 알림 받을 발신자를 등록해봐 📬",
+                ephemeral=True,
+            )
+        except Exception as e:
+            print(f"[EmailSetupModal 오류] {e}")
+            await interaction.followup.send(f"❌ 오류: {e}", ephemeral=True)
+
+
+# ══════════════════════════════════════════════════════
+# 발신자 추가 Modal
+# ══════════════════════════════════════════════════════
+class SenderAddModal(discord.ui.Modal, title="📬 발신자 등록"):
+    sender_email = discord.ui.TextInput(
+        label="발신자 이메일",
+        placeholder="예: boss@company.com",
+        max_length=100,
+    )
+    nickname = discord.ui.TextInput(
+        label="별명 (구분용)",
+        placeholder="예: 사장님, 학교, 팀장",
+        max_length=20,
+    )
+
+    async def on_submit(self, interaction: discord.Interaction):
+        await interaction.response.defer(ephemeral=True)
+        user_id      = str(interaction.user.id)
+        sender_email = self.sender_email.value.strip().lower()
+        nickname     = self.nickname.value.strip()
+
+        # 기본 이메일 형식 검증
+        if "@" not in sender_email or "." not in sender_email.split("@")[-1]:
+            await interaction.followup.send(
+                "❌ 이메일 형식이 올바르지 않아!\n예: `boss@company.com`", ephemeral=True
+            )
+            return
+
+        success = add_email_sender(user_id, sender_email, nickname)
+        if success:
+            await interaction.followup.send(
+                f"✅ **{nickname}** (`{sender_email}`) 등록 완료!\n"
+                f"앞으로 이 주소에서 메일이 오면 여기에 알려줄게 📩",
+                ephemeral=True,
+            )
+        else:
+            await interaction.followup.send(
+                f"⚠️ `{sender_email}` 은 이미 등록된 발신자야!", ephemeral=True
+            )
+
+
+# ══════════════════════════════════════════════════════
+# 이메일 모니터링 Cog
+# ══════════════════════════════════════════════════════
+class EmailMonitorCog(commands.Cog):
+
+    def __init__(self, bot: commands.Bot):
+        self.bot       = bot
+        self.scheduler = AsyncIOScheduler(timezone="Asia/Seoul")
+        self.scheduler.add_job(
+            self._poll_all_users,
+            trigger="interval",
+            minutes=5,
+            id="email_poll",
+        )
+        self.scheduler.start()
+        print("[이메일] 모니터링 스케줄러 시작 (5분 간격)")
+
+    # ── 5분마다 전체 유저 폴링 ────────────────────────
+    async def _poll_all_users(self):
+        users = get_email_users()
+        if not users:
+            return
+        for user in users:
+            await self._poll_user(user)
+
+    async def _poll_user(self, user: dict):
+        user_id   = str(user["user_id"])
+        naver_id  = user.get("naver_email", "")
+        app_pw    = user.get("naver_app_pw", "")
+        last_uid  = int(user.get("email_last_uid") or 0)
+
+        senders_rows   = get_email_senders(user_id)
+        registered     = [row["sender_email"] for row in senders_rows]
+        nickname_map   = {row["sender_email"]: row["nickname"] for row in senders_rows}
+
+        if not registered:
+            return
+
+        try:
+            # 새 이메일 fetch (blocking → executor로 오프로드)
+            loop = asyncio.get_event_loop()
+            new_emails, max_uid = await loop.run_in_executor(
+                None,
+                fetch_new_emails,
+                naver_id, app_pw, registered, last_uid,
+            )
+        except Exception as e:
+            print(f"[이메일 폴링 오류] {user_id}: {e}")
+            return
+
+        # last_uid 갱신
+        if max_uid > last_uid:
+            update_email_last_uid(user_id, max_uid)
+
+        if not new_emails:
+            return
+
+        # 유저 쓰레드 가져오기
+        user_data = get_user(user_id)
+        thread_id = user_data.get("thread_id") if user_data else None
+        thread    = None
+        if thread_id:
+            for guild in self.bot.guilds:
+                thread = guild.get_thread(int(thread_id))
+                if thread:
+                    break
+
+        for mail_item in new_emails:
+            sender_email = mail_item["sender_email"]
+            sender_name  = mail_item["sender_name"] or sender_email
+            nickname     = nickname_map.get(sender_email, sender_name)
+            subject      = mail_item["subject"]
+            body         = mail_item["body"]
+
+            # GPT 요약
+            try:
+                summary = await summarize_email(subject, body)
+            except Exception as e:
+                print(f"[이메일 요약 오류] {e}")
+                summary = "요약을 가져오지 못했어요."
+
+            # email_log 저장 (ML 학습 데이터)
+            save_email_log(user_id, sender_email, subject, summary)
+
+            # Discord 쓰레드 알림
+            if thread:
+                embed = discord.Embed(
+                    title=f"📧 새 메일 — {nickname}",
+                    color=0x03C75A,  # 네이버 그린
+                )
+                embed.add_field(
+                    name="보낸 사람",
+                    value=f"{nickname} (`{sender_email}`)",
+                    inline=False,
+                )
+                embed.add_field(name="제목", value=subject or "(제목 없음)", inline=False)
+                embed.add_field(name="📝 요약", value=summary, inline=False)
+                embed.set_footer(text="네이버 메일에서 전체 내용을 확인하세요.")
+                await thread.send(embed=embed)
+                print(f"[이메일] {user_id} → Discord 알림 전송: {subject}")
+
+    # ── 슬래시 커맨드 ─────────────────────────────────
+
+    @app_commands.command(name="이메일설정", description="네이버 메일 연동 설정")
+    async def email_setup(self, interaction: discord.Interaction):
+        print(f"[CMD] /이메일설정 — {interaction.user}")
+        await interaction.response.send_modal(EmailSetupModal())
+
+    @app_commands.command(name="발신자추가", description="알림 받을 발신자 이메일 등록")
+    async def sender_add(self, interaction: discord.Interaction):
+        print(f"[CMD] /발신자추가 — {interaction.user}")
+        user = get_user(str(interaction.user.id))
+        if not user or not user.get("naver_email"):
+            await interaction.response.send_message(
+                "❌ 먼저 `/이메일설정`으로 네이버 계정을 연동해줘!", ephemeral=True
+            )
+            return
+        await interaction.response.send_modal(SenderAddModal())
+
+    @app_commands.command(name="발신자목록", description="등록된 발신자 목록 확인")
+    async def sender_list(self, interaction: discord.Interaction):
+        print(f"[CMD] /발신자목록 — {interaction.user}")
+        user_id = str(interaction.user.id)
+        senders = get_email_senders(user_id)
+        if not senders:
+            await interaction.response.send_message(
+                "등록된 발신자가 없어!\n`/발신자추가`로 추가해봐 📬", ephemeral=True
+            )
+            return
+        lines = [
+            f"`{i+1}.` **{row['nickname']}** — `{row['sender_email']}`"
+            for i, row in enumerate(senders)
+        ]
+        embed = discord.Embed(
+            title="📋 등록된 발신자 목록",
+            description="\n".join(lines),
+            color=0x5865F2,
+        )
+        embed.set_footer(text="삭제하려면 /발신자삭제 를 사용해줘")
+        await interaction.response.send_message(embed=embed, ephemeral=True)
+
+    @app_commands.command(name="발신자삭제", description="등록된 발신자 삭제")
+    @app_commands.describe(sender_email="삭제할 발신자 이메일")
+    async def sender_remove(self, interaction: discord.Interaction, sender_email: str):
+        print(f"[CMD] /발신자삭제 — {interaction.user} / {sender_email}")
+        user_id = str(interaction.user.id)
+        success = remove_email_sender(user_id, sender_email.strip())
+        if success:
+            await interaction.response.send_message(
+                f"✅ `{sender_email}` 삭제 완료!", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                f"❌ `{sender_email}` 은 등록되지 않은 발신자야.", ephemeral=True
+            )
+
+
+async def setup(bot: commands.Bot):
+    await bot.add_cog(EmailMonitorCog(bot))

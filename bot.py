@@ -27,6 +27,7 @@ COGS = [
     "cogs.weather",
     "cogs.meal",
     "cogs.weight",
+    "cogs.email_monitor",
 ]
 
 # on_ready 중복 실행 방지 플래그 (Discord 재연결 시 on_ready가 재호출됨)
