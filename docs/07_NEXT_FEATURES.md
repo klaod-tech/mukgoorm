@@ -201,7 +201,8 @@ N8N_FOOD_WEBHOOK_URL   # n8n 음식 추천 웹훅 URL
 
 ## Phase 4 — 일기봇 (bot_diary.py)
 
-> 상태: 설계 예정
+> 상태: 설계 완료, 구현 예정  
+> 상세 문서: [`docs/bots/diary/`](bots/diary/) — OVERVIEW / FLOWS / DB / IMPLEMENTATION / ML
 
 ### 개요
 
@@ -242,7 +243,8 @@ diary_log (
 
 ## Phase 5 — 일정봇 (bot_schedule.py)
 
-> 상태: 설계 예정
+> 상태: 설계 완료, 구현 예정  
+> 상세 문서: [`docs/bots/schedule/`](bots/schedule/) — OVERVIEW / FLOWS / DB / IMPLEMENTATION / ML
 
 ### 개요
 
@@ -290,18 +292,17 @@ schedules (
 ## 미결 사항
 
 ```
+n8n 연동 (Phase 3)
 [ ] n8n 응답 포맷 확정 (팀원)
 [ ] 위치 필드 address 컬럼 추가 결정
 [ ] N8N_FOOD_WEBHOOK_URL 환경변수 등록
 
-봇 분리 관련
-[ ] bot_meal.py 분리 설계 (식사 입력 / 칼로리 분석 / 스트릭)
-[ ] bot_weather.py 분리 설계 (날씨 / 미세먼지 스레드)
-[ ] bot_weight.py 설계 (체중 기록 + 칼로리 목표 동적 조정 통합)
-[ ] 봇별 Discord Application 생성 계획 (현재 2개: 먹구름, 이메일)
-[ ] 온보딩 시 유저별 스레드 다중 생성 방식 설계 (구름 / 날씨 / 체중관리 / 메일함)
+다음 봇 구현
+[ ] bot_weight.py — cogs.weight 이전 + 체중 목표 동적 조정 통합
+[ ] bot_diary.py  — 구현 코드: docs/bots/diary/IMPLEMENTATION.md
+[ ] bot_schedule.py — 구현 코드: docs/bots/schedule/IMPLEMENTATION.md
 
-장기
-[ ] 일기봇 / 일정봇 설계 착수 시점 결정
-[ ] 호스팅 배포 방식 결정 (Railway / Render / VPS — 다중 프로세스 지원 필요)
+배포
+[ ] 호스팅 방식 결정 (Railway / Render / VPS — 4개 봇 프로세스 동시 배포)
+[ ] .env → 플랫폼 시크릿 이전
 ```
