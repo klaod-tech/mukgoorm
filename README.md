@@ -1,8 +1,39 @@
 # 🌧️ 먹구름 (mukgoorm)
 
-디스코드에서 동작하는 1인 1캐릭터 식습관 관리 봇.
-음식을 입력하면 나만의 캐릭터에게 밥을 주는 행위로 연결되고,
-**칼로리 관리와 날씨 정보를 수치가 아닌 캐릭터 이미지와 대사로 간접 전달**합니다.
+디스코드에서 동작하는 1인 1캐릭터 라이프스타일 관리 멀티봇.  
+음식을 입력하면 나만의 캐릭터에게 밥을 주는 행위로 연결되고,  
+**칼로리·날씨·체중·이메일 정보를 수치가 아닌 캐릭터 이미지와 대사로 간접 전달**합니다.
+
+---
+
+## 🤖 멀티봇 구조 (v3.2)
+
+기능별로 독립된 봇 프로세스로 분리되어 있으며, 모든 봇이 하나의 Supabase DB를 공유합니다.
+
+```
+Discord 서버  #먹구름 채널
+│
+├── bot.py          먹구름봇     온보딩 · 설정 · 식사(텍스트) · 스케줄러 · 캐릭터 관리
+├── bot_mail.py     메일봇       IMAP 1분 폴링 · 이메일 알림 · 발신자 관리
+├── bot_meal.py     식사봇       사진 식사 감지 · GPT-4o Vision · 칼로리 분석
+├── bot_weather.py  날씨봇       기상청 API · 미세먼지 · 기상 시간 자동 알림
+├── bot_weight.py   체중관리봇   체중 기록 · 목표 달성 · 추이 관리  [skeleton → 분리 예정]
+├── bot_diary.py    일기봇       일기 작성 · 감정 분석  [미구현]
+└── bot_schedule.py 일정봇       일정 등록 · 알림 · 반복  [미구현]
+                                         ↓ 전체 공유
+                                   Supabase DB
+```
+
+### 유저별 전용 쓰레드 (온보딩 시 자동 생성)
+
+```
+#먹구름 채널
+└── {이름}의 구름      ← 먹구름봇  (캐릭터 Embed, 칼로리 판정, 배지)
+    {이름}의 식사 기록  ← 식사봇    (사진 분석 결과)
+    {이름}의 날씨      ← 날씨봇    (기상 시 날씨 Embed)
+    {이름}의 체중관리   ← 체중관리봇 (체중 기록, 목표 달성)
+    {이름}의 메일함    ← 메일봇    (이메일 알림)
+```
 
 ---
 
@@ -10,42 +41,60 @@
 
 ```
 mukgoorm/
-├── bot.py                      # 먹구름 봇 진입점 (식사/날씨/설정)
-├── bot_mail.py                 # 메일봇 진입점 (IMAP 1분 폴링 전용)
-├── database.py                 # init_db 수동 실행용
+├── bot.py              먹구름봇 진입점
+├── bot_mail.py         메일봇 진입점
+├── bot_meal.py         식사봇 진입점
+├── bot_weather.py      날씨봇 진입점
+├── bot_weight.py       체중관리봇 진입점 (skeleton)
+├── bot_diary.py        일기봇 진입점 (미구현)
+├── bot_schedule.py     일정봇 진입점 (미구현)
+│
 ├── cogs/
-│   ├── onboarding.py           # 온보딩 Modal + 스레드 생성
-│   ├── meal.py                 # 식사 입력 (텍스트 / GPT-4o Vision 사진)
-│   ├── weather.py              # 날씨 연동 + wake_time 기반 이미지 교체
-│   ├── summary.py              # 오늘 요약 (Ephemeral)
-│   ├── settings.py             # 설정 변경 (이름/도시/목표체중/이메일)
-│   ├── time_settings.py        # 시간 설정 Select Menu (2단계)
-│   ├── scheduler.py            # APScheduler (칼로리 판정 / 식사 알림 / 스트릭·배지 / 주간 리포트)
-│   ├── weight.py               # 체중 기록 + 달성률
-│   └── email_monitor.py        # 메일봇 전용 — IMAP 폴링 + Discord 알림
+│   ├── onboarding.py       온보딩 Modal + 쓰레드 5개 자동 생성
+│   ├── meal.py             사진 식사 감지 (bot_meal.py 전용)
+│   ├── weather.py          날씨 연동 + wake_time 스케줄러 (bot_weather.py 전용)
+│   ├── email_monitor.py    IMAP 폴링 + Discord 알림 (bot_mail.py 전용)
+│   ├── weight.py           체중 기록 + 달성률 (bot.py 임시 → bot_weight.py 이전 예정)
+│   ├── summary.py          오늘 요약 Ephemeral
+│   ├── settings.py         설정 하위 메뉴 (내정보/위치/시간/이메일)
+│   ├── time_settings.py    시간 설정 Select Menu (2단계)
+│   └── scheduler.py        APScheduler (칼로리 판정 / 식사 알림 / 주간 리포트)
+│
 ├── utils/
-│   ├── gpt.py                  # OpenAI GPT-4o 래퍼
-│   ├── db.py                   # Supabase CRUD (7개 테이블)
-│   ├── embed.py                # 메인 Embed UI + 버튼 + MealInputModal
-│   ├── image.py                # 상태별 이미지 선택 로직 (11종)
-│   ├── badges.py               # 도전과제 배지 7종 정의 + 달성 체크
-│   ├── pattern.py              # 식습관 패턴 분석 (ML)
-│   ├── ml.py                   # 칼로리 보정 모델 (ML)
-│   ├── gpt_ml_bridge.py        # ML → GPT 브릿지
-│   ├── email_ui.py             # 이메일 공통 Modal (EmailSetupModal, SenderAddModal)
-│   ├── mail.py                 # 네이버 IMAP/SMTP 클라이언트
-│   └── nutrition.py            # 식약처 식품영양성분 DB API
-├── images/                     # 다마고치 이미지 11종
+│   ├── db.py               Supabase CRUD 전체 (모든 봇 공유)
+│   ├── gpt.py              GPT-4o 래퍼 (파싱 / Vision / 대사 / 이메일 요약)
+│   ├── embed.py            메인 Embed UI + 버튼 + MealInputModal
+│   ├── image.py            11종 이미지 우선순위 선택 로직
+│   ├── badges.py           배지 7종 정의 + 달성 체크
+│   ├── pattern.py          식습관 패턴 5종 분석
+│   ├── ml.py               칼로리 보정 모델 (Ridge / RandomForest)
+│   ├── gpt_ml_bridge.py    ML 결과 → GPT 프롬프트 브릿지
+│   ├── nutrition.py        식약처 식품영양성분 DB API + GPT fallback
+│   ├── mail.py             네이버 IMAP / SMTP 클라이언트
+│   └── email_ui.py         이메일 공통 Modal (먹구름봇·메일봇 공유)
+│
+├── images/                 캐릭터 이미지 11종 (.png)
+├── models/                 유저별 칼로리 보정 모델 (.pkl)
 ├── docs/
-│   ├── CONTEXT.md              # 문서 인덱스
-│   ├── 01_OVERVIEW.md          # 개요, 기술스택, 버전 히스토리
-│   ├── 02_FLOWS.md             # 전체 기능 흐름
-│   ├── 03_DATABASE.md          # DB 스키마 + CRUD 함수
-│   ├── 04_GAME_RULES.md        # 수치 변화 + 이미지 규칙 + 스트릭/배지 규칙
-│   ├── 05_ML_MODULES.md        # ML 모듈 설명
-│   ├── 06_PROGRESS.md          # 진행 상황 + 버전 변경 내역
-│   ├── 07_NEXT_FEATURES.md     # 다음 개발 계획
-│   └── 08_EMAIL.md             # 이메일 모니터링 상세
+│   ├── 01_OVERVIEW.md      개요 · 기술스택 · 멀티봇 구조 · 버전 히스토리
+│   ├── 02_FLOWS.md         전체 기능 흐름 (봇별 처리 주체 명시)
+│   ├── 03_DATABASE.md      DB 스키마 · 테이블 소유권 · CRUD 함수
+│   ├── 04_GAME_RULES.md    수치 변화 · 이미지 규칙 · 스트릭/배지 규칙
+│   ├── 05_ML_MODULES.md    ML 모듈 설명 · 봇별 ML 로드맵
+│   ├── 06_PROGRESS.md      구현 현황 · 이전 예정 항목 · 버그 목록
+│   ├── 07_NEXT_FEATURES.md 다음 개발 계획
+│   ├── 08_EMAIL.md         이메일 모니터링 상세
+│   ├── PRODUCTION_ROADMAP.md  전체 Phase 제작 순서
+│   └── bots/               봇별 상세 문서
+│       ├── 00_INDEX.md
+│       ├── mukgoorm/ROADMAP.md
+│       ├── meal/ROADMAP.md
+│       ├── weather/ROADMAP.md
+│       ├── email/ROADMAP.md
+│       ├── weight/ROADMAP.md
+│       ├── diary/ROADMAP.md
+│       └── schedule/ROADMAP.md
+│
 ├── .env
 └── requirements.txt
 ```
@@ -55,85 +104,119 @@ mukgoorm/
 ## 🚀 실행 방법
 
 ### 1. 패키지 설치
+
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 2. 환경변수 설정
-`.env` 파일을 프로젝트 루트에 배치하세요.
 
-### 3. 봇 실행 (터미널 2개)
+`.env` 파일을 프로젝트 루트에 배치 (아래 환경변수 섹션 참고)
+
+### 3. 봇 실행 (터미널 4개)
+
 ```bash
-# 터미널 1 — 먹구름 봇 (식사/날씨/설정)
+# 터미널 1 — 먹구름봇 (온보딩 / 설정 / 식사텍스트 / 스케줄러)
 python bot.py
 
-# 터미널 2 — 메일봇 (이메일 1분 폴링)
+# 터미널 2 — 메일봇 (IMAP 1분 폴링 / 이메일 알림)
 python bot_mail.py
+
+# 터미널 3 — 식사봇 (사진 식사 감지 / GPT Vision)
+python bot_meal.py
+
+# 터미널 4 — 날씨봇 (기상청 API / wake_time 알림)
+python bot_weather.py
 ```
 
 ### 4. 디스코드 최초 설정
-봇이 켜진 후, 관리자 계정으로 `#다마고치` 채널에서:
+
+봇 실행 후 관리자 계정으로 `#먹구름` 채널에서:
+
 ```
 !setup
 ```
-명령어 실행 → 고정 메시지 + 시작하기 버튼 생성
+
+→ 고정 메시지 + [🐣 다마고치 시작하기] 버튼 생성
 
 ---
 
 ## ⚙️ 환경변수 (.env)
 
-| 변수명 | 설명 |
-|--------|------|
-| `DISCORD_TOKEN` | 먹구름 봇 토큰 |
-| `DISCORD_TOKEN_EMAIL` | 메일봇 토큰 |
-| `OPENAI_API_KEY` | OpenAI API 키 |
-| `WEATHER_API_KEY` | 기상청 공공데이터 포털 인증키 |
-| `AIR_API_KEY` | 에어코리아 API 키 (미세먼지) |
-| `FOOD_API_KEY` | 식약처 식품영양성분 DB API 키 |
-| `DATABASE_URL` | Supabase Session pooler URL (`postgresql://...`) |
-| `TAMAGOTCHI_CHANNEL_ID` | `#다마고치` 채널 ID |
+| 변수명 | 설명 | 상태 |
+|--------|------|------|
+| `DISCORD_TOKEN` | 먹구름봇 토큰 | 필수 |
+| `DISCORD_TOKEN_EMAIL` | 메일봇 토큰 | 필수 |
+| `DISCORD_TOKEN_MEAL` | 식사봇 토큰 | 필수 |
+| `DISCORD_TOKEN_WEATHER` | 날씨봇 토큰 | 필수 |
+| `DISCORD_TOKEN_WEIGHT` | 체중관리봇 토큰 | 발급 필요 |
+| `DISCORD_TOKEN_DIARY` | 일기봇 토큰 | 미구현 |
+| `DISCORD_TOKEN_SCHEDULE` | 일정봇 토큰 | 미구현 |
+| `OPENAI_API_KEY` | OpenAI API 키 | 필수 |
+| `WEATHER_API_KEY` | 기상청 공공데이터 포털 인증키 | 필수 |
+| `AIR_API_KEY` | 에어코리아 API 키 (미세먼지) | 필수 |
+| `FOOD_API_KEY` | 식약처 식품영양성분 DB API 키 | 필수 |
+| `DATABASE_URL` | Supabase Session pooler URL | 필수 |
+| `TAMAGOTCHI_CHANNEL_ID` | `#먹구름` 채널 ID | 필수 |
+| `N8N_FOOD_WEBHOOK_URL` | n8n 음식 추천 웹훅 URL | 팀원 확정 후 |
+
+> **이메일 수신 계정**은 `.env`가 아닌 유저가 디스코드 설정 버튼으로 직접 입력합니다.  
+> → Supabase `users.naver_email / naver_app_pw`에 유저별 저장
 
 ---
 
 ## 🛠️ 기술 스택
 
-- **Python 3.11+**
-- **discord.py 2.x** — 디스코드 봇
-- **OpenAI GPT-4o** — 칼로리 분석 / Vision / 대사 생성 / 이메일 요약
-- **Supabase (PostgreSQL)** — 클라우드 DB (psycopg2-binary)
-- **APScheduler** — 날씨 교체 / 칼로리 자동 판정 / 식사 알림 / 이메일 폴링 / 주간 리포트
-- **기상청 공공데이터 API** — 날씨 정보
-- **에어코리아 API** — 미세먼지 정보
-- **식약처 식품영양성분 DB API** — 공식 영양 정보
-- **네이버 IMAP/SMTP** — 이메일 모니터링
-- **scikit-learn / pandas** — ML 칼로리 보정 + 식습관 패턴 분석
+| 분류 | 기술 |
+|------|------|
+| 언어 | Python 3.11+ |
+| 디스코드 | discord.py 2.x (slash commands, View/Modal) |
+| AI | OpenAI GPT-4o (자연어 파싱 · Vision · 대사 생성 · 이메일 요약) |
+| 영양 DB | 식약처 식품영양성분 DB API (1순위) + GPT fallback |
+| 날씨 | 기상청 공공데이터 API (초단기실황) |
+| 미세먼지 | 에어코리아 API (PM10 · PM2.5) |
+| 이메일 | 네이버 IMAP SSL / SMTP |
+| DB | Supabase (PostgreSQL) + psycopg2-binary Session pooler |
+| 스케줄러 | APScheduler AsyncIOScheduler |
+| ML | scikit-learn (Ridge · RandomForest) · pandas · numpy |
+| 칼로리 공식 | Mifflin-St Jeor |
 
 ---
 
-## 🤖 멀티봇 구조
+## 🎮 메인 Embed 버튼 (v2.9~)
 
 ```
-[먹구름 봇]              [메일봇]
-식사 / 날씨 / 설정        IMAP 1분 폴링
-이메일 설정 UI            Discord 스레드 알림
-       ↓                        ↓
-      ┌──────────────────────────┐
-      │      Supabase DB (공유)  │
-      └──────────────────────────┘
+[ 🍽️ 식사 입력 ]  [ 📋 하루 정리 ]  [ 🍜 뭐 먹고 싶어? ]
+[ ⚙️ 설정 ]       [ ⚖️ 체중 기록 ]
 ```
+
+| 버튼 | 처리 봇 | 동작 |
+|------|---------|------|
+| 🍽️ 식사 입력 | 먹구름봇 (텍스트) / 식사봇 (사진) | 텍스트 → GPT 파싱 + 식약처 API / 사진 → GPT Vision |
+| 📋 하루 정리 | 먹구름봇 | 칼로리·탄단지·끼니·체중·날씨·GPT 7개 필드 Ephemeral |
+| 🍜 뭐 먹고 싶어? | 먹구름봇 | n8n 웹훅 POST → 음식 추천 (준비 중) |
+| ⚙️ 설정 | 먹구름봇 | 하위 메뉴: 내정보 / 위치 / 시간 / 이메일 |
+| ⚖️ 체중 기록 | 먹구름봇* | 체중 입력 → 달성률 + GPT 반응 |
+
+> *체중 기록은 현재 먹구름봇에서 처리. bot_weight.py 분리 후 체중관리봇으로 이전 예정.
 
 ---
 
-## 🎮 메인 Embed 버튼
+## ⏱️ 스케줄러 동작 요약
 
-| Row | 버튼 | 동작 |
-|-----|------|------|
-| 0 | 🍽️ 식사 입력 | 텍스트/사진 선택 → GPT 분석 + ML 칼로리 보정 |
-| 0 | 📊 오늘 요약 | 칼로리/탄단지/끼니별 내역 Ephemeral |
-| 0 | 📅 오늘 일정 | 목표칼로리/체중현황/식사시간/날씨 Ephemeral |
-| 1 | ⚙️ 설정 변경 | 이름/도시/목표체중/이메일 하위 메뉴 |
-| 1 | ⏰ 시간 설정 | 기상/식사 알림 시간 Select Menu (2단계) |
-| 1 | ⚖️ 체중 기록 | 체중 입력 → 달성률 + GPT 반응 |
+| 시각 | 담당 봇 | 동작 |
+|------|---------|------|
+| 매 1분 | 메일봇 | IMAP 폴링 → 새 메일 Discord 알림 |
+| 유저 wake_time | 날씨봇 | 기상청·에어코리아 API → 날씨 Embed 자동 전송 |
+| 식사시간 -30분 | 먹구름봇 | 쓰레드에 배고픔 예고 메시지 |
+| 식사시간 정각 | 먹구름봇 | 미입력 시 upset.png + GPT 대사 |
+| 식사시간 +1시간 | 먹구름봇 | 미입력 시 추가 GPT 대사 |
+| 매 시간 정각 | 먹구름봇 | 전체 유저 hunger -5 |
+| 매일 22:00 | 먹구름봇 | 칼로리 판정 + 스트릭 갱신 + 배지 체크 |
+| 매주 일요일 03:00 | 먹구름봇* | ML 칼로리 보정 모델 재학습 |
+| 매주 일요일 08:00 | 먹구름봇 | 주간 리포트 (칼로리·끼니·체중·스트릭·배지) |
+
+> *ML 재학습 Job은 추후 식사봇(bot_meal.py)으로 이전 예정.
 
 ---
 
@@ -141,28 +224,12 @@ python bot_mail.py
 
 | 항목 | 내용 |
 |------|------|
-| 폴링 간격 | 1분 (메일봇 전용 이벤트 루프) |
+| 처리 봇 | 메일봇 (bot_mail.py) |
+| 폴링 간격 | 1분 |
 | 지원 메일 | 네이버 메일 (IMAP SSL) |
-| 알림 조건 | 등록된 발신자 + 스팸 키워드 미포함 |
-| 요약 방식 | 본문 ≤200자 → 원문 그대로 / >200자 → GPT 요약 |
-| 표시 정보 | 보낸 사람, 📅 발송 일시, 제목, 요약 |
-
-상세: [`docs/08_EMAIL.md`](docs/08_EMAIL.md)
-
----
-
-## 🏅 스케줄러 동작 요약
-
-| 시각 | 담당 | 동작 |
-|------|------|------|
-| 매 1분 | 메일봇 | IMAP 폴링 → 새 메일 Discord 알림 |
-| 매일 식사시간 -30분 | 먹구름 | 스레드에 배고픔 예고 메시지 |
-| 매일 식사시간 정각 | 먹구름 | 미입력 시 upset.png + GPT 대사 |
-| 매일 식사시간 +1시간 | 먹구름 | 미입력 시 추가 대사 |
-| 매 시간 정각 | 먹구름 | hunger -5 (전체 유저) |
-| 매일 22:00 | 먹구름 | 하루 칼로리 판정 + 스트릭 + 배지 체크 |
-| 매주 일요일 03:00 | 먹구름 | ML 칼로리 보정 모델 재학습 |
-| 매주 일요일 08:00 | 먹구름 | 주간 리포트 |
+| 알림 조건 | 등록 발신자 + 스팸 필터 3단계 통과 |
+| 요약 방식 | 본문 ≤200자 → 원문 / >200자 → GPT 요약 |
+| 슬래시 커맨드 | `/이메일설정` `/발신자추가` `/발신자목록` `/발신자삭제` |
 
 ---
 
@@ -174,41 +241,76 @@ python bot_mail.py
 | 🔥 3일 연속 | 3일 연속 식사 기록 |
 | 🌟 일주일 달인 | 7일 연속 |
 | 👑 한 달 챔피언 | 30일 연속 |
-| 🎯 목표 달성 10회 | 목표 칼로리 90% 이상 달성일 10일 |
+| 🎯 목표 달성 10회 | 목표 칼로리 90% 이상 달성 10일 |
 | 📸 사진 마스터 | 사진 입력 10회 |
 | 🌅 아침형 인간 | 아침 기록 7회 |
 
-배지 달성 시 골드 Embed 전송 + 메인 이미지 `cheer.png` 갱신.
-
 ---
 
-## 🖼️ 다마고치 이미지 목록 (11종)
+## 🖼️ 캐릭터 이미지 (11종)
 
 | 이미지 | 표시 조건 | 우선순위 |
 |--------|-----------|---------|
-| `cheer.png` | 목표 체중 달성 / 배지 획득 | 1 |
-| `eat.png` | 식사 입력 직후 3분 이내 | 2 |
-| `upset.png` | hunger < 40 (배고픔) | 3 |
-| `wear mask.png` | PM10 > 80 또는 PM2.5 > 35 | 4 |
-| `rainy.png` | 비/소나기 | 4 |
+| `cheer.png` | 목표 달성 / 배지 획득 | 1 |
+| `eat.png` | 식사 입력 직후 3분 | 2 |
+| `upset.png` | 배고픔 (hunger < 40) | 3 |
+| `wear_mask.png` | PM10 > 80 또는 PM2.5 > 35 | 4 |
+| `rainy.png` | 비 / 소나기 | 4 |
 | `snow.png` | 눈 | 4 |
 | `hot.png` | 기온 ≥ 26°C | 4 |
 | `warm.png` | 기온 ≤ 5°C | 4 |
 | `tired.png` | hp < 40 또는 mood < 40 | 5 |
-| `smile.png` | hp ≥ 70, hunger ≥ 70, mood ≥ 70 | 5 |
+| `smile.png` | 상태 양호 (hp·hunger·mood ≥ 70) | 5 |
 | `normal.png` | 기본값 | 5 |
+
+> hp / hunger / mood 수치는 내부 전용 — 유저에게 직접 노출하지 않습니다.
 
 ---
 
-## 📋 버전
+## 📊 DB 테이블 구조
 
-현재 버전: **v3.1** (2026-04-13)
-전체 변경 이력: [`docs/06_PROGRESS.md`](docs/06_PROGRESS.md)
-이메일 기능 상세: [`docs/08_EMAIL.md`](docs/08_EMAIL.md)
-다음 개발 계획: [`docs/07_NEXT_FEATURES.md`](docs/07_NEXT_FEATURES.md)
+| 테이블 | 소유 봇 | 주요 내용 |
+|--------|---------|----------|
+| `users` | 공통 | 유저 정보, 시간 설정, 쓰레드 ID, 이메일 자격증명 |
+| `tamagotchi` | 먹구름봇 | hp / hunger / mood / 현재 이미지 |
+| `meals` | 먹구름봇(텍스트) + 식사봇(사진) | 식사 기록, 칼로리, 영양소 |
+| `weather_log` | 날씨봇 | 날씨·기온·미세먼지 기록 |
+| `weight_log` | 체중관리봇 | 체중 기록 |
+| `email_senders` | 메일봇 | 발신자 화이트리스트 |
+| `email_log` | 메일봇 | 수신 이메일 로그 |
+| `diary_log` | 일기봇 (예정) | 일기 원문 + 감정 분석 |
+| `schedules` | 일정봇 (예정) | 일정·반복·알림 상태 |
+
+상세: [`docs/03_DATABASE.md`](docs/03_DATABASE.md)
+
+---
+
+## 🗺️ 개발 로드맵
+
+| Phase | 버전 | 내용 |
+|-------|------|------|
+| 현재 | v3.2 | 멀티봇 4개 운영 (먹구름·메일·식사·날씨) |
+| 다음 | v3.3 | 체중관리봇 분리 + n8n 음식 추천 연동 |
+| 예정 | v3.4 | 일기봇 (감정 분석 + 식사×감정 교차 분석) |
+| 예정 | v3.5 | 일정봇 (일정 등록 + APScheduler 알림) |
+| 장기 | v4.0 | 오케스트레이터 전환 (GPT 의도 파싱 → 전문봇 자동 트리거) |
+
+상세: [`docs/PRODUCTION_ROADMAP.md`](docs/PRODUCTION_ROADMAP.md)
 
 ---
 
 ## 📖 상세 문서
 
-프로젝트 상세 문서는 [`docs/CONTEXT.md`](docs/CONTEXT.md)를 참고하세요.
+| 문서 | 내용 |
+|------|------|
+| [`docs/01_OVERVIEW.md`](docs/01_OVERVIEW.md) | 개요 · 기술스택 · 멀티봇 구조 |
+| [`docs/02_FLOWS.md`](docs/02_FLOWS.md) | 전체 기능 흐름 (봇별 처리 주체 명시) |
+| [`docs/03_DATABASE.md`](docs/03_DATABASE.md) | DB 스키마 · 테이블 소유권 |
+| [`docs/05_ML_MODULES.md`](docs/05_ML_MODULES.md) | ML 모듈 · 봇별 ML 로드맵 |
+| [`docs/06_PROGRESS.md`](docs/06_PROGRESS.md) | 구현 현황 · 이전 예정 · 버그 목록 |
+| [`docs/PRODUCTION_ROADMAP.md`](docs/PRODUCTION_ROADMAP.md) | 전체 Phase 제작 순서 |
+| [`docs/bots/00_INDEX.md`](docs/bots/00_INDEX.md) | 봇별 상세 문서 인덱스 |
+
+---
+
+현재 버전: **v3.2** (2026-04-13)

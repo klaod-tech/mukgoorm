@@ -1,50 +1,94 @@
 # 진행 상황 (v3.2 기준 — 2026-04-13)
 
-## 구현 완료
+---
 
-| 파일 | 기능 | 상태 |
-|------|------|------|
-| `utils/db.py` | Supabase CRUD (users/tamagotchi/meals/weather_log/weight_log/email_senders/email_log), 마이그레이션 컬럼 자동 추가, `set_email_credentials(initial_uid)` 시그니처 수정 | ✅ 완료 (v3.1) |
-| `utils/gpt.py` | GPT-4o 래퍼 (칼로리 계산, 식사 분석, 자연어 파싱, 대사 생성, 이메일 요약) | ✅ 완료 |
-| `utils/image.py` | 이미지 선택 로직 (우선순위 5단계, 11종 이미지) | ✅ 완료 |
-| `utils/embed.py` | 메인 Embed + 5개 버튼 (2행) + MealInputSelectView + MealInputModal + daily_button(하루 정리 통합), 칼로리 0 저장 차단, 식사 중복 제출 방지 (`_meal_submitting`) | ✅ 완료 (v2.9) |
-| `utils/ml.py` | 칼로리 보정 모델 (양 표현 즉시 + Ridge/RF 개인화) | ✅ 완료 |
-| `utils/pattern.py` | 식습관 패턴 분석 (5가지 패턴 탐지) | ✅ 완료 |
-| `utils/gpt_ml_bridge.py` | ML 결과 → GPT 주입 브릿지 | ✅ 완료 |
-| `utils/email_ui.py` | EmailSetupModal + SenderAddModal 공통 모달 분리 (먹구름/메일봇 양쪽 import) | ✅ 완료 (v3.1) |
-| `utils/mail.py` | IMAP `fetch_new_emails()` (sent_at 발송 일시 반환 추가), 스팸 필터, SMTP `send_email()`, 헤더 디코딩 헬퍼 | ✅ 완료 (v3.1) |
-| `cogs/onboarding.py` | 4필드 Modal, 쓰레드 생성, 첫 Embed 전송, TimeStep1View 유도, gender/age/height 저장, 식사 알림 Job 등록, 입력 형식 오류 시 안내 메시지, 쓰레드 삭제 후 재등록 허용 | ✅ 완료 |
-| `cogs/time_settings.py` | Select Menu 2단계 시간 설정, 분 10분 단위, 저장 시 식사 알림 Job 재등록 | ✅ 완료 |
-| `cogs/meal.py` | 사진 입력 2경로 (버튼 60초 대기 / 직접 업로드), `_build_analysis_embed` 헬퍼, 칼로리 0 저장 차단 | ✅ 완료 |
-| `cogs/summary.py` | 오늘 요약 (칼로리/탄단지/끼니별/GPT 코멘트) | ✅ 완료 |
-| `cogs/weather.py` | 기상청+에어코리아 API, wake_time 기반 스케줄러 | ✅ 완료 |
-| `cogs/settings.py` | SettingsSubView (내 정보/위치/시간/이메일), EmailSubView, import 경로 → `utils.email_ui` 변경 | ✅ 완료 (v3.1) |
-| `cogs/weight.py` | 체중 기록, 달성률 바, 목표 달성 판정 | ✅ 완료 |
-| `cogs/scheduler.py` | 22:00 칼로리 판정, 매시간 hunger 감소, 식사 알림 3단계 Job, ML 재학습(일 03:00), 주간 리포트(일 08:00), 스트릭/배지 체크 | ✅ 완료 |
-| `cogs/email_monitor.py` | 메일봇 전용 — APScheduler **1분** IMAP 폴링, 200자 이하 원문 / 초과 GPT 요약, 발송 일시 embed 표시, 슬래시 커맨드 4종 | ✅ 완료 (v3.1) |
-| `utils/badges.py` | 배지 7종 정의, 스트릭·DB 기반 신규 배지 체크 로직 | ✅ 완료 |
-| `utils/nutrition.py` | 식약처 식품영양성분 DB API 래퍼, fallback GPT | ✅ 완료 (v2.8) |
-| `bot.py` | 먹구름봇 진입점 — weather/meal 제거, weight/onboarding 등 6개 cog | ✅ 완료 (v3.2) |
-| `bot_mail.py` | 메일봇 전용 진입점, email_monitor 단독 로드 | ✅ 완료 (v3.1) |
-| `bot_meal.py` | 식사봇 진입점 — cogs.meal 단독 로드 | ✅ 완료 (v3.2) |
-| `bot_weather.py` | 날씨봇 진입점 — cogs.weather 단독 로드 | ✅ 완료 (v3.2) |
-| `bot_weight.py` | 체중관리봇 진입점 — skeleton (향후 cogs.weight 이전 시 활성화) | 🔄 skeleton |
+## 봇별 구현 현황
+
+| 봇 | 파일 | Cog | 상태 | 비고 |
+|----|------|-----|------|------|
+| 먹구름봇 | `bot.py` | onboarding, summary, settings, time_settings, scheduler, weight* | ✅ 운영 | *weight 임시 |
+| 메일봇 | `bot_mail.py` | email_monitor | ✅ 운영 | |
+| 식사봇 | `bot_meal.py` | meal | ✅ 운영 | |
+| 날씨봇 | `bot_weather.py` | weather | ✅ 운영 | |
+| 체중관리봇 | `bot_weight.py` | (미로드) | 🔄 skeleton | cogs.weight 이전 필요 |
+| 일기봇 | `bot_diary.py` | 미구현 | 📋 예정 | v3.4 |
+| 일정봇 | `bot_schedule.py` | 미구현 | 📋 예정 | v3.5 |
 
 ---
 
-## 미구현
+## 구현 완료 (파일별)
 
-### P1 — 호스팅 배포
-- Railway / Render / VPS 중 선택
-- `.env` → 플랫폼 시크릿 이전
-- `develop` → `main` 머지 후 배포
-- **4개 봇 프로세스 모두 배포 필요**: bot.py / bot_mail.py / bot_meal.py / bot_weather.py
+### 봇 진입점
 
-### 다음 — 미구현 기능
-상세 내용: [`07_NEXT_FEATURES.md`](07_NEXT_FEATURES.md)
-- **일기봇** (v3.3): diary_log 테이블 + 감정 분석 + 식사×감정 데이터 누적
-- **일정봇** (v3.4): schedule_log 테이블 + APScheduler 알림
-- **n8n 음식 추천**: `🍜 뭐 먹고 싶어?` 버튼 → n8n 웹훅 POST
+| 파일 | 내용 | 버전 |
+|------|------|------|
+| `bot.py` | 먹구름봇 — onboarding/summary/settings/time_settings/scheduler/weight(임시) 로드 | v3.2 |
+| `bot_mail.py` | 메일봇 — email_monitor 단독 로드 | v3.1 |
+| `bot_meal.py` | 식사봇 — cogs.meal 단독 로드 | v3.2 |
+| `bot_weather.py` | 날씨봇 — cogs.weather 단독 로드 | v3.2 |
+| `bot_weight.py` | 체중관리봇 skeleton — cogs.weight 미활성화 | 🔄 |
+
+### Cogs
+
+| 파일 | 내용 | 버전 |
+|------|------|------|
+| `cogs/onboarding.py` | 4필드 Modal, 쓰레드 5개 생성, Embed 전송, 식사 알림 Job 등록 | v3.2 |
+| `cogs/time_settings.py` | Select Menu 2단계 시간 설정, 10분 단위, Job 재등록 | v2.4 |
+| `cogs/meal.py` | 사진 입력 2경로, GPT Vision, 칼로리 0 차단 | v3.2 |
+| `cogs/summary.py` | 오늘 요약 Ephemeral (칼로리/탄단지/끼니/GPT) | v2.9 |
+| `cogs/weather.py` | 기상청+에어코리아, wake_time 스케줄러, 50개+ 도시 | v3.2 |
+| `cogs/settings.py` | SettingsSubView (내정보/위치/시간/이메일 하위 메뉴) | v3.1 |
+| `cogs/weight.py` | 체중 기록, 달성률 바, 목표 달성 판정 | v3.2 |
+| `cogs/scheduler.py` | 22:00 판정, hourly decay, 식사 알림 3단계, ML 재학습, 주간 리포트 | v3.2 |
+| `cogs/email_monitor.py` | 1분 IMAP 폴링, 스팸 필터, GPT 요약, 슬래시 커맨드 4종 | v3.1 |
+
+### Utils
+
+| 파일 | 내용 | 버전 |
+|------|------|------|
+| `utils/db.py` | 전체 CRUD + 마이그레이션 + 쓰레드 setter 6개 + meal_waiting 3개 | v3.2 |
+| `utils/gpt.py` | GPT-4o 래퍼 (파싱/분석/대사/Vision/이메일요약) | v3.1 |
+| `utils/embed.py` | 메인 Embed + 5버튼 + View/Modal 빌더 | v2.9 |
+| `utils/image.py` | 11종 이미지 우선순위 선택 | v1.8 |
+| `utils/ml.py` | 칼로리 보정 (즉시+Ridge/RF 개인화) | v2.6 |
+| `utils/pattern.py` | 식습관 패턴 5종 탐지 | v2.6 |
+| `utils/gpt_ml_bridge.py` | ML 결과 → GPT 프롬프트 주입 | v2.6 |
+| `utils/badges.py` | 배지 7종, 달성 체크 | v2.7 |
+| `utils/nutrition.py` | 식약처 API + GPT fallback | v2.8 |
+| `utils/mail.py` | 네이버 IMAP/SMTP, 헤더 디코딩, KST 변환 | v3.1 |
+| `utils/email_ui.py` | EmailSetupModal + SenderAddModal 공통 모달 | v3.1 |
+
+---
+
+## 미구현 / 진행 예정
+
+### bot.py → 각 봇으로 이전 필요
+
+| 항목 | 현재 위치 | 이전 대상 | 상태 |
+|------|-----------|-----------|------|
+| `cogs.weight` | bot.py (임시 로드) | bot_weight.py | 🔄 다음 작업 |
+| `_weekly_ml_retrain` | cogs/scheduler.py | bot_meal.py | 📋 예정 |
+| 주간 리포트 체중 섹션 | cogs/scheduler.py | bot_weight.py | 📋 예정 |
+| 식사 알림 쓰레드 라우팅 | `_get_thread(thread_id)` | `meal_thread_id or thread_id` | 📋 예정 |
+
+### 버그 / 안정화
+
+| 우선순위 | 항목 | 파일 | 내용 |
+|---------|------|------|------|
+| P2 | `generate_comment_with_pattern()` 파라미터 불일치 | `utils/gpt_ml_bridge.py:73` | 미호출 데드코드, 수정 후 pattern 연동 활성화 |
+| P2 | 식약처 숫자+단위 검색 500 오류 | `utils/nutrition.py` | 검색어 전처리 정규식 추가 |
+| P2 | 여러 끼니 동시 입력 시 첫 번째만 저장 | `utils/embed.py MealInputModal` | 쉼표 분리 + 다중 파싱 |
+| P2 | 사진 대기 만료 후 안내 메시지 없음 | `cogs/meal.py` | 만료 감지 → 재시도 안내 |
+
+### 신규 봇 구현
+
+| 봇 | 버전 | 상세 |
+|----|------|------|
+| 체중관리봇 분리 | v3.3 | [`docs/bots/weight/ROADMAP.md`](bots/weight/ROADMAP.md) |
+| n8n 음식 추천 | v3.3 | [`docs/bots/mukgoorm/ROADMAP.md`](bots/mukgoorm/ROADMAP.md) Phase 3 |
+| 일기봇 | v3.4 | [`docs/bots/diary/ROADMAP.md`](bots/diary/ROADMAP.md) |
+| 일정봇 | v3.5 | [`docs/bots/schedule/ROADMAP.md`](bots/schedule/ROADMAP.md) |
+| 오케스트레이터 전환 | v4.0 | [`docs/bots/mukgoorm/ROADMAP.md`](bots/mukgoorm/ROADMAP.md) Phase 4 |
 
 ---
 
