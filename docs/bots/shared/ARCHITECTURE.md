@@ -31,7 +31,8 @@ DISCORD_TOKEN_DIARY        # 일기봇 (예정)
 DISCORD_TOKEN_SCHEDULE     # 일정봇 (예정)
 
 # ── 채널 / 서버 ───────────────────────────────
-TAMAGOTCHI_CHANNEL_ID      # 봇 전용 채널 ID (쓰레드 조회 기준)
+TAMAGOTCHI_CHANNEL_ID      # 온보딩 진입점 채널 ID (v3.2: 다마고치 채널)
+TAMAGOTCHI_CATEGORY_ID     # 유저 전용 채널 생성 카테고리 ID (v4.0~)
 
 # ── API 키 (모든 봇 공유) ─────────────────────
 OPENAI_API_KEY             # GPT-4o (자연어 파싱, Vision, 대사 생성)
@@ -40,8 +41,8 @@ WEATHER_API_KEY            # 기상청 공공데이터 포털
 AIR_API_KEY                # 에어코리아 미세먼지
 FOOD_API_KEY               # 식약처 식품영양성분 DB
 
-# ── 추가 예정 ─────────────────────────────────
-N8N_FOOD_WEBHOOK_URL       # n8n 음식 추천 웹훅
+# ── n8n (웹훅 URL 수령 후 등록) ───────────────
+N8N_FOOD_WEBHOOK_URL       # n8n 음식 추천 웹훅 (이미 구성됨, URL만 등록)
 ```
 
 ---
