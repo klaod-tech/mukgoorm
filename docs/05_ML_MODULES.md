@@ -211,17 +211,63 @@
 
 ---
 
-### 먹구름봇 (bot.py) — GPT 영구 유지
+### 먹구름봇 (bot.py) — GPT + ML 하이브리드 전략
 
-| 기능 | 이유 |
-|------|------|
-| 자연어 파싱 | 한국어 구어체 이해, 규칙으로 대체 불가 |
-| 봇 트리거 의도 분류 | 복합 의도 파악 (식사+일기+일정 동시) |
-| 대사/코멘트 생성 | 생성형 태스크, ML 대체 불가 |
-| 식사×감정 인사이트 주입 | ML 분석 결과를 GPT 대사에 자연스럽게 녹임 |
+| 기능 | 현재 | 목표 |
+|------|------|------|
+| **의도 분류** (어느 봇 트리거할지) | GPT 100% | ML 전환 (50건+ 개인화, 비용 절감) |
+| **엔티티 추출** ("비빔밥", "내일 오후 3시") | GPT | GPT 유지 (생성형) |
+| **대사/코멘트 생성** | GPT | GPT 유지 (생성형) |
+| **식사×감정 인사이트 주입** | GPT | GPT 유지 (ML 결과를 대사에 녹임) |
 
-> ML 대체 대상이 아님. GPT 비용은 오케스트레이터 호출에 집중,
-> 전문봇들의 ML 전환으로 전체 GPT 호출 수를 줄이는 전략.
+> **ML 전환 대상**: 의도 분류만 (meal/diary/schedule/weight/none).  
+> 복합 의도 파악이나 엔티티 추출은 GPT 유지.
+
+---
+
+## 의도 분류기 (utils/intent_classifier.py — v4.0 예정)
+
+**역할**: 유저 발화에서 어느 전문봇을 트리거할지 분류
+
+**학습 데이터**: `intent_log` 테이블 (GPT가 분류한 결과 누적)
+
+```python
+# utils/intent_classifier.py
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+import pickle
+
+class IntentClassifier:
+    """
+    유저별 개인화 의도 분류기.
+    활성화 조건: 유저당 intent_log 50건+
+    재학습: 매주 일요일 03:30 (ML 재학습과 동일 주기)
+    저장: models/intent_{user_id}.pkl
+    """
+    def predict(self, user_id: str, text: str) -> str | None:
+        # None 반환 시 GPT fallback
+        ...
+```
+
+**GPT → ML 전환 흐름**:
+
+```
+1. 유저가 전용 채널에 메시지 입력
+2. ML 분류기 predict() 시도
+   ├── 모델 있음 → ML 의도 분류 (빠름, 비용 0)
+   └── 모델 없음(50건 미만) → GPT 의도 분류
+3. GPT 분류 시: intent_log 저장 (학습 데이터 축적)
+4. 50건+ 누적 → 매주 재학습 → ML 전환 완료
+5. ML 전환 후: GPT는 엔티티 추출만 사용
+```
+
+**ML 로드맵**:
+
+| 단계 | 기능 | 방법 | 조건 |
+|------|------|------|------|
+| 현재 | 의도 분류 | GPT (레이블 누적) | — |
+| ML 전환 | 의도 분류 | TF-IDF + LogisticRegression | 유저당 50건+ |
+| 고도화 | 복합 의도 처리 | Multi-label 분류 | 수백 건+ |
 
 ---
 
@@ -230,12 +276,13 @@
 | 기능 | 봇 | 방법 | 데이터 소스 | 상태 |
 |------|-----|------|------------|------|
 | 칼로리 보정 | 식사봇 | Ridge/RF | `meals` | ✅ 진행 중 |
+| **의도 분류** | 먹구름봇 | TF-IDF + LogisticRegression | `intent_log` | 📋 v4.0 예정 |
 | 이메일 요약 | 메일봇 | Extractive → Abstractive | `email_log.summary_gpt` | 데이터 누적 중 |
 | 스팸 분류 고도화 | 메일봇 | Naive Bayes / SVM | `email_log.is_spam` | 데이터 누적 중 |
 | 음식 추천 개인화 | 식사봇 | Collaborative Filtering | `meals` 선택 이력 | 일정봇 개발 후 |
 | 체중 추이 예측 | 체중관리봇 | 회귀 | `weight_log` × `meals` | 예정 |
 | 칼로리 목표 동적 조정 | 체중관리봇 | Q-Learning | `weight_log` + `meals` | 예정 |
-| 감정 분석 | 일기봇 | KoBERT / 분류기 | `diary_log` | 일기봇 개발 후 |
-| 식사 × 감정 상관관계 | 먹구름봇 주입 | 교차 분석 | `diary_log` × `meals` | 일기봇 개발 후 |
-| 일정 패턴 학습 | 일정봇 | 시퀀스 분석 | `schedules` | 일정봇 개발 후 |
+| 감정 분석 | 일기봇 | KoBERT / 분류기 | `diary_log` | 일기봇 구상 단계 |
+| 식사 × 감정 상관관계 | 먹구름봇 주입 | 교차 분석 | `diary_log` × `meals` | 일기봇 구상 단계 |
+| 일정 패턴 학습 | 일정봇 | 시퀀스 분석 | `schedules` | 일정봇 구상 단계 |
 | 한식 이미지 인식 | 식사봇 | CNN MobileNetV3 | 사진 + AI Hub | 장기 |
