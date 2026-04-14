@@ -73,16 +73,19 @@ badges           TEXT    DEFAULT '[]'  -- 획득 배지 ID JSON 배열 (v2.7)
 created_at       TIMESTAMP DEFAULT NOW()
 ```
 
-### 쓰레드 ID Fallback 규칙
+### 쓰레드/채널 ID Fallback 규칙
 
-각 봇은 전용 쓰레드 ID가 NULL인 기존 유저를 위해 반드시 fallback 적용:
+각 봇은 신규 ID가 NULL인 기존 v3.2 유저를 위해 반드시 fallback 적용:
 
 ```python
-# 올바른 패턴 (전 봇 공통)
-target_id = user.get("meal_thread_id") or user.get("thread_id")
-target_id = user.get("weather_thread_id") or user.get("thread_id")
-target_id = user.get("weight_thread_id") or user.get("thread_id")
-target_id = user.get("mail_thread_id") or user.get("thread_id")
+# 유저 요청 응답 (식사봇, 체중봇, 일기봇 등): 전용 채널 → fallback 메인 쓰레드
+channel_id = user.get("personal_channel_id") or user.get("thread_id")
+
+# Push 알림 (날씨봇, 일정봇): 알림 쓰레드 → fallback 메인 쓰레드
+info_id = user.get("info_thread_id") or user.get("thread_id")
+
+# Push 알림 (메일봇): 메일 쓰레드 → fallback 메인 쓰레드
+mail_id = user.get("mail_thread_id") or user.get("thread_id")
 ```
 
 ---
@@ -264,17 +267,16 @@ created_at   TIMESTAMP DEFAULT NOW()
 | `update_streak(user_id, streak, max_streak)` | 연속 기록일 업데이트 | v2.7 |
 | `add_badges(user_id, badge_ids)` | 배지 JSON 배열에 추가 | v2.7 |
 
-### 쓰레드 ID Setter
+### 채널/쓰레드 ID Setter
 
 | 함수 | 설명 | 버전 |
 |------|------|------|
-| `set_mail_thread_id(user_id, thread_id)` | 메일봇 쓰레드 ID 저장 | v3.0 |
-| `set_meal_thread_id(user_id, thread_id)` | 식사봇 쓰레드 ID 저장 | v3.2 |
-| `set_weather_thread_id(user_id, thread_id)` | 날씨봇 쓰레드 ID 저장 | v3.2 |
-| `set_weight_thread_id(user_id, thread_id)` | 체중관리봇 쓰레드 ID 저장 | v3.2 |
-| `set_diary_thread_id(user_id, thread_id)` | 일기봇 쓰레드 ID 저장 | v3.4 예정 |
-| `set_schedule_thread_id(user_id, thread_id)` | 일정봇 쓰레드 ID 저장 | v3.5 예정 |
 | `set_personal_channel_id(user_id, channel_id)` | 유저 전용 채널 ID 저장 | v4.0 예정 |
+| `set_info_thread_id(user_id, thread_id)` | Push 알림 쓰레드 ID 저장 (날씨+일정) | v4.0 예정 |
+| `set_mail_thread_id(user_id, thread_id)` | 메일봇 쓰레드 ID 저장 | v3.0 |
+| ~~`set_meal_thread_id`~~ | v4.0에서 제거 (personal_channel 직접 응답) | — |
+| ~~`set_weather_thread_id`~~ | v4.0에서 제거 (info_thread 통합) | — |
+| ~~`set_weight_thread_id`~~ | v4.0에서 제거 (personal_channel 직접 응답) | — |
 
 ### 식사봇 대기 상태
 

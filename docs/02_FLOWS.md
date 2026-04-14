@@ -291,8 +291,7 @@ _poll_user(user):
 
 [식사 알림 — 유저별 3단계 Job]
   식사시간 -30분 → _meal_reminder()
-    → 메인 쓰레드: "{이름}이(가) 슬슬 배가 고파지고 있어!"
-    ※ TODO: meal_thread_id or thread_id 로 변경 예정
+    → personal_channel_id or thread_id: "{이름}이(가) 슬슬 배가 고파지고 있어!"
   식사시간 정각  → _meal_upset() (미입력 시)
     → GPT 대사 (배고파서) + upset.png Embed 갱신
   식사시간 +1시간 → _meal_late() (미입력 시)
