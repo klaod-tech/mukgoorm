@@ -374,26 +374,26 @@ _poll_user(user):
 
 ```
 [예상 흐름]
-자연어: "오늘 하루 적고 싶어" → 먹구름봇 감지 → 일기봇 트리거
+자연어: "오늘 하루 적고 싶어" → 먹구름봇 감지 → task_queue INSERT → 일기봇 poll
   또는 /일기작성 슬래시 커맨드
   → DiaryInputModal (500자 자유 작성)
   → GPT 감정 분석: 긍정/부정/중립 + 감정 키워드
   → DB diary_log 저장
-  → diary_thread_id 쓰레드에 감정 Embed 전송
-매주 일요일 09:00 → 주간 감정 리포트 자동 전송
+  → personal_channel_id에 감정 Embed 직접 응답  ← 쓰레드 아님
+매주 일요일 09:00 → 주간 감정 리포트 자동 전송 (info_thread_id)
 ```
 
 ### 일정봇 흐름 (v3.5 — UX 구상 단계)
 
 ```
 [예상 흐름]
-자연어: "다음 주 월요일 병원 예약 있어" → 먹구름봇 감지 → 일정봇 트리거
+자연어: "다음 주 월요일 병원 예약 있어" → 먹구름봇 감지 → task_queue INSERT → 일정봇 poll
   또는 /일정등록 슬래시 커맨드
-  → ScheduleInputModal (제목, 날짜, 시간, 반복)
+  → GPT-4o 날짜/시간 파싱
   → DB schedules 저장
-  → APScheduler DateTrigger → 지정 시간 알림
-  → schedule_thread_id 쓰레드에 알림 Embed 전송
-매일 08:00 → 오늘 일정 브리핑 자동 전송
+  → personal_channel_id에 등록 완료 Embed 직접 응답  ← 쓰레드 아님
+  → APScheduler DateTrigger → 지정 시간 도달 시 info_thread_id에 알림 Embed 전송  ← Push
+매일 08:00 → 오늘 일정 브리핑 (info_thread_id에 자동 전송)  ← Push
 ```
 
 ### 오케스트레이터 자연어 라우팅 (v4.0 예정)
@@ -404,14 +404,24 @@ _poll_user(user):
   → [1단계] GPT 의도 분류 (meal/diary/schedule/weight/none)
     → task_queue 테이블 삽입 (bot_target, user_id, payload)
     → intent_log 저장 (학습 데이터 축적)
-  → 각 전문봇 30초 폴링 → 태스크 처리 → 전용 쓰레드에 결과 전송
+    → 먹구름봇은 여기서 종료 (서브봇으로 반환받지 않음)
+
+  → 각 서브봇 5~30초 폴링 → 태스크 처리 → personal_channel_id에 직접 응답
+      (메인봇 개입 없음 — 서브봇이 채널 권한을 가짐)
 
   → [2단계, v4.0 이후] ML 의도 분류기 (50건+ 누적 시)
     TF-IDF + LogisticRegression으로 GPT 의도 분류 대체
     GPT는 엔티티 추출만 담당 (비용 절감 + 개인화)
 
+응답 위치 규칙:
+  - 유저 요청에 대한 응답    → personal_channel_id (서브봇 직접)
+  - 자동 Push 알림 (날씨)   → info_thread_id (날씨봇)
+  - 자동 Push 알림 (일정)   → info_thread_id (일정봇)
+  - 이메일 수신 알림         → mail_thread_id (메일봇)
+
 예: "오늘 점심에 비빔밥이랑 콜라 먹었어"
-  → 식사봇 트리거 (비빔밥, 콜라 각각 분석)
+  → 식사봇: personal_channel_id에 칼로리 분석 Embed
 예: "다음 주에 제주도 여행 가"
-  → 일정봇 트리거 + 날씨봇 트리거 (제주도 날씨 미리 조회)
+  → 일정봇: personal_channel_id에 등록 완료 응답
+     (여행 당일 기상 시) → info_thread_id에 날씨 알림
 ```
