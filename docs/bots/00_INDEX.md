@@ -17,38 +17,44 @@ docs/bots/
 ├── mukgoorm/                ← 먹구름봇 (오케스트레이터)
 │   ├── OVERVIEW.md          역할, Cog 목록, 버튼 구조
 │   ├── FLOWS.md             온보딩, 식사입력, 하루정리, 설정 흐름
-│   └── SCHEDULER.md         APScheduler 전체 Job 목록 및 로직
+│   ├── SCHEDULER.md         APScheduler 전체 Job 목록 및 로직
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (체중분리/n8n/오케스트레이터)
 ├── meal/                    ← 식사봇
 │   ├── OVERVIEW.md          역할, 현재 구현 상태, bot 파일
 │   ├── FLOWS.md             사진 감지 흐름 (2경로), 봇 간 협력
 │   ├── DB.md                meals 테이블, DB 함수 목록
-│   └── ML.md                칼로리 보정 ML 현황 및 계획
+│   ├── ML.md                칼로리 보정 ML 현황 및 계획
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (안정화/직접업로드/n8n)
 ├── weather/                 ← 날씨봇
 │   ├── OVERVIEW.md          역할, 스케줄러 구조
 │   ├── FLOWS.md             날씨 알림 흐름, 스케줄러 동작
-│   └── API.md               기상청/에어코리아 API 상세
+│   ├── API.md               기상청/에어코리아 API 상세
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (안정화/도시확장/대기질)
 ├── weight/                  ← 체중관리봇
 │   ├── OVERVIEW.md          역할, 현재 상태 (skeleton)
 │   ├── FLOWS.md             체중 기록 흐름, 프로그레스 바
 │   ├── DB.md                weight_log 테이블
-│   └── ROADMAP.md           봇 이전 절차, Phase별 구현 계획
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (봇분리/그래프/ML)
 ├── email/                   ← 이메일봇
 │   ├── OVERVIEW.md          역할, 슬래시 커맨드 목록
 │   ├── FLOWS.md             IMAP 폴링 흐름, 스팸 필터 3단계
 │   ├── DB.md                email_senders/email_log 테이블
-│   └── ML.md                스팸 분류 ML 계획
+│   ├── ML.md                스팸 분류 ML 계획
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (안정화/분류/SMTP/ML)
 ├── diary/                   ← 일기봇 (구현 예정)
 │   ├── OVERVIEW.md          역할, 설계 원칙
 │   ├── FLOWS.md             일기 입력 흐름, 감정 분석
 │   ├── DB.md                diary_log 테이블 + 신규 함수 코드
 │   ├── IMPLEMENTATION.md    cogs/diary.py 전체 구현 코드
-│   └── ML.md                감정 분석, 식사×감정 상관관계
+│   ├── ML.md                감정 분석, 식사×감정 상관관계
+│   └── ROADMAP.md           ★ Phase별 제작 순서 (사전준비→구현→ML)
 └── schedule/                ← 일정봇 (구현 예정)
     ├── OVERVIEW.md          역할, 반복 일정 설계
     ├── FLOWS.md             일정 등록/알림/완료 흐름
     ├── DB.md                schedule_log 테이블 + 신규 함수 코드
     ├── IMPLEMENTATION.md    cogs/schedule.py 전체 구현 코드
-    └── ML.md                반복 패턴 ML 계획
+    ├── ML.md                반복 패턴 ML 계획
+    └── ROADMAP.md           ★ Phase별 제작 순서 (사전준비→구현→인사이트)
 ```
 
 ---
@@ -71,15 +77,17 @@ docs/bots/
 
 ## 봇 상태 요약
 
-| 봇 | 폴더 | 상태 | 토큰 |
-|----|------|------|------|
-| 먹구름봇 (오케스트레이터) | `mukgoorm/` | ✅ 운영 | `DISCORD_TOKEN` |
-| 메일봇 | `email/` | ✅ 완전 구현 | `DISCORD_TOKEN_EMAIL` |
-| 식사봇 | `meal/` | ✅ cog 구현 완료 | `DISCORD_TOKEN_MEAL` |
-| 날씨봇 | `weather/` | ✅ cog 구현 완료 | `DISCORD_TOKEN_WEATHER` |
-| 체중관리봇 | `weight/` | 🔄 이전 준비 완료 | `DISCORD_TOKEN_WEIGHT` |
-| 일기봇 | `diary/` | 📋 설계 완료, 구현 예정 | `DISCORD_TOKEN_DIARY` |
-| 일정봇 | `schedule/` | 📋 설계 완료, 구현 예정 | `DISCORD_TOKEN_SCHEDULE` |
+| 봇 | 폴더 | 상태 | 토큰 | 로드맵 |
+|----|------|------|------|--------|
+| 먹구름봇 (오케스트레이터) | `mukgoorm/` | ✅ 운영 (v3.2) | `DISCORD_TOKEN` | [ROADMAP](mukgoorm/ROADMAP.md) |
+| 메일봇 | `email/` | ✅ 운영 (v3.1) | `DISCORD_TOKEN_EMAIL` | [ROADMAP](email/ROADMAP.md) |
+| 식사봇 | `meal/` | ✅ 운영 (v3.2) | `DISCORD_TOKEN_MEAL` | [ROADMAP](meal/ROADMAP.md) |
+| 날씨봇 | `weather/` | ✅ 운영 (v3.2) | `DISCORD_TOKEN_WEATHER` | [ROADMAP](weather/ROADMAP.md) |
+| 체중관리봇 | `weight/` | 🔄 skeleton → 분리 필요 | `DISCORD_TOKEN_WEIGHT` (발급 필요) | [ROADMAP](weight/ROADMAP.md) |
+| 일기봇 | `diary/` | 📋 미구현 | `DISCORD_TOKEN_DIARY` (발급 필요) | [ROADMAP](diary/ROADMAP.md) |
+| 일정봇 | `schedule/` | 📋 미구현 | `DISCORD_TOKEN_SCHEDULE` (발급 필요) | [ROADMAP](schedule/ROADMAP.md) |
+
+전체 제작 순서 및 Phase 계획: [`docs/PRODUCTION_ROADMAP.md`](../PRODUCTION_ROADMAP.md)
 
 ---
 

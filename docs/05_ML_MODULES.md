@@ -1,6 +1,6 @@
 # ML 모듈 설명
 
-> last_updated: 2026-04-13
+> last_updated: 2026-04-13 | 현재 버전: v3.2
 
 ---
 
@@ -23,11 +23,25 @@
 
 ## 구성 파일 (현재)
 
-| 파일 | 역할 | 담당 봇 | 활성화 조건 |
-|------|------|---------|------------|
-| `utils/pattern.py` | 식습관 패턴 분석 → GPT 대사에 주입 | bot.py | 7일 이상 식사 데이터 |
-| `utils/ml.py` | GPT 칼로리 보정 (양 표현 + 개인화 모델) | bot_meal.py (예정) | 즉시 (양 표현), 30건+ (모델) |
-| `utils/gpt_ml_bridge.py` | ML 결과 → GPT System Prompt 브릿지 | bot.py | 항상 |
+| 파일 | 역할 | 현재 담당 봇 | 정착 위치 | 활성화 조건 |
+|------|------|------------|----------|------------|
+| `utils/pattern.py` | 식습관 패턴 5종 분석 → GPT 대사 주입 | bot.py | bot.py (유지) | 7일 이상 식사 데이터 |
+| `utils/ml.py` | 칼로리 보정 (양 표현 + 개인화 Ridge/RF) | bot.py (임시) | **bot_meal.py** (이전 예정) | 즉시 (양 표현), 30건+ (모델) |
+| `utils/gpt_ml_bridge.py` | ML 결과 → GPT System Prompt 브릿지 | bot.py | bot.py (유지) | 항상 |
+
+> **`utils/ml.py` 이전 계획**: ML 재학습 Job(`_weekly_ml_retrain`)이 현재 `cogs/scheduler.py`(먹구름봇)에 있음.  
+> 칼로리 ML은 식사 데이터 소유자인 **bot_meal.py**로 이전 예정 (v3.3 체중관리봇 분리 시 함께 진행).
+
+---
+
+## 알려진 버그 — gpt_ml_bridge.py
+
+```python
+# utils/gpt_ml_bridge.py:73
+# generate_comment_with_pattern() — 현재 미호출 (데드코드)
+# 호출부 시그니처와 함수 정의 불일치 → 실제 호출 시 크래시
+# 수정 후 pattern.py 연동 활성화 예정
+```
 
 ---
 
