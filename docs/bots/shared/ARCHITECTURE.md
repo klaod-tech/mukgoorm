@@ -95,20 +95,20 @@ if __name__ == "__main__":
 
 ### v4.0 목표 구조 (유저별 전용 채널)
 
-온보딩 시 유저 전용 채널 1개를 생성하고, 그 안에 기능봇별 쓰레드를 생성.
+온보딩 시 유저 전용 채널 1개 + **Push 전용 쓰레드 2개**만 생성.
 
-| 구분 | 이름 | DB 컬럼 | 담당 봇 |
+| 구분 | 이름 | DB 컬럼 | 용도 |
 |------|------|---------|---------|
-| **채널** | `#{이름}-채팅창` | `personal_channel_id` | 먹구름봇 (오케스트레이터 대화 공간) |
-| **쓰레드** | `🍽️ {이름}의 식사기록` | `meal_thread_id` | 식사봇 |
-| **쓰레드** | `🌤️ {이름}의 날씨` | `weather_thread_id` | 날씨봇 |
-| **쓰레드** | `⚖️ {이름}의 체중관리` | `weight_thread_id` | 체중관리봇 |
-| **쓰레드** | `📧 {이름}의 메일함` | `mail_thread_id` | 메일봇 |
-| **쓰레드** | `📔 {이름}의 일기장` | `diary_thread_id` | 일기봇 (v3.4~) |
-| **쓰레드** | `📅 {이름}의 일정표` | `schedule_thread_id` | 일정봇 (v3.5~) |
+| **채널** | `#{이름}-채팅창` | `personal_channel_id` | 오케스트레이터 대화 + 서브봇 직접 응답 공간 |
+| **쓰레드** | `🔔 {이름}의 알림` | `info_thread_id` | Push 전용: 날씨 기상 알림, 일정 D-day 알림, 주간 리포트 |
+| **쓰레드** | `📧 {이름}의 메일함` | `mail_thread_id` | Push 전용: 이메일 수신 알림 |
 
-> 캐릭터 상태 Embed는 유저 전용 채널에 **고정 메시지(pin)**로 표시.  
-> 채널 권한: 온보딩 시 해당 유저만 읽기/쓰기 가능하도록 자동 설정.
+> **설계 원칙**:
+> - 유저가 요청한 것 (식사 기록, 체중, 일기 등) → 서브봇이 `personal_channel_id`에 직접 응답
+> - 시스템이 자동 발송하는 Push → 쓰레드 (`info_thread_id` or `mail_thread_id`)
+> - 서브봇은 메인봇으로 결과를 반환하지 않음. `personal_channel_id` 권한을 직접 보유.
+>
+> 캐릭터 상태 Embed는 채널에 **고정 메시지(pin)**로 표시. 채널 권한: 해당 유저만 읽기/쓰기 가능.
 
 ### v3.2 현재 구조 (단일 채널 + 쓰레드)
 
@@ -125,12 +125,17 @@ if __name__ == "__main__":
 ### Fallback 패턴 (기존 유저 호환 — 반드시 사용)
 
 ```python
-# 전용 채널/쓰레드 ID가 없는 기존 유저 → 메인 thread_id로 fallback
-thread_id = user.get("weather_thread_id") or user.get("thread_id")
+# 유저 요청 응답: 전용 채널 없으면 메인 thread_id fallback
 channel_id = user.get("personal_channel_id") or user.get("thread_id")
+
+# Push 알림 (날씨/일정): info_thread_id 없으면 thread_id fallback
+info_id = user.get("info_thread_id") or user.get("thread_id")
+
+# 메일 알림: mail_thread_id 없으면 thread_id fallback
+mail_id = user.get("mail_thread_id") or user.get("thread_id")
 ```
 
-기존 유저는 신규 전용 채널/쓰레드 ID가 NULL → 메인 쓰레드(`thread_id`)로 자동 fallback.
+기존 유저(`personal_channel_id`, `info_thread_id` = NULL) → 메인 쓰레드(`thread_id`)로 자동 fallback.
 
 ---
 

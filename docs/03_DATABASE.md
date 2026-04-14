@@ -45,15 +45,13 @@ breakfast_time   TEXT NOT NULL         -- 아침 알림 HH:MM
 lunch_time       TEXT NOT NULL         -- 점심 알림 HH:MM
 dinner_time      TEXT NOT NULL         -- 저녁 알림 HH:MM
 
--- 채널 / 쓰레드 ID (봇별 전용)
-personal_channel_id TEXT               -- 유저 전용 채널 ID (v4.0 채널 구조 전환 시)
-thread_id        TEXT                  -- 메인 쓰레드 (fallback 기준, 기존 유저 호환용)
-mail_thread_id   TEXT                  -- 메일봇 전용 (v3.0)
-meal_thread_id   TEXT                  -- 식사봇 전용 (v3.2)
-weather_thread_id TEXT                 -- 날씨봇 전용 (v3.2)
-weight_thread_id  TEXT                 -- 체중관리봇 전용 (v3.2)
--- diary_thread_id  TEXT              -- 일기봇 전용 (v3.4 예정)
--- schedule_thread_id TEXT            -- 일정봇 전용 (v3.5 예정)
+-- 채널 / 쓰레드 ID
+personal_channel_id TEXT               -- 유저 전용 채널 ID (v4.0~, 오케스트레이터 대화 + 서브봇 응답)
+thread_id        TEXT                  -- 메인 쓰레드 (fallback 기준, 기존 v3.2 유저 호환용)
+info_thread_id   TEXT                  -- Push 알림 전용: 날씨 + 일정 알림 (v4.0~)
+mail_thread_id   TEXT                  -- 메일봇 Push 전용 (v3.0~)
+-- 제거: meal_thread_id, weather_thread_id, weight_thread_id, diary_thread_id, schedule_thread_id
+--   → v4.0부터 서브봇 응답은 personal_channel_id에 직접, 별도 기능별 쓰레드 없음
 
 -- 위치 정보
 -- city: 기존 (날씨 API용, 시 단위)
