@@ -70,13 +70,12 @@ CREATE TABLE users (
 
 | 컬럼 | 소유 봇 |
 |------|---------|
-| tamagotchi_name, city, wake_time, init_weight, goal_weight, daily_cal_target, breakfast_time, lunch_time, dinner_time, thread_id, gender, age, height | 먹구름봇 (온보딩) |
+| tamagotchi_name, city, wake_time, init_weight, goal_weight, daily_cal_target, breakfast_time, lunch_time, dinner_time, thread_id, gender, age, height, address | 먹구름봇 (온보딩) |
+| personal_channel_id, info_thread_id | 먹구름봇 (v4.0 온보딩) |
 | streak, max_streak, badges | 먹구름봇 (scheduler) |
 | naver_email, naver_app_pw, email_last_uid, mail_thread_id | 메일봇 |
-| meal_thread_id | 먹구름봇 (온보딩) |
-| weather_thread_id | 먹구름봇 (온보딩) |
-| weight_thread_id | 먹구름봇 (온보딩) |
-| meal_waiting_until | 먹구름봇 (embed.py), 식사봇 (clear) |
+| meal_waiting_until | 먹구름봇 (embed.py v3.2), 식사봇 (clear) |
+| ~~meal_thread_id, weather_thread_id, weight_thread_id~~ | [v3.2 호환용만 유지, v4.0~신규 봇은 미사용] |
 
 ---
 
@@ -280,16 +279,18 @@ CREATE TABLE schedule_log (
 | `get_email_senders(user_id)` | list[dict] | 발신자 목록 조회 |
 | `save_email_log(user_id, sender_email, subject, summary_gpt, is_spam=False)` | None | 수신 로그 저장 |
 
-### 멀티봇 쓰레드 ID Setters
+### 채널·쓰레드 ID Setters (v4.0)
 
 | 함수 | 반환 | 설명 |
 |------|------|------|
-| `set_meal_thread_id(user_id, thread_id)` | None | 식사 전용 쓰레드 ID |
-| `set_weather_thread_id(user_id, thread_id)` | None | 날씨 전용 쓰레드 ID |
-| `set_weight_thread_id(user_id, thread_id)` | None | 체중관리 전용 쓰레드 ID |
-| `set_meal_waiting(user_id, seconds=60)` | None | 사진 대기 만료 시각 설정 (NOW() + interval) |
-| `clear_meal_waiting(user_id)` | None | 사진 대기 해제 (NULL) |
-| `is_meal_waiting(user_id)` | bool | 사진 대기 중인지 확인 |
+| `set_personal_channel_id(user_id, channel_id)` | None | 유저 전용 채널 ID (v4.0 온보딩) |
+| `set_info_thread_id(user_id, thread_id)` | None | Push 알림 쓰레드 ID (날씨+일정 통합) |
+| `set_mail_thread_id(user_id, thread_id)` | None | 메일봇 Push 쓰레드 ID |
+| `set_meal_waiting(user_id, seconds=60)` | None | 사진 대기 만료 시각 설정 (v3.2 호환) |
+| `clear_meal_waiting(user_id)` | None | 사진 대기 해제 (v3.2 호환) |
+| `is_meal_waiting(user_id)` | bool | 사진 대기 중인지 확인 (v3.2 호환) |
+
+> ~~`set_meal_thread_id`, `set_weather_thread_id`, `set_weight_thread_id`~~ — v4.0~신규 봇에서 미사용.
 
 ---
 
@@ -310,17 +311,23 @@ cur.execute("CREATE TABLE IF NOT EXISTS new_table (...)")
 
 ---
 
-## 5. Fallback 패턴 (기존 유저 호환)
+## 5. Fallback 패턴 (기존 v3.2 유저 호환)
 
-신규 전용 쓰레드 컬럼이 NULL인 기존 유저를 위해 **반드시** 적용:
+v4.0 신규 컬럼이 NULL인 기존 유저를 위해 **반드시** 적용:
 
 ```python
-thread_id = user.get("meal_thread_id") or user.get("thread_id")
-thread_id = user.get("weather_thread_id") or user.get("thread_id")
-thread_id = user.get("weight_thread_id") or user.get("thread_id")
-thread_id = user.get("diary_thread_id") or user.get("thread_id")    # 추가 예정
-thread_id = user.get("schedule_thread_id") or user.get("thread_id") # 추가 예정
+# 유저 요청 응답 (식사봇, 체중봇, 일기봇 등)
+channel_id = user.get("personal_channel_id") or user.get("thread_id")
+
+# Push 알림 (날씨봇, 일정봇)
+info_id = user.get("info_thread_id") or user.get("thread_id")
+
+# 메일 알림 (메일봇)
+mail_id = user.get("mail_thread_id") or user.get("thread_id")
 ```
+
+> v3.2 기존 유저는 `personal_channel_id`, `info_thread_id` = NULL → `thread_id` fallback 동작.  
+> v3.2 개별 thread ID (meal/weather/weight)는 기존 코드에서 계속 동작하되, 신규 봇 개발 시 사용하지 않음.
 
 ---
 
