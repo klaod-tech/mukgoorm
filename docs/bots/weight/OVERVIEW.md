@@ -10,7 +10,7 @@
 | 토큰 환경변수 | `DISCORD_TOKEN_WEIGHT` |
 | 커맨드 prefix | `!weight_` |
 | 담당 Cog | `cogs/weight.py` → `WeightCog` |
-| 담당 쓰레드 | `users.weight_thread_id` (fallback: `thread_id`) |
+| 응답 위치 | `users.personal_channel_id` (v4.0~, 직접 응답), fallback: `thread_id` |
 | 담당 DB 테이블 | `weight_log` (소유) |
 | 현재 상태 | 🔄 skeleton (WeightCog 구현됨, bot_weight.py는 아직 미활성화) |
 
@@ -48,7 +48,7 @@
    - 유지 → 응원
 6. 프로그레스 바 계산: `(init_weight → weight) / (init_weight → goal_weight)`
 7. Embed 전송 (ephemeral=True)
-8. 목표 달성 시: `weight_thread_id or thread_id` 쓰레드에 `create_or_update_embed(goal_achieved=True)`
+8. 목표 달성 시: `personal_channel_id or thread_id` 채널에 `create_or_update_embed(goal_achieved=True)`
 
 ---
 
