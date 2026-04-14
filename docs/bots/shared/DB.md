@@ -53,11 +53,16 @@ CREATE TABLE users (
     email_last_uid   INTEGER,                    -- 마지막 처리 이메일 UID
     mail_thread_id   TEXT,                       -- 메일 전용 쓰레드 ID
 
-    -- v3.2 마이그레이션 (멀티봇 분리)
-    meal_thread_id     TEXT,                     -- 식사 전용 쓰레드 ID
-    weather_thread_id  TEXT,                     -- 날씨 전용 쓰레드 ID
-    weight_thread_id   TEXT,                     -- 체중관리 전용 쓰레드 ID
-    meal_waiting_until TIMESTAMP                 -- 사진 입력 대기 만료 시각
+    -- v3.2 마이그레이션 (멀티봇 분리) — v4.0에서 아래 thread ID들 사용 중단
+    meal_thread_id     TEXT,                     -- [v3.2 호환용, v4.0~폐기] 식사 전용 쓰레드
+    weather_thread_id  TEXT,                     -- [v3.2 호환용, v4.0~폐기] 날씨 전용 쓰레드
+    weight_thread_id   TEXT,                     -- [v3.2 호환용, v4.0~폐기] 체중관리 전용 쓰레드
+    meal_waiting_until TIMESTAMP,                -- 사진 입력 대기 만료 시각 (v3.2 호환)
+
+    -- v4.0 마이그레이션 (전용 채널 + Push 전용 쓰레드)
+    personal_channel_id TEXT,                    -- 유저 전용 채널 (오케스트레이터 대화 + 서브봇 응답)
+    info_thread_id      TEXT,                    -- Push 전용: 날씨 기상 알림 + 일정 D-day 알림
+    address             TEXT                     -- 음식 추천용 주소 (구/동 단위, nullable)
 )
 ```
 
