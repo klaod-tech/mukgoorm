@@ -74,30 +74,58 @@ Row 1: [ ⚙️ 설정 ]      [ ⚖️ 체중 기록 ]
 
 ## 온보딩 흐름 — [먹구름봇]
 
+### v4.0 목표 (유저별 전용 채널 방식)
+
 ```
-[🐣 다마고치 시작하기] 클릭
-  → OnboardingModal (4개 필드)
+#먹구름-시작 채널의 [🐣 다마고치 시작하기] 클릭
+  → OnboardingModal (5개 필드)
       - tamagotchi_name: 캐릭터 이름
-      - city: 거주 도시 (날씨 API용)
+      - city: 거주 도시 (날씨 API용, 시 단위)
+      - address: 동네 주소 (음식 추천용, 구/동 단위, 예: "마포구 합정동")
       - weight_info: "현재체중/목표체중" 형식
       - body_info: "성별/나이/키" 형식 (칼로리 계산용)
-    ※ 시간 설정은 완료 후 별도 단계로 분리 (시간 기본값 자동 부여)
+    ※ 시간 설정은 완료 후 별도 단계로 분리
+
   → GPT-4o: Mifflin-St Jeor 공식으로 daily_cal_target 계산
   → DB users + tamagotchi 저장 (hp=100, hunger=100, mood=100)
       기본값: wake=07:00 / 아침=08:00 / 점심=12:00 / 저녁=18:00
-  → #먹구름 채널에 유저 전용 쓰레드 5개 생성:
-      1. {이름}의 구름        → thread_id (메인)
-      2. {이름}의 식사 기록   → meal_thread_id
-      3. {이름}의 날씨        → weather_thread_id
-      4. {이름}의 체중관리    → weight_thread_id
-      5. {이름}의 메일함      → mail_thread_id
-  → 메인 쓰레드에 캐릭터 Embed 전송 + embed_message_id 저장
-  → SchedulerCog.register_meal_jobs(user_id) 호출 (식사 알림 Job 등록)
-  → Ephemeral: "✅ 설정 완료! 이제 시간을 설정해줘 ⏰"
+
+  → "먹구름" 카테고리에 유저 전용 채널 생성:
+      #{이름}-채팅창  → personal_channel_id 저장
+      ※ 권한 설정: 해당 유저만 읽기/쓰기 가능
+
+  → 전용 채널 안에 기능봇 쓰레드 생성 (총 6개):
+      1. 🍽️ {이름}의 식사기록  → meal_thread_id
+      2. 🌤️ {이름}의 날씨      → weather_thread_id
+      3. ⚖️ {이름}의 체중관리  → weight_thread_id
+      4. 📧 {이름}의 메일함    → mail_thread_id
+      5. 📔 {이름}의 일기장    → diary_thread_id   (일기봇 활성화 후)
+      6. 📅 {이름}의 일정표    → schedule_thread_id (일정봇 활성화 후)
+
+  → 전용 채널에 캐릭터 Embed 고정 (pin) + embed_message_id 저장
+  → SchedulerCog.register_meal_jobs(user_id) 호출
+  → Ephemeral: "✅ 설정 완료! 이제 #{이름}-채팅창 에서 대화해줘 ⏰"
   → Ephemeral: TimeStep1View (시간 설정 1단계)
 
 기존 유저가 버튼 클릭 시:
-  → Ephemeral: "이미 등록되어 있어! 쓰레드 확인해봐 😊"
+  → Ephemeral: "이미 등록되어 있어! #{이름}-채팅창 채널을 확인해봐 😊"
+```
+
+### v3.2 현재 (쓰레드 방식 — 기존 유저 호환)
+
+```
+[🐣 다마고치 시작하기] 클릭
+  → OnboardingModal (4개 필드: 이름/도시/체중/신체정보)
+  → GPT-4o: 칼로리 계산
+  → DB users + tamagotchi 저장
+  → #다마고치 채널에 유저 전용 쓰레드 5개 생성:
+      1. {이름}의 구름      → thread_id (메인, fallback 기준)
+      2. {이름}의 식사 기록 → meal_thread_id
+      3. {이름}의 날씨      → weather_thread_id
+      4. {이름}의 체중관리  → weight_thread_id
+      5. {이름}의 메일함    → mail_thread_id
+  → 메인 쓰레드에 캐릭터 Embed 전송 + embed_message_id 저장
+  → 시간 설정 팝업
 ```
 
 ---
