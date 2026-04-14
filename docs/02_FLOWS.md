@@ -26,18 +26,24 @@
 
 유저: "나 오늘 점심에 비빔밥 먹었어"
   → 먹구름봇 on_message 감지
-  → GPT/ML 의도 분류 → task_queue INSERT
-  → 식사봇 poll → 처리 → personal_channel에 직접 응답
+  → GPT/ML 의도 분류 → "meal" 감지
+  → 먹구름봇: 유저 전용 채널에 🍽️ 식사입력 버튼 전송
+  → 유저가 버튼 클릭 → 텍스트(MealInputModal) 또는 사진 업로드 경로로 분기
+  ※ meal은 task_queue를 사용하지 않음 (버튼 클릭 기반 기존 흐름 유지)
 
 유저: "내일 오후 3시 병원 예약 있어"
   → 먹구름봇 on_message 감지
-  → GPT/ML 의도 분류 → task_queue INSERT
-  → 일정봇 poll → 처리 → personal_channel에 직접 응답
+  → GPT/ML 의도 분류 → task_queue INSERT {bot_target: schedule, payload: 발화 원문}
+  → 일정봇 poll → 처리 → task_queue UPDATE {status: done, result_json: {...}}
+  → 먹구름봇 poll (done 항목) → 등록 완료 Embed 전송 + 캐릭터 Embed 갱신
   → APScheduler: 지정 시간에 info_thread에 알림 전송
 ```
 
-> **핵심 설계**: 서브봇은 `personal_channel_id`로 직접 응답. 메인봇으로 반환하지 않음.  
-> 쓰레드는 **Push 알림 전용** (날씨/일정 → `info_thread_id`, 메일 → `mail_thread_id`).
+> **핵심 설계**:
+> - **식사(meal)**: task_queue 미사용. 메인봇이 버튼 제공 → 클릭 후 기존 Modal/사진 흐름.
+> - **체중/일기/일정**: task_queue → 서브봇 처리 → result_json → 메인봇이 최종 응답 + Embed 갱신.
+> - 메인봇이 서브봇 결과를 수신하여 유저에게 최종 응답. 서브봇은 Discord 채널에 직접 응답하지 않음.
+> - 쓰레드는 **Push 알림 전용** (날씨/일정 D-day → `info_thread_id`, 메일 → `mail_thread_id`).
 
 ### 자연어 트리거 목록
 
