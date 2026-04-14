@@ -115,7 +115,8 @@ Railway 기준 설정:
 
 ## Phase 5 — 일기봇 (v3.4)
 
-> 목표: 감정 일기 작성, GPT 감정 분석, 주간 감정 리포트
+> 목표: 감정 일기 작성, GPT 감정 분석, 주간 감정 리포트  
+> 상태: 📋 구상 단계 — UX 흐름 미결, 구현 전 기획 구체화 필요
 
 상세: [`docs/bots/diary/ROADMAP.md`](bots/diary/ROADMAP.md)
 
@@ -123,17 +124,31 @@ Railway 기준 설정:
 
 ## Phase 6 — 일정봇 (v3.5)
 
-> 목표: 일정 등록, 알림, 반복 패턴 관리
+> 목표: 일정 등록, 알림, 반복 패턴 관리  
+> 상태: 📋 구상 단계 — UX 흐름 미결, 구현 전 기획 구체화 필요
 
 상세: [`docs/bots/schedule/ROADMAP.md`](bots/schedule/ROADMAP.md)
 
 ---
 
-## Phase 7 — 오케스트레이터 전환 (v4.0)
+## Phase 7 — 채널 구조 전환 + 오케스트레이터 (v4.0)
 
-> 목표: bot.py가 GPT 의도 파싱으로 전문봇들을 자동 트리거
+> 목표:
+> 1. 유저별 전용 채널 + 기능봇 쓰레드 구조로 온보딩 전환
+> 2. bot.py가 GPT/ML 의도 파싱으로 전문봇 자동 트리거
+> 3. intent_log 데이터 축적 → ML 의도 분류기 점진적 전환
 
-상세: [`docs/bots/mukgoorm/ROADMAP.md`](bots/mukgoorm/ROADMAP.md) Phase 4 참고
+상세: [`docs/bots/mukgoorm/ROADMAP.md`](bots/mukgoorm/ROADMAP.md) Phase 3.5~5 참고
+
+### 인프라 고려 사항 (20인 서버 기준)
+
+| 항목 | 내용 |
+|------|------|
+| Discord 채널 수 | 최대 20명 × 6~7 쓰레드 ≈ 130개 (한도 500, 여유 있음) |
+| 환경변수 추가 | `TAMAGOTCHI_CATEGORY_ID` (카테고리 ID) |
+| DB 컬럼 추가 | `users.personal_channel_id`, `users.address` |
+| 신규 테이블 | `intent_log` (ML 학습 데이터) |
+| Supabase 연결 | 7개 봇 동시 운영 → 커넥션 풀 한도 확인 필요 |
 
 ---
 
