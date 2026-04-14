@@ -90,27 +90,46 @@ if __name__ == "__main__":
 
 ---
 
-## 4. 디스코드 쓰레드 소유권
+## 4. 디스코드 채널·쓰레드 소유권
 
-온보딩 시 `cogs/onboarding.py`가 쓰레드를 자동 생성하고 DB에 ID 저장.
+### v4.0 목표 구조 (유저별 전용 채널)
+
+온보딩 시 유저 전용 채널 1개를 생성하고, 그 안에 기능봇별 쓰레드를 생성.
+
+| 구분 | 이름 | DB 컬럼 | 담당 봇 |
+|------|------|---------|---------|
+| **채널** | `#{이름}-채팅창` | `personal_channel_id` | 먹구름봇 (오케스트레이터 대화 공간) |
+| **쓰레드** | `🍽️ {이름}의 식사기록` | `meal_thread_id` | 식사봇 |
+| **쓰레드** | `🌤️ {이름}의 날씨` | `weather_thread_id` | 날씨봇 |
+| **쓰레드** | `⚖️ {이름}의 체중관리` | `weight_thread_id` | 체중관리봇 |
+| **쓰레드** | `📧 {이름}의 메일함` | `mail_thread_id` | 메일봇 |
+| **쓰레드** | `📔 {이름}의 일기장` | `diary_thread_id` | 일기봇 (v3.4~) |
+| **쓰레드** | `📅 {이름}의 일정표` | `schedule_thread_id` | 일정봇 (v3.5~) |
+
+> 캐릭터 상태 Embed는 유저 전용 채널에 **고정 메시지(pin)**로 표시.  
+> 채널 권한: 온보딩 시 해당 유저만 읽기/쓰기 가능하도록 자동 설정.
+
+### v3.2 현재 구조 (단일 채널 + 쓰레드)
+
+온보딩 시 `cogs/onboarding.py`가 #다마고치 채널 아래 쓰레드를 자동 생성.
 
 | 쓰레드명 | DB 컬럼 | 담당 봇 |
 |---------|---------|---------|
-| `{이름}의 {캐릭터명}` | `thread_id` | 먹구름봇 (메인 Embed) |
+| `{이름}의 {캐릭터명}` | `thread_id` | 먹구름봇 (메인 Embed, **fallback 기준**) |
 | `📧 {이름}의 메일함` | `mail_thread_id` | 메일봇 |
 | `🍽️ {이름}의 식사 기록` | `meal_thread_id` | 식사봇 |
 | `🌤️ {이름}의 날씨` | `weather_thread_id` | 날씨봇 |
 | `⚖️ {이름}의 체중관리` | `weight_thread_id` | 체중관리봇 |
-| `📔 {이름}의 일기` | `diary_thread_id` | 일기봇 (추가 예정) |
-| `📅 {이름}의 일정` | `schedule_thread_id` | 일정봇 (추가 예정) |
 
 ### Fallback 패턴 (기존 유저 호환 — 반드시 사용)
 
 ```python
+# 전용 채널/쓰레드 ID가 없는 기존 유저 → 메인 thread_id로 fallback
 thread_id = user.get("weather_thread_id") or user.get("thread_id")
+channel_id = user.get("personal_channel_id") or user.get("thread_id")
 ```
 
-기존 유저는 신규 전용 쓰레드가 NULL → 메인 쓰레드(`thread_id`)로 자동 fallback.
+기존 유저는 신규 전용 채널/쓰레드 ID가 NULL → 메인 쓰레드(`thread_id`)로 자동 fallback.
 
 ---
 
