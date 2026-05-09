@@ -26,6 +26,37 @@ interface Message {
 
 interface Tamagotchi { hp: number; hunger: number; mood: number }
 
+function getMealType(profile: {
+  breakfast_time?: string | null
+  lunch_time?: string | null
+  dinner_time?: string | null
+  snack_time?: string | null
+}): string {
+  const now = new Date()
+  const current = now.getHours() * 60 + now.getMinutes()
+  const toMin = (t?: string | null) => {
+    if (!t) return null
+    const [h, m] = t.split(':').map(Number)
+    return h * 60 + m
+  }
+  const meals: [number, string][] = (
+    [
+      [toMin(profile.breakfast_time), '아침'],
+      [toMin(profile.lunch_time), '점심'],
+      [toMin(profile.snack_time), '간식'],
+      [toMin(profile.dinner_time), '저녁'],
+    ] as [number | null, string][]
+  )
+    .filter((e): e is [number, string] => e[0] !== null)
+    .sort(([a], [b]) => a - b)
+
+  let result = '간식'
+  for (const [t, label] of meals) {
+    if (current >= t) result = label
+  }
+  return result
+}
+
 interface PendingDiaryUpdate {
   existingId: string
   existingSummary: string
@@ -87,7 +118,11 @@ export default function Home() {
         diaryConflict = await getTodayDiary(profile.user_id, classified.date)
       }
 
-      const combined = await dispatchToWebhooks(profile.user_id, text, classified)
+      const combined = await dispatchToWebhooks(profile.user_id, text, classified, {
+        city: profile.city ?? '',
+        village: profile.village ?? '',
+        meal_type: getMealType(profile),
+      })
 
       const reply = await synthesizeResponse(
         profile.tamagotchi_name ?? '먹구름',
@@ -283,41 +318,57 @@ export default function Home() {
 }
 
 function WeatherCard({ weather: w }: { weather: WeatherData }) {
+  const gradeColor = (grade?: string) =>
+    grade === '좋음' ? '#4caf50' : grade === '보통' ? '#f5a623' : grade === '나쁨' ? '#ff6b6b' : '#888'
+
   return (
     <div style={{
       background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14,
       display: 'flex', flexDirection: 'column', gap: 6,
     }}>
-      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>🌤️ 날씨</div>
-      {w.description && <div style={{ fontSize: 13, color: '#bbb' }}>{w.description}</div>}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        {w.temp != null && <span style={{ fontSize: 13, color: '#fff' }}>🌡️ {w.temp}°C</span>}
-        {w.humidity != null && <span style={{ fontSize: 12, color: '#888' }}>💧 습도 {w.humidity}%</span>}
-        {w.wind_speed != null && <span style={{ fontSize: 12, color: '#888' }}>💨 {w.wind_speed}m/s</span>}
-        {w.pm10 != null && (
-          <span style={{ fontSize: 12, color: w.pm10 > 80 ? '#f44336' : w.pm10 > 30 ? '#f5a623' : '#4caf50' }}>
-            미세먼지 {w.pm10}㎍/m³
-          </span>
-        )}
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>
+        🌤️ 날씨{w.sky && <span style={{ fontWeight: 400, fontSize: 13, color: '#bbb', marginLeft: 6 }}>{w.sky}</span>}
       </div>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        {w.temperature != null && <span style={{ fontSize: 13, color: '#fff' }}>🌡️ {w.temperature}°C</span>}
+        {(w.low_temperature != null || w.high_temperature != null) && (
+          <span style={{ fontSize: 12, color: '#888' }}>최저 {w.low_temperature ?? '-'}° / 최고 {w.high_temperature ?? '-'}°</span>
+        )}
+        {w.humidity != null && <span style={{ fontSize: 12, color: '#888' }}>💧 {w.humidity}%</span>}
+        {w.windSpeed != null && <span style={{ fontSize: 12, color: '#888' }}>💨 {w.windSpeed}m/s</span>}
+        {w.rain && w.rain !== '없음' && <span style={{ fontSize: 12, color: '#6c9fff' }}>🌧️ {w.rain}</span>}
+      </div>
+      {(w.pm10 != null || w.pm25 != null) && (
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {w.pm10 != null && (
+            <span style={{ fontSize: 12, color: gradeColor(w.pm10_grade) }}>
+              미세먼지 {w.pm10}㎍/m³{w.pm10_grade && ` (${w.pm10_grade})`}
+            </span>
+          )}
+          {w.pm25 != null && (
+            <span style={{ fontSize: 12, color: gradeColor(w.pm25_grade) }}>
+              초미세먼지 {w.pm25}㎍/m³{w.pm25_grade && ` (${w.pm25_grade})`}
+            </span>
+          )}
+        </div>
+      )}
       {w.message && <div style={{ fontSize: 12, color: '#bbb', marginTop: 2 }}>{w.message}</div>}
     </div>
   )
 }
 
 function RestaurantCard({ restaurant: r, userId }: { restaurant: Restaurant; userId: string }) {
-  const [reaction, setReaction] = useState<'like' | 'dislike' | null>(null)
+  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null)
 
   const handleFeedback = async (type: 'like' | 'dislike') => {
-    if (reaction) return
-    setReaction(type)
+    if (feedback) return
+    setFeedback(type)
     try {
       await sendFeedback({
         user_id: userId,
+        restaurant_id: r.restaurant_id,
         food_name: r.food_name,
-        reaction: type,
-        location: r.location,
-        date: new Date().toISOString().slice(0, 10),
+        feedback: type,
       })
     } catch { /* silent */ }
   }
@@ -327,12 +378,13 @@ function RestaurantCard({ restaurant: r, userId }: { restaurant: Restaurant; use
       <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{r.food_name}</div>
       <div style={{ fontSize: 12, color: '#6c63ff' }}>{r.category}</div>
       <div style={{ fontSize: 12, color: '#888' }}>{r.location}</div>
-      <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5, marginTop: 2 }}>{r.reason}</div>
-      {r.rating != null && <div style={{ fontSize: 12, color: '#f5a623' }}>★ {r.rating}</div>}
+      {r.description && <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5, marginTop: 2 }}>{r.description}</div>}
+      {r.reason && <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>{r.reason}</div>}
+      {r.phone && <div style={{ fontSize: 11, color: '#555' }}>📞 {r.phone}</div>}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
         <div style={{ display: 'flex', gap: 6 }}>
-          <FeedbackBtn emoji="👍" active={reaction === 'like'} color="#4caf50" onClick={() => handleFeedback('like')} disabled={!!reaction} />
-          <FeedbackBtn emoji="👎" active={reaction === 'dislike'} color="#f44336" onClick={() => handleFeedback('dislike')} disabled={!!reaction} />
+          <FeedbackBtn emoji="👍" active={feedback === 'like'} color="#4caf50" onClick={() => handleFeedback('like')} disabled={!!feedback} />
+          <FeedbackBtn emoji="👎" active={feedback === 'dislike'} color="#f44336" onClick={() => handleFeedback('dislike')} disabled={!!feedback} />
         </div>
         {r.link && (
           <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#6c63ff', textDecoration: 'none' }}>

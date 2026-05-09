@@ -7,21 +7,28 @@ const client = new OpenAI({
 })
 
 export interface Restaurant {
+  restaurant_id: string
   food_name: string
   location: string
   category: string
+  description: string
+  phone: string
   reason: string
-  rating: number | null
   link: string
 }
 
 export interface WeatherData {
-  description?: string
-  temp?: number
+  temperature?: number
+  low_temperature?: number
+  high_temperature?: number
+  sky?: string
+  rain?: string
   humidity?: number
-  wind_speed?: number
+  windSpeed?: number
   pm10?: number
-  condition?: string
+  pm25?: number
+  pm10_grade?: string
+  pm25_grade?: string
   message?: string
 }
 
@@ -52,7 +59,12 @@ const BOT_WEBHOOK: Record<string, string> = {
   음식추천: '/webhook/food',
 }
 
-const FEEDBACK_WEBHOOK = '/webhook/5152b752-2221-467a-b7ff-d7cbe9945eab'
+const BOT_TIMEOUT: Record<string, number> = {
+  음식추천: 20000,
+}
+const DEFAULT_TIMEOUT = 15000
+
+const FEEDBACK_WEBHOOK = '/webhook/feedback'
 
 const CLASSIFY_PROMPT = `당신은 사용자 채팅을 분석하는 AI입니다.
 오늘 날짜: {TODAY}
@@ -113,6 +125,7 @@ export async function dispatchToWebhooks(
   userId: string,
   originalMessage: string,
   classified: ClassifyResult,
+  extra?: Record<string, unknown>,
 ): Promise<CombinedResponse> {
   const payload = {
     user_id: userId,
@@ -123,21 +136,24 @@ export async function dispatchToWebhooks(
     message_past: classified.message_past,
     message_future: classified.message_future,
     is_update: false,
+    ...extra,
   }
 
-  const urls = classified.bots.map(bot => BOT_WEBHOOK[bot]).filter(Boolean)
+  const botEntries = classified.bots
+    .map(bot => ({ bot, url: BOT_WEBHOOK[bot] }))
+    .filter(e => e.url)
 
   const combined: CombinedResponse = { messages: [], restaurants: [], weather: [], failed: [] }
-  if (urls.length === 0) return combined
-
-  const botNames = classified.bots.filter(bot => BOT_WEBHOOK[bot])
+  if (botEntries.length === 0) return combined
 
   const results = await Promise.allSettled(
-    urls.map(url =>
+    botEntries.map(({ bot, url }) =>
       axios
-        .post<{ message?: string; restaurants?: Restaurant[]; weather?: WeatherData }>(
-          url, payload, { timeout: 15000 },
-        )
+        .post<{
+          message?: string
+          recommendations?: Restaurant[]
+          weather?: WeatherData
+        }>(url, payload, { timeout: BOT_TIMEOUT[bot] ?? DEFAULT_TIMEOUT })
         .then(r => r.data),
     ),
   )
@@ -146,10 +162,11 @@ export async function dispatchToWebhooks(
     if (result.status === 'fulfilled') {
       const data = result.value
       if (data.message) combined.messages.push(data.message)
-      if (data.restaurants?.length) combined.restaurants.push(...data.restaurants)
+      // 음식추천: recommendations 필드로 반환
+      if (data.recommendations?.length) combined.restaurants.push(...data.recommendations)
       if (data.weather) combined.weather.push(data.weather)
     } else {
-      combined.failed.push(botNames[i])
+      combined.failed.push(botEntries[i].bot)
     }
   })
   return combined
@@ -218,10 +235,9 @@ export async function callBotWebhook(
 
 export async function sendFeedback(params: {
   user_id: string
+  restaurant_id: string
   food_name: string
-  reaction: string
-  location: string
-  date: string
+  feedback: 'like' | 'dislike'
 }) {
   await axios.post(FEEDBACK_WEBHOOK, params, { timeout: 5000 })
 }
