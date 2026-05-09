@@ -170,7 +170,7 @@ def save_to_supabase(rows: list[dict]) -> int:
             print(f"  배치 {i // batch_size + 1}: {len(batch)}개 저장 완료")
         else:
             print(f"  [Supabase 오류] 배치 {i // batch_size + 1}: "
-                  f"{res.status_code} — {res.text[:300]}")
+                  f"{res.status_code} - {res.text[:300]}")
 
     return total
 

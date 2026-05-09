@@ -23,3 +23,6 @@ ppt/
 # 에디터
 .DS_Store
 Thumbs.db
+scripts/crawl_result.json
+scripts/crawl_menus_result.json
+scripts/debug_page.html
