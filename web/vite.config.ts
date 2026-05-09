@@ -6,6 +6,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/webhook': 'http://localhost:5678',
+      '/webhook-test': 'http://localhost:5678',
     },
   },
 })

@@ -231,7 +231,7 @@ export default function Settings() {
         <Section title="📧 이메일 설정 (선택)">
           <Field label="이메일 제공사">
             <div style={{ display: 'flex', gap: 8 }}>
-              {['네이버', '구글', '다음'].map(p => (
+              {['네이버', '구글'].map(p => (
                 <ToggleBtn key={p} label={p} active={form.email_provider === p} onClick={() => set('email_provider', p)} />
               ))}
             </div>

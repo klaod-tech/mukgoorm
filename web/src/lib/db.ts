@@ -38,3 +38,16 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   const { error } = await supabase.from('users').update(updates).eq('user_id', userId)
   if (error) throw error
 }
+
+export async function getTodayDiary(
+  userId: string,
+  date: string,
+): Promise<{ id: string; summary: string } | null> {
+  const { data } = await supabase
+    .from('diary')
+    .select('id, summary')
+    .eq('user_id', userId)
+    .eq('date', date)
+    .maybeSingle()
+  return data
+}

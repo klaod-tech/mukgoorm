@@ -1,17 +1,38 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUser } from '../hooks/useUser'
 import { selectCharacterImage } from '../lib/image'
-import { sendToN8N, sendFeedback, type Restaurant } from '../lib/n8n'
+import {
+  classifyMessage,
+  dispatchToWebhooks,
+  synthesizeResponse,
+  callBotWebhook,
+  sendFeedback,
+  type Restaurant,
+  type WeatherData,
+  type ClassifyResult,
+} from '../lib/n8n'
 import { supabase } from '../lib/supabase'
+import { getTodayDiary } from '../lib/db'
 
 interface Message {
   id: number
   role: 'user' | 'bot'
   text: string
   restaurants?: Restaurant[]
+  weather?: WeatherData[]
+  classified?: string[]
+  failed?: string[]
 }
 
 interface Tamagotchi { hp: number; hunger: number; mood: number }
+
+interface PendingDiaryUpdate {
+  existingId: string
+  existingSummary: string
+  userId: string
+  message: string
+  classified: ClassifyResult
+}
 
 export default function Home() {
   const { user, profile } = useUser()
@@ -20,6 +41,8 @@ export default function Home() {
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [showDiaryModal, setShowDiaryModal] = useState(false)
+  const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -56,24 +79,77 @@ export default function Home() {
     setLoading(true)
 
     try {
-      const res = await sendToN8N(profile.user_id, text, {
-        city: profile.city ?? '',
-        village: profile.village ?? '',
-      })
+      const classified = await classifyMessage(text)
+
+      // 일기 충돌 여부 사전 확인 (dispatch는 항상 진행)
+      let diaryConflict: { id: string; summary: string } | null = null
+      if (classified.bots.includes('일기')) {
+        diaryConflict = await getTodayDiary(profile.user_id, classified.date)
+      }
+
+      const combined = await dispatchToWebhooks(profile.user_id, text, classified)
+
+      const reply = await synthesizeResponse(
+        profile.tamagotchi_name ?? '먹구름',
+        text, classified, combined,
+      )
+
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'bot',
-        text: res.message || '응? 다시 말해줘 😅',
-        restaurants: res.restaurants,
+        text: reply,
+        restaurants: combined.restaurants.length > 0 ? combined.restaurants : undefined,
+        weather: combined.weather.length > 0 ? combined.weather : undefined,
+        classified: classified.bots,
+        failed: combined.failed.length > 0 ? combined.failed : undefined,
       }])
+
+      if (diaryConflict) {
+        setPendingDiary({
+          existingId: diaryConflict.id,
+          existingSummary: diaryConflict.summary,
+          userId: profile.user_id,
+          message: text,
+          classified,
+        })
+        setShowDiaryModal(true)
+      }
+
       if (user) {
         supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
           .then(({ data }) => { if (data) setTamagotchi(data) })
       }
     } catch {
-      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: 'n8n 연결을 확인해줘 😥' }])
+      setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: '앗, 뭔가 잘못됐어 😥 다시 말해줄래?' }])
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleDiaryOverwrite() {
+    if (!pendingDiary) return
+    setShowDiaryModal(false)
+    try {
+      await callBotWebhook(
+        '/webhook/diary',
+        pendingDiary.userId,
+        pendingDiary.message,
+        pendingDiary.classified,
+        { is_update: true, diary_id: pendingDiary.existingId },
+      )
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'bot',
+        text: '오늘 일기를 새 내용으로 덮어썼어 📝',
+      }])
+    } catch {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'bot',
+        text: '일기 수정 실패했어 😥 n8n 연결을 확인해줘',
+      }])
+    } finally {
+      setPendingDiary(null)
     }
   }
 
@@ -104,6 +180,34 @@ export default function Home() {
             }}>
               {msg.text}
             </div>
+            {msg.role === 'bot' && msg.classified && msg.classified.length > 0 && (
+              <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+                {msg.classified.map(bot => (
+                  <span key={bot} style={{
+                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
+                    background: '#2a2a4a', color: '#6c63ff', border: '1px solid #6c63ff33',
+                  }}>{bot}</span>
+                ))}
+              </div>
+            )}
+            {msg.role === 'bot' && msg.failed && msg.failed.length > 0 && (
+              <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 11, color: '#ff6b6b' }}>⚠️ 연결 실패:</span>
+                {msg.failed.map(bot => (
+                  <span key={bot} style={{
+                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
+                    background: '#3a1a1a', color: '#ff6b6b', border: '1px solid #ff6b6b33',
+                  }}>{bot}</span>
+                ))}
+              </div>
+            )}
+            {msg.weather && msg.weather.length > 0 && (
+              <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {msg.weather.map((w, i) => (
+                  <WeatherCard key={i} weather={w} />
+                ))}
+              </div>
+            )}
             {msg.restaurants && msg.restaurants.length > 0 && (
               <div style={{ marginTop: 10, width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                 {msg.restaurants.map((r, i) => (
@@ -116,6 +220,41 @@ export default function Home() {
         {loading && <LoadingBubble elapsed={elapsed} />}
         <div ref={bottomRef} />
       </div>
+
+      {showDiaryModal && pendingDiary && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
+        }}>
+          <div style={{
+            background: '#1a1a2e', borderRadius: 16, padding: 28,
+            width: 340, display: 'flex', flexDirection: 'column', gap: 14,
+            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+          }}>
+            <h3 style={{ color: '#fff', margin: 0, fontSize: 16 }}>오늘 일기가 이미 있어 📖</h3>
+            <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
+              기존 요약: <span style={{ color: '#ccc' }}>{pendingDiary.existingSummary}</span><br />
+              새 내용으로 덮어쓸까?
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button
+                onClick={() => { setShowDiaryModal(false); setPendingDiary(null) }}
+                style={{
+                  flex: 1, background: '#16213e', border: 'none', borderRadius: 8,
+                  padding: 12, color: '#fff', fontSize: 14, cursor: 'pointer',
+                }}
+              >취소</button>
+              <button
+                onClick={handleDiaryOverwrite}
+                style={{
+                  flex: 1, background: '#6c63ff', border: 'none', borderRadius: 8,
+                  padding: 12, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                }}
+              >덮어쓰기</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 8, paddingTop: 12, paddingBottom: 8 }}>
         <input
@@ -139,6 +278,29 @@ export default function Home() {
           }}
         >전송</button>
       </div>
+    </div>
+  )
+}
+
+function WeatherCard({ weather: w }: { weather: WeatherData }) {
+  return (
+    <div style={{
+      background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14,
+      display: 'flex', flexDirection: 'column', gap: 6,
+    }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>🌤️ 날씨</div>
+      {w.description && <div style={{ fontSize: 13, color: '#bbb' }}>{w.description}</div>}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        {w.temp != null && <span style={{ fontSize: 13, color: '#fff' }}>🌡️ {w.temp}°C</span>}
+        {w.humidity != null && <span style={{ fontSize: 12, color: '#888' }}>💧 습도 {w.humidity}%</span>}
+        {w.wind_speed != null && <span style={{ fontSize: 12, color: '#888' }}>💨 {w.wind_speed}m/s</span>}
+        {w.pm10 != null && (
+          <span style={{ fontSize: 12, color: w.pm10 > 80 ? '#f44336' : w.pm10 > 30 ? '#f5a623' : '#4caf50' }}>
+            미세먼지 {w.pm10}㎍/m³
+          </span>
+        )}
+      </div>
+      {w.message && <div style={{ fontSize: 12, color: '#bbb', marginTop: 2 }}>{w.message}</div>}
     </div>
   )
 }

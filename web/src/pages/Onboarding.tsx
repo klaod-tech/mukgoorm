@@ -51,28 +51,35 @@ export default function Onboarding() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setError('로그인 정보가 없어요.'); setLoading(false); return }
 
+    const timeout = new Promise<never>((_, reject) =>
+      setTimeout(() => reject(new Error('저장 시간이 초과됐어요. 네트워크를 확인해주세요.')), 10000)
+    )
+
     try {
-      await createUserProfile({
-        user_id: user.id,
-        tamagotchi_name: form.tamagotchi_name,
-        city: form.city,
-        village: form.village,
-        gender: form.gender,
-        age: Number(form.age),
-        height: Number(form.height),
-        init_weight: Number(form.init_weight),
-        goal_weight: Number(form.goal_weight),
-        allergies: form.allergies,
-        food_preferences: form.food_preferences,
-        wake_time: form.wake_time,
-        breakfast_time: form.breakfast_time,
-        lunch_time: form.lunch_time,
-        dinner_time: form.dinner_time,
-        snack_time: form.snack_time || undefined,
-        email_provider: form.email_provider,
-        email_address: form.email_address || undefined,
-        email_app_pw: form.email_app_pw || undefined,
-      })
+      await Promise.race([
+        createUserProfile({
+          user_id: user.id,
+          tamagotchi_name: form.tamagotchi_name,
+          city: form.city,
+          village: form.village,
+          gender: form.gender,
+          age: Number(form.age),
+          height: Number(form.height),
+          init_weight: Number(form.init_weight),
+          goal_weight: Number(form.goal_weight),
+          allergies: form.allergies,
+          food_preferences: form.food_preferences,
+          wake_time: form.wake_time,
+          breakfast_time: form.breakfast_time,
+          lunch_time: form.lunch_time,
+          dinner_time: form.dinner_time,
+          snack_time: form.snack_time || undefined,
+          email_provider: form.email_provider,
+          email_address: form.email_address || undefined,
+          email_app_pw: form.email_app_pw || undefined,
+        }),
+        timeout,
+      ])
       navigate('/')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : JSON.stringify(e))
@@ -193,7 +200,7 @@ export default function Onboarding() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <p style={{ color: '#888', fontSize: 12, margin: 0 }}>이메일 알림을 받으려면 입력해요. 나중에 설정에서도 변경 가능해요.</p>
             <div style={{ display: 'flex', gap: 8 }}>
-              {['네이버', '구글', '다음'].map(p => (
+              {['네이버', '구글'].map(p => (
                 <button key={p} onClick={() => set('email_provider', p)} style={{ ...genderBtn, flex: 1, background: form.email_provider === p ? '#6c63ff' : '#16213e' }}>{p}</button>
               ))}
             </div>
