@@ -162,8 +162,8 @@ export async function dispatchToWebhooks(
     if (result.status === 'fulfilled') {
       const data = result.value
       if (data.message) combined.messages.push(data.message)
-      // 음식추천: recommendations 필드로 반환
-      if (data.recommendations?.length) combined.restaurants.push(...data.recommendations)
+      const recs = data.recommendations ?? (data as Record<string, unknown>).restaurants as Restaurant[] ?? []
+      if (recs.length) combined.restaurants.push(...recs)
       if (data.weather) combined.weather.push(data.weather)
     } else {
       combined.failed.push(botEntries[i].bot)

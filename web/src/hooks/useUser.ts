@@ -60,7 +60,7 @@ export function useUser() {
     }, 10000)
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      async (_event, session) => {
         if (!mounted) return
 
         const authUser = session?.user ?? null
