@@ -259,27 +259,25 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/intent_logs",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=minimal" }
+        "tableId": "intent_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "message",          "fieldValue": "={{ $('의도 분류').first().json.message }}" },
+            { "fieldId": "keyword",          "fieldValue": "={{ $json.keyword }}" },
+            { "fieldId": "predicted_path",   "fieldValue": "B" },
+            { "fieldId": "path_description", "fieldValue": "={{ $json.description }}" },
+            { "fieldId": "user_id",          "fieldValue": "={{ $json.user_id }}" }
           ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: $('의도 분류').first().json.message, keyword: $json.keyword, predicted_path: $json.path, path_description: $json.description, user_id: $json.user_id }) }}",
-        "options": {}
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [1400, 0],
       "id": "fd01000e-food-0000-0000-000000000001",
-      "name": "B: 의도 로그 저장"
+      "name": "B: 의도 로그 저장",
+      "credentials": {
+        "supabaseApi": { "id": "ZoISfiUUHP5TJ825", "name": "Supabase account" }
+      }
     },
     {
       "parameters": { "options": {} },
@@ -357,27 +355,25 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/intent_logs",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=representation" }
+        "tableId": "intent_logs",
+        "fieldsUi": {
+          "fieldValues": [
+            { "fieldId": "message",          "fieldValue": "={{ $('의도 분류').first().json.message }}" },
+            { "fieldId": "keyword",          "fieldValue": "={{ $json.keyword }}" },
+            { "fieldId": "predicted_path",   "fieldValue": "C" },
+            { "fieldId": "path_description", "fieldValue": "={{ $json.description }}" },
+            { "fieldId": "user_id",          "fieldValue": "={{ $json.user_id }}" }
           ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ message: $('의도 분류').first().json.message, keyword: $json.keyword, predicted_path: $json.path, path_description: $json.description, user_id: $json.user_id }) }}",
-        "options": {}
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [2000, 300],
       "id": "fd010015-food-0000-0000-000000000001",
-      "name": "C: 의도 로그 저장"
+      "name": "C: 의도 로그 저장",
+      "credentials": {
+        "supabaseApi": { "id": "ZoISfiUUHP5TJ825", "name": "Supabase account" }
+      }
     },
     {
       "parameters": {
