@@ -528,27 +528,38 @@
     },
     {
       "parameters": {
-        "method": "PATCH",
-        "url": "={{ 'https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/intent_logs?id=eq.' + ($input.first().json.body || $input.first().json).intent_log_id }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Content-Type", "value": "application/json" },
-            { "name": "Prefer", "value": "return=minimal" }
+        "operation": "update",
+        "tableId": "intent_logs",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ ($('피드백 입력').first().json.body || $('피드백 입력').first().json).intent_log_id }}"
+            }
           ]
         },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ is_correct: ($input.first().json.body || $input.first().json).is_correct, true_path: ($input.first().json.body || $input.first().json).true_path || null }) }}",
-        "options": {}
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "is_correct",
+              "fieldValue": "={{ ($('피드백 입력').first().json.body || $('피드백 입력').first().json).is_correct }}"
+            },
+            {
+              "fieldId": "true_path",
+              "fieldValue": "={{ ($('피드백 입력').first().json.body || $('피드백 입력').first().json).true_path || null }}"
+            }
+          ]
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [-1300, 1500],
       "id": "fd010021-food-0000-0000-000000000001",
-      "name": "피드백 저장"
+      "name": "피드백 저장",
+      "credentials": {
+        "supabaseApi": { "id": "ZoISfiUUHP5TJ825", "name": "Supabase account" }
+      }
     },
     {
       "parameters": {
