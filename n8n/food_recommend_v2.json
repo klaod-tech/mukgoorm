@@ -77,22 +77,32 @@
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ 'https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/restaurants?name=ilike.*' + encodeURIComponent($('키워드 추출').first().json.keyword) + '*&is_active=eq.true&select=id,name,category,address,description,phone,link&limit=5' }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}" }
+        "operation": "getAll",
+        "tableId": "restaurants",
+        "limit": 5,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "name",
+              "condition": "ilike",
+              "keyValue": "={{ '*' + $('키워드 추출').first().json.keyword + '*' }}"
+            },
+            {
+              "keyName": "is_active",
+              "condition": "eq",
+              "keyValue": "true"
+            }
           ]
-        },
-        "options": {}
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [-400, 0],
       "id": "fd010005-food-0000-0000-000000000001",
-      "name": "식당명 검색"
+      "name": "식당명 검색",
+      "credentials": {
+        "supabaseApi": { "id": "ZoISfiUUHP5TJ825", "name": "Supabase account" }
+      }
     },
     {
       "parameters": {
