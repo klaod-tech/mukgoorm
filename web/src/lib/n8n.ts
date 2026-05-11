@@ -60,7 +60,7 @@ const BOT_WEBHOOK: Record<string, string> = {
 }
 
 const BOT_TIMEOUT: Record<string, number> = {
-  음식추천: 20000,
+  음식추천: 10000,
 }
 const DEFAULT_TIMEOUT = 15000
 
@@ -240,4 +240,78 @@ export async function sendFeedback(params: {
   feedback: 'like' | 'dislike'
 }) {
   await axios.post(FEEDBACK_WEBHOOK, params, { timeout: 5000 })
+}
+
+// ── 음식 추천 v2: 3단계 분리 API ──────────────────────────────
+
+export type IntentPath = 'A' | 'B' | 'C'
+
+export interface FoodRecommendResponse {
+  path: IntentPath
+  description: string
+  message: string
+  restaurants: Restaurant[]
+  keyword: string
+  intent_log_id?: string
+}
+
+export interface MenuItem {
+  id: string
+  menu_name: string
+  price: number | null
+  description: string | null
+  tags: string[] | null
+  allergens: string[] | null
+}
+
+export interface MenuResponse {
+  restaurant_id: string
+  menus: MenuItem[]
+}
+
+/** 1단계: 음식 추천 (의도 분류 → A/B/C 경로) */
+export async function recommendFood(params: {
+  user_id: string
+  message: string
+  location?: string
+}): Promise<FoodRecommendResponse> {
+  const res = await axios.post<FoodRecommendResponse>(
+    '/webhook/food',
+    params,
+    { timeout: 10000 },
+  )
+  return res.data
+}
+
+/** 2단계: 식당 메뉴 조회 */
+export async function fetchRestaurantMenu(params: {
+  restaurant_id: string
+}): Promise<MenuResponse> {
+  const res = await axios.post<MenuResponse>(
+    '/webhook/food/menu',
+    params,
+    { timeout: 5000 },
+  )
+  return res.data
+}
+
+/** 3단계: 메뉴 선택 기록 */
+export async function selectFood(params: {
+  user_id: string
+  restaurant_id: string
+  menu_name: string
+  location?: string
+  tags?: string
+  message?: string
+}): Promise<void> {
+  await axios.post('/webhook/food/select', params, { timeout: 5000 })
+}
+
+/** ML 피드백: 의도 분류 결과가 맞았는지 */
+export async function submitIntentFeedback(params: {
+  intent_log_id: string
+  is_correct: boolean
+  true_path?: IntentPath
+}): Promise<void> {
+  await axios.post('/webhook/food/feedback', params, { timeout: 5000 })
 }
