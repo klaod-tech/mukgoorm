@@ -410,22 +410,31 @@
     },
     {
       "parameters": {
-        "method": "GET",
-        "url": "={{ 'https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/menu_items?restaurant_id=eq.' + ($input.first().json.body || $input.first().json).restaurant_id + '&is_available=eq.true&select=id,menu_name,price,description,tags,allergens&order=menu_name.asc' }}",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            { "name": "apikey", "value": "={{ $env.SUPABASE_SERVICE_KEY }}" },
-            { "name": "Authorization", "value": "={{ 'Bearer ' + $env.SUPABASE_SERVICE_KEY }}" }
+        "operation": "getAll",
+        "tableId": "menu_items",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "restaurant_id",
+              "condition": "eq",
+              "keyValue": "={{ ($('메뉴 조회 입력').first().json.body || $('메뉴 조회 입력').first().json).restaurant_id }}"
+            },
+            {
+              "keyName": "is_available",
+              "condition": "eq",
+              "keyValue": "true"
+            }
           ]
-        },
-        "options": {}
+        }
       },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [-1300, 700],
       "id": "fd010019-food-0000-0000-000000000001",
-      "name": "메뉴 목록 조회"
+      "name": "메뉴 목록 조회",
+      "credentials": {
+        "supabaseApi": { "id": "ZoISfiUUHP5TJ825", "name": "Supabase account" }
+      }
     },
     {
       "parameters": {
