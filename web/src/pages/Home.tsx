@@ -6,13 +6,19 @@ import {
   dispatchToWebhooks,
   synthesizeResponse,
   callBotWebhook,
-  sendFeedback,
+  fetchRestaurantMenu,
+  selectFood,
+  submitIntentFeedback,
   type Restaurant,
   type WeatherData,
+  type MenuItem,
   type ClassifyResult,
+  type IntentPath,
 } from '../lib/n8n'
 import { supabase } from '../lib/supabase'
 import { getTodayDiary } from '../lib/db'
+
+// ── 타입 ──────────────────────────────────────────────────────────
 
 interface Message {
   id: number
@@ -22,9 +28,30 @@ interface Message {
   weather?: WeatherData[]
   classified?: string[]
   failed?: string[]
+  intent_log_id?: string
+  food_path?: IntentPath
+  food_description?: string
 }
 
 interface Tamagotchi { hp: number; hunger: number; mood: number }
+
+interface MenuState {
+  restaurant: Restaurant
+  menus: MenuItem[]
+  loading: boolean
+  selected: string | null       // 선택한 menu_name
+  feedbackDone: boolean
+}
+
+interface PendingDiaryUpdate {
+  existingId: string
+  existingSummary: string
+  userId: string
+  message: string
+  classified: ClassifyResult
+}
+
+// ── 유틸 ──────────────────────────────────────────────────────────
 
 function getMealType(profile: {
   breakfast_time?: string | null
@@ -57,13 +84,7 @@ function getMealType(profile: {
   return result
 }
 
-interface PendingDiaryUpdate {
-  existingId: string
-  existingSummary: string
-  userId: string
-  message: string
-  classified: ClassifyResult
-}
+// ── 메인 컴포넌트 ─────────────────────────────────────────────────
 
 export default function Home() {
   const { user, profile } = useUser()
@@ -74,6 +95,8 @@ export default function Home() {
   const [elapsed, setElapsed] = useState(0)
   const [showDiaryModal, setShowDiaryModal] = useState(false)
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
+  const [menuState, setMenuState] = useState<MenuState | null>(null)
+  const [activeIntentLogId, setActiveIntentLogId] = useState<string | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -102,6 +125,8 @@ export default function Home() {
     ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp)
     : '/normal.png'
 
+  // ── 메시지 전송 ──────────────────────────────────────────────
+
   async function handleSend() {
     if (!input.trim() || loading || !profile) return
     const text = input.trim()
@@ -112,7 +137,6 @@ export default function Home() {
     try {
       const classified = await classifyMessage(text)
 
-      // 일기 충돌 여부 사전 확인 (dispatch는 항상 진행)
       let diaryConflict: { id: string; summary: string } | null = null
       if (classified.bots.includes('일기')) {
         diaryConflict = await getTodayDiary(profile.user_id, classified.date)
@@ -129,7 +153,7 @@ export default function Home() {
         text, classified, combined,
       )
 
-      setMessages(prev => [...prev, {
+      const botMsg: Message = {
         id: Date.now() + 1,
         role: 'bot',
         text: reply,
@@ -137,7 +161,16 @@ export default function Home() {
         weather: combined.weather.length > 0 ? combined.weather : undefined,
         classified: classified.bots,
         failed: combined.failed.length > 0 ? combined.failed : undefined,
-      }])
+        intent_log_id: combined.intent_log_id,
+        food_path: combined.food_path,
+        food_description: combined.food_description,
+      }
+      setMessages(prev => [...prev, botMsg])
+
+      // 음식 추천이 있으면 intent_log_id 활성화
+      if (combined.intent_log_id) {
+        setActiveIntentLogId(combined.intent_log_id)
+      }
 
       if (diaryConflict) {
         setPendingDiary({
@@ -161,6 +194,60 @@ export default function Home() {
     }
   }
 
+  // ── 2단계: 식당 선택 → 메뉴 조회 ────────────────────────────
+
+  async function handleMenuRequest(restaurant: Restaurant) {
+    setMenuState({ restaurant, menus: [], loading: true, selected: null, feedbackDone: false })
+    try {
+      const result = await fetchRestaurantMenu({ restaurant_id: restaurant.restaurant_id })
+      setMenuState(prev => prev ? { ...prev, menus: result.menus, loading: false } : null)
+    } catch {
+      setMenuState(prev => prev ? { ...prev, loading: false } : null)
+    }
+  }
+
+  // ── 3단계: 메뉴 선택 → 기록 저장 ────────────────────────────
+
+  async function handleMenuSelect(menuName: string) {
+    if (!menuState || !profile) return
+    const { restaurant } = menuState
+    setMenuState(prev => prev ? { ...prev, selected: menuName } : null)
+
+    try {
+      await selectFood({
+        user_id: profile.user_id,
+        restaurant_id: restaurant.restaurant_id,
+        menu_name: menuName,
+        location: profile.village ?? '',
+        message: menuName,
+      })
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'bot',
+        text: `${restaurant.food_name}에서 ${menuName} 선택했구나 🍽️ 맛있게 먹어!`,
+      }])
+    } catch {
+      setMessages(prev => [...prev, {
+        id: Date.now(),
+        role: 'bot',
+        text: '기록 저장에 실패했어 😥',
+      }])
+    }
+  }
+
+  // ── ML 피드백 ────────────────────────────────────────────────
+
+  async function handleIntentFeedback(isCorrect: boolean, truePath?: IntentPath) {
+    if (!activeIntentLogId) return
+    setActiveIntentLogId(null)
+    setMenuState(prev => prev ? { ...prev, feedbackDone: true } : null)
+    try {
+      await submitIntentFeedback({ intent_log_id: activeIntentLogId, is_correct: isCorrect, true_path: truePath })
+    } catch { /* silent */ }
+  }
+
+  // ── 일기 덮어쓰기 ────────────────────────────────────────────
+
   async function handleDiaryOverwrite() {
     if (!pendingDiary) return
     setShowDiaryModal(false)
@@ -172,25 +259,20 @@ export default function Home() {
         pendingDiary.classified,
         { is_update: true, diary_id: pendingDiary.existingId },
       )
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        role: 'bot',
-        text: '오늘 일기를 새 내용으로 덮어썼어 📝',
-      }])
+      setMessages(prev => [...prev, { id: Date.now(), role: 'bot', text: '오늘 일기를 새 내용으로 덮어썼어 📝' }])
     } catch {
-      setMessages(prev => [...prev, {
-        id: Date.now(),
-        role: 'bot',
-        text: '일기 수정 실패했어 😥 n8n 연결을 확인해줘',
-      }])
+      setMessages(prev => [...prev, { id: Date.now(), role: 'bot', text: '일기 수정 실패했어 😥 n8n 연결을 확인해줘' }])
     } finally {
       setPendingDiary(null)
     }
   }
 
+  // ── 렌더 ─────────────────────────────────────────────────────
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxWidth: 680, margin: '0 auto' }}>
 
+      {/* 캐릭터 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 0 12px' }}>
         <img src={characterImage} alt="캐릭터" style={{ width: 100, height: 100, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0 }} />
         <div>
@@ -203,6 +285,7 @@ export default function Home() {
 
       <div style={{ width: '100%', height: 1, background: '#2a2a4a', marginBottom: 16 }} />
 
+      {/* 채팅 영역 */}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
         {messages.map(msg => (
           <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
@@ -215,6 +298,8 @@ export default function Home() {
             }}>
               {msg.text}
             </div>
+
+            {/* 분류 태그 */}
             {msg.role === 'bot' && msg.classified && msg.classified.length > 0 && (
               <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
                 {msg.classified.map(bot => (
@@ -225,8 +310,10 @@ export default function Home() {
                 ))}
               </div>
             )}
+
+            {/* 실패 태그 */}
             {msg.role === 'bot' && msg.failed && msg.failed.length > 0 && (
-              <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: 11, color: '#ff6b6b' }}>⚠️ 연결 실패:</span>
                 {msg.failed.map(bot => (
                   <span key={bot} style={{
@@ -236,17 +323,34 @@ export default function Home() {
                 ))}
               </div>
             )}
+
+            {/* 날씨 카드 */}
             {msg.weather && msg.weather.length > 0 && (
               <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {msg.weather.map((w, i) => (
-                  <WeatherCard key={i} weather={w} />
-                ))}
+                {msg.weather.map((w, i) => <WeatherCard key={i} weather={w} />)}
               </div>
             )}
+
+            {/* 음식 추천 경로 설명 */}
+            {msg.food_description && (
+              <div style={{ fontSize: 12, color: '#888', marginTop: 6, paddingLeft: 2 }}>
+                {msg.food_path === 'A' && '🎯 '}
+                {msg.food_path === 'B' && '🔍 '}
+                {msg.food_path === 'C' && '✨ '}
+                {msg.food_description}
+              </div>
+            )}
+
+            {/* 식당 카드 — v2 메뉴 흐름 연결 */}
             {msg.restaurants && msg.restaurants.length > 0 && (
               <div style={{ marginTop: 10, width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
                 {msg.restaurants.map((r, i) => (
-                  <RestaurantCard key={i} restaurant={r} userId={profile?.user_id ?? ''} />
+                  <RestaurantCard
+                    key={i}
+                    restaurant={r}
+                    onMenuRequest={handleMenuRequest}
+                    isMenuOpen={menuState?.restaurant.restaurant_id === r.restaurant_id}
+                  />
                 ))}
               </div>
             )}
@@ -256,41 +360,35 @@ export default function Home() {
         <div ref={bottomRef} />
       </div>
 
+      {/* 메뉴 패널 (식당 선택 후 표시) */}
+      {menuState && (
+        <MenuPanel
+          state={menuState}
+          intentLogId={activeIntentLogId}
+          onMenuSelect={handleMenuSelect}
+          onClose={() => setMenuState(null)}
+          onIntentFeedback={handleIntentFeedback}
+        />
+      )}
+
+      {/* 일기 덮어쓰기 모달 */}
       {showDiaryModal && pendingDiary && (
-        <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
-        }}>
-          <div style={{
-            background: '#1a1a2e', borderRadius: 16, padding: 28,
-            width: 340, display: 'flex', flexDirection: 'column', gap: 14,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-          }}>
+        <ModalOverlay>
+          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 28, width: 340, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
             <h3 style={{ color: '#fff', margin: 0, fontSize: 16 }}>오늘 일기가 이미 있어 📖</h3>
             <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
               기존 요약: <span style={{ color: '#ccc' }}>{pendingDiary.existingSummary}</span><br />
               새 내용으로 덮어쓸까?
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button
-                onClick={() => { setShowDiaryModal(false); setPendingDiary(null) }}
-                style={{
-                  flex: 1, background: '#16213e', border: 'none', borderRadius: 8,
-                  padding: 12, color: '#fff', fontSize: 14, cursor: 'pointer',
-                }}
-              >취소</button>
-              <button
-                onClick={handleDiaryOverwrite}
-                style={{
-                  flex: 1, background: '#6c63ff', border: 'none', borderRadius: 8,
-                  padding: 12, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer',
-                }}
-              >덮어쓰기</button>
+              <GhostBtn onClick={() => { setShowDiaryModal(false); setPendingDiary(null) }}>취소</GhostBtn>
+              <PrimaryBtn onClick={handleDiaryOverwrite}>덮어쓰기</PrimaryBtn>
             </div>
           </div>
-        </div>
+        </ModalOverlay>
       )}
 
+      {/* 입력창 */}
       <div style={{ display: 'flex', gap: 8, paddingTop: 12, paddingBottom: 8 }}>
         <input
           value={input}
@@ -317,15 +415,199 @@ export default function Home() {
   )
 }
 
+// ── 서브 컴포넌트 ─────────────────────────────────────────────────
+
+function RestaurantCard({
+  restaurant: r,
+  onMenuRequest,
+  isMenuOpen,
+}: {
+  restaurant: Restaurant
+  onMenuRequest: (r: Restaurant) => void
+  isMenuOpen: boolean
+}) {
+  return (
+    <div style={{
+      background: isMenuOpen ? '#1e1e3a' : '#16213e',
+      border: `1px solid ${isMenuOpen ? '#6c63ff' : '#2a2a4a'}`,
+      borderRadius: 12, padding: 14,
+      display: 'flex', flexDirection: 'column', gap: 4,
+      transition: 'border-color 0.15s',
+    }}>
+      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{r.food_name}</div>
+      <div style={{ fontSize: 12, color: '#6c63ff' }}>{r.category}</div>
+      <div style={{ fontSize: 12, color: '#888' }}>{r.location}</div>
+      {r.description && <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5, marginTop: 2 }}>{r.description}</div>}
+      {r.reason && <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>{r.reason}</div>}
+      {r.phone && <div style={{ fontSize: 11, color: '#555' }}>📞 {r.phone}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+        <button
+          onClick={() => onMenuRequest(r)}
+          style={{
+            background: isMenuOpen ? '#6c63ff' : '#2a2a4a',
+            border: 'none', borderRadius: 8, padding: '6px 12px',
+            color: '#fff', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+          }}
+        >
+          {isMenuOpen ? '메뉴 보는 중' : '메뉴 보기 →'}
+        </button>
+        {r.link && (
+          <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#555', textDecoration: 'none' }}>
+            지도 →
+          </a>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function MenuPanel({
+  state,
+  intentLogId,
+  onMenuSelect,
+  onClose,
+  onIntentFeedback,
+}: {
+  state: MenuState
+  intentLogId: string | null
+  onMenuSelect: (menuName: string) => void
+  onClose: () => void
+  onIntentFeedback: (isCorrect: boolean, truePath?: IntentPath) => void
+}) {
+  const { restaurant, menus, loading, selected, feedbackDone } = state
+
+  return (
+    <div style={{
+      position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+      width: 'min(680px, 96vw)',
+      background: '#0f0f1e', border: '1px solid #2a2a4a',
+      borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+      zIndex: 50, maxHeight: '55vh', display: 'flex', flexDirection: 'column',
+    }}>
+      {/* 헤더 */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #2a2a4a' }}>
+        <div>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{restaurant.food_name}</div>
+          <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{restaurant.location}</div>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>✕</button>
+      </div>
+
+      {/* 메뉴 목록 */}
+      <div style={{ overflowY: 'auto', flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {loading && <div style={{ color: '#aaa', fontSize: 14, textAlign: 'center', paddingTop: 20 }}>메뉴 불러오는 중...</div>}
+        {!loading && menus.length === 0 && (
+          <div style={{ color: '#555', fontSize: 13, textAlign: 'center', paddingTop: 20 }}>등록된 메뉴 정보가 없어요</div>
+        )}
+        {menus.map(menu => (
+          <MenuItemRow
+            key={menu.id}
+            menu={menu}
+            isSelected={selected === menu.menu_name}
+            onSelect={() => onMenuSelect(menu.menu_name)}
+          />
+        ))}
+      </div>
+
+      {/* ML 피드백 바 — 선택 완료 후 + 피드백 미완료 시 */}
+      {selected && intentLogId && !feedbackDone && (
+        <IntentFeedbackBar onFeedback={onIntentFeedback} />
+      )}
+    </div>
+  )
+}
+
+function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelected: boolean; onSelect: () => void }) {
+  return (
+    <div style={{
+      background: isSelected ? '#1e1e3a' : '#16213e',
+      border: `1px solid ${isSelected ? '#6c63ff' : '#2a2a4a'}`,
+      borderRadius: 10, padding: '12px 14px',
+      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+    }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{menu.menu_name}</div>
+        {menu.description && <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{menu.description}</div>}
+        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+          {menu.tags?.map(tag => (
+            <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#2a2a4a', color: '#6c63ff' }}>{tag}</span>
+          ))}
+          {menu.allergens?.map(a => (
+            <span key={a} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#3a2a1a', color: '#f5a623' }}>⚠️ {a}</span>
+          ))}
+        </div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginLeft: 12 }}>
+        {menu.price != null && (
+          <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
+            {menu.price.toLocaleString()}원
+          </div>
+        )}
+        <button
+          onClick={onSelect}
+          disabled={isSelected}
+          style={{
+            background: isSelected ? '#2a2a4a' : '#6c63ff',
+            border: 'none', borderRadius: 8, padding: '6px 14px',
+            color: isSelected ? '#6c63ff' : '#fff', fontSize: 12,
+            cursor: isSelected ? 'default' : 'pointer', fontWeight: 600,
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {isSelected ? '선택됨 ✓' : '선택'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function IntentFeedbackBar({ onFeedback }: { onFeedback: (isCorrect: boolean, truePath?: IntentPath) => void }) {
+  const [showCorrect, setShowCorrect] = useState(false)
+
+  return (
+    <div style={{
+      borderTop: '1px solid #2a2a4a', padding: '12px 20px',
+      display: 'flex', flexDirection: 'column', gap: 8,
+    }}>
+      {!showCorrect ? (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 12, color: '#888' }}>추천이 원하던 것과 맞았어?</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              onClick={() => onFeedback(true)}
+              style={{ background: '#1a3a1a', border: '1px solid #4caf50', borderRadius: 8, padding: '5px 12px', color: '#4caf50', fontSize: 12, cursor: 'pointer' }}
+            >맞아 👍</button>
+            <button
+              onClick={() => setShowCorrect(true)}
+              style={{ background: '#3a1a1a', border: '1px solid #ff6b6b', borderRadius: 8, padding: '5px 12px', color: '#ff6b6b', fontSize: 12, cursor: 'pointer' }}
+            >아니야 👎</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <span style={{ fontSize: 12, color: '#aaa' }}>어떤 방식으로 찾길 원했어?</span>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={() => onFeedback(false, 'A')} style={feedbackBtnStyle}>식당 이름으로</button>
+            <button onClick={() => onFeedback(false, 'B')} style={feedbackBtnStyle}>메뉴 이름으로</button>
+            <button onClick={() => onFeedback(false, 'C')} style={feedbackBtnStyle}>그냥 추천으로</button>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const feedbackBtnStyle: React.CSSProperties = {
+  background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8,
+  padding: '5px 10px', color: '#aaa', fontSize: 11, cursor: 'pointer',
+}
+
 function WeatherCard({ weather: w }: { weather: WeatherData }) {
   const gradeColor = (grade?: string) =>
     grade === '좋음' ? '#4caf50' : grade === '보통' ? '#f5a623' : grade === '나쁨' ? '#ff6b6b' : '#888'
 
   return (
-    <div style={{
-      background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14,
-      display: 'flex', flexDirection: 'column', gap: 6,
-    }}>
+    <div style={{ background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>
         🌤️ 날씨{w.sky && <span style={{ fontWeight: 400, fontSize: 13, color: '#bbb', marginLeft: 6 }}>{w.sky}</span>}
       </div>
@@ -340,70 +622,12 @@ function WeatherCard({ weather: w }: { weather: WeatherData }) {
       </div>
       {(w.pm10 != null || w.pm25 != null) && (
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {w.pm10 != null && (
-            <span style={{ fontSize: 12, color: gradeColor(w.pm10_grade) }}>
-              미세먼지 {w.pm10}㎍/m³{w.pm10_grade && ` (${w.pm10_grade})`}
-            </span>
-          )}
-          {w.pm25 != null && (
-            <span style={{ fontSize: 12, color: gradeColor(w.pm25_grade) }}>
-              초미세먼지 {w.pm25}㎍/m³{w.pm25_grade && ` (${w.pm25_grade})`}
-            </span>
-          )}
+          {w.pm10 != null && <span style={{ fontSize: 12, color: gradeColor(w.pm10_grade) }}>미세먼지 {w.pm10}㎍/m³{w.pm10_grade && ` (${w.pm10_grade})`}</span>}
+          {w.pm25 != null && <span style={{ fontSize: 12, color: gradeColor(w.pm25_grade) }}>초미세먼지 {w.pm25}㎍/m³{w.pm25_grade && ` (${w.pm25_grade})`}</span>}
         </div>
       )}
       {w.message && <div style={{ fontSize: 12, color: '#bbb', marginTop: 2 }}>{w.message}</div>}
     </div>
-  )
-}
-
-function RestaurantCard({ restaurant: r, userId }: { restaurant: Restaurant; userId: string }) {
-  const [feedback, setFeedback] = useState<'like' | 'dislike' | null>(null)
-
-  const handleFeedback = async (type: 'like' | 'dislike') => {
-    if (feedback) return
-    setFeedback(type)
-    try {
-      await sendFeedback({
-        user_id: userId,
-        restaurant_id: r.restaurant_id,
-        food_name: r.food_name,
-        feedback: type,
-      })
-    } catch { /* silent */ }
-  }
-
-  return (
-    <div style={{ background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 4 }}>
-      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{r.food_name}</div>
-      <div style={{ fontSize: 12, color: '#6c63ff' }}>{r.category}</div>
-      <div style={{ fontSize: 12, color: '#888' }}>{r.location}</div>
-      {r.description && <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5, marginTop: 2 }}>{r.description}</div>}
-      {r.reason && <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>{r.reason}</div>}
-      {r.phone && <div style={{ fontSize: 11, color: '#555' }}>📞 {r.phone}</div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <FeedbackBtn emoji="👍" active={feedback === 'like'} color="#4caf50" onClick={() => handleFeedback('like')} disabled={!!feedback} />
-          <FeedbackBtn emoji="👎" active={feedback === 'dislike'} color="#f44336" onClick={() => handleFeedback('dislike')} disabled={!!feedback} />
-        </div>
-        {r.link && (
-          <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#6c63ff', textDecoration: 'none' }}>
-            지도 보기 →
-          </a>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function FeedbackBtn({ emoji, active, color, onClick, disabled }: {
-  emoji: string; active: boolean; color: string; onClick: () => void; disabled: boolean
-}) {
-  return (
-    <button onClick={onClick} disabled={disabled} style={{
-      background: active ? color : '#2a2a4a', color: '#fff', border: 'none',
-      borderRadius: 6, padding: '4px 10px', cursor: disabled ? 'default' : 'pointer', fontSize: 13,
-    }}>{emoji}</button>
   )
 }
 
@@ -419,9 +643,31 @@ function LoadingBubble({ elapsed }: { elapsed: number }) {
           }} />
         ))}
       </div>
-      {elapsed >= 10 && (
-        <div style={{ fontSize: 11, color: '#555', paddingLeft: 4 }}>맛집 검색 중이면 조금 더 걸릴 수 있어 🍽️</div>
-      )}
+      {elapsed >= 10 && <div style={{ fontSize: 11, color: '#555', paddingLeft: 4 }}>맛집 검색 중이면 조금 더 걸릴 수 있어 🍽️</div>}
     </div>
+  )
+}
+
+function ModalOverlay({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+      {children}
+    </div>
+  )
+}
+
+function GhostBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{ flex: 1, background: '#16213e', border: 'none', borderRadius: 8, padding: 12, color: '#fff', fontSize: 14, cursor: 'pointer' }}>
+      {children}
+    </button>
+  )
+}
+
+function PrimaryBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button onClick={onClick} style={{ flex: 1, background: '#6c63ff', border: 'none', borderRadius: 8, padding: 12, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+      {children}
+    </button>
   )
 }

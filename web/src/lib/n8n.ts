@@ -47,6 +47,9 @@ export interface CombinedResponse {
   restaurants: Restaurant[]
   weather: WeatherData[]
   failed: string[]
+  intent_log_id?: string
+  food_path?: IntentPath
+  food_description?: string
 }
 
 const BOT_WEBHOOK: Record<string, string> = {
@@ -160,11 +163,18 @@ export async function dispatchToWebhooks(
 
   results.forEach((result, i) => {
     if (result.status === 'fulfilled') {
-      const data = result.value
-      if (data.message) combined.messages.push(data.message)
-      const recs = data.recommendations ?? (data as Record<string, unknown>).restaurants as Restaurant[] ?? []
+      const data = result.value as Record<string, unknown>
+      if (data.message) combined.messages.push(data.message as string)
+
+      const recs = (data.restaurants ?? data.recommendations ?? []) as Restaurant[]
       if (recs.length) combined.restaurants.push(...recs)
-      if (data.weather) combined.weather.push(data.weather)
+
+      if (data.weather) combined.weather.push(data.weather as WeatherData)
+
+      // v2 음식 추천 전용 필드
+      if (data.intent_log_id) combined.intent_log_id = data.intent_log_id as string
+      if (data.path) combined.food_path = data.path as IntentPath
+      if (data.description) combined.food_description = data.description as string
     } else {
       combined.failed.push(botEntries[i].bot)
     }
