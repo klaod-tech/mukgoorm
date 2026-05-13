@@ -18,6 +18,7 @@ export interface Restaurant {
 }
 
 export interface WeatherData {
+  city?: string
   temperature?: number
   low_temperature?: number
   high_temperature?: number
@@ -29,6 +30,8 @@ export interface WeatherData {
   pm25?: number
   pm10_grade?: string
   pm25_grade?: string
+  condition?: string
+  dust_level?: string
   message?: string
 }
 

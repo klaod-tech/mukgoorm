@@ -1,336 +1,127 @@
-# 다음 작업 목록 — React 웹앱 전환
+# 다음 작업 목록
 
-> 기준: 2026-04-30 | 브랜치: `feat/web-migration`
-
----
-
-## 작업 순서 개요
-
-```
-1단계  React 기본 세팅          ← 지금 여기
-2단계  인증 · 온보딩
-3단계  핵심 기능 (식사·체중·날씨)
-4단계  확장 기능 (일정·일기·이메일)
-5단계  n8n 연동
-6단계  알림 · 주간 리포트
-```
+> 최종 업데이트: 2026-05-13
+> 브랜치: `exp`
 
 ---
 
-## 1단계 — React 기본 세팅
+## 완료된 작업 (n8n)
 
-### SETUP-1. Vite + React + TypeScript 프로젝트 초기화
-
-```bash
-npm create vite@latest mukgoorm-web -- --template react-ts
-cd mukgoorm-web
-npm install
-```
-
-**추가 설치 패키지:**
-
-```bash
-npm install @supabase/supabase-js     # Supabase 클라이언트
-npm install react-router-dom          # 라우팅
-npm install openai                    # GPT API
-npm install axios                     # HTTP 클라이언트 (n8n 웹훅 호출)
-npm install recharts                  # 체중 추이 그래프
-npm install react-query               # 서버 상태 관리
-```
-
-### SETUP-2. Supabase 연결 설정
-
-```typescript
-// src/lib/supabase.ts
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-
-export const supabase = createClient(supabaseUrl, supabaseKey)
-```
-
-**환경변수 (.env.local):**
-
-```
-VITE_SUPABASE_URL=
-VITE_SUPABASE_ANON_KEY=
-VITE_OPENAI_API_KEY=
-VITE_WEATHER_API_KEY=
-VITE_FOOD_API_KEY=
-VITE_N8N_FOOD_WEBHOOK_URL=
-VITE_DISCORD_WEBHOOK_URL=
-```
-
-### SETUP-3. 라우팅 구조
-
-```
-/                 → 캐릭터 상태 메인 화면
-/login            → 로그인
-/onboarding       → 온보딩 (최초 1회)
-/meal             → 식사 기록
-/weight           → 체중 관리
-/weather          → 날씨
-/schedule         → 일정
-/diary            → 일기
-/email            → 이메일 모니터링
-/report           → 주간 리포트
-/settings         → 설정
-```
-
-### SETUP-4. 기본 레이아웃 컴포넌트
-
-```
-src/
-├── components/
-│   ├── Layout.tsx          — 사이드바 + 메인 영역
-│   ├── Sidebar.tsx         — 기능별 네비게이션 (빨간 점 알림 표시)
-│   └── CharacterCard.tsx   — 캐릭터 이미지 + GPT 대사
-├── pages/
-│   ├── Home.tsx
-│   ├── Meal.tsx
-│   ├── Weight.tsx
-│   ├── Weather.tsx
-│   ├── Schedule.tsx
-│   ├── Diary.tsx
-│   ├── Email.tsx
-│   ├── Report.tsx
-│   └── Settings.tsx
-├── lib/
-│   ├── supabase.ts
-│   ├── openai.ts
-│   └── n8n.ts
-└── hooks/
-    ├── useUser.ts
-    ├── useMeals.ts
-    └── useCharacter.ts
-```
+| 항목 | 상태 |
+|---|---|
+| 날씨 webhook (sky/rain 추출, 응답 포맷) | ✅ |
+| 식사 webhook | ✅ |
+| 일기 webhook (is_update boolean 오류 수정) | ✅ |
+| 일정 webhook (Agent 중복 실행 수정) | ✅ |
+| 체중 webhook (메시지 직접 분석) | ✅ |
+| 음식추천 A경로 | ✅ |
+| 음식추천 B경로 (Decision 노드 메시지 변수 수정) | ✅ |
+| 음식추천 C경로 (5개 랜덤 선택 + Loop + restaurant_log 저장) | ✅ |
 
 ---
 
-## 2단계 — 인증 · 온보딩
+## 내일 작업 계획
 
-### AUTH-1. Supabase Auth 이메일 로그인
+### Phase 1 — React ↔ n8n 연결
+
+#### 1-1. `recommendFood` 함수에 date 추가
+파일: [web/src/lib/n8n.ts](web/src/lib/n8n.ts)
 
 ```typescript
-// src/lib/auth.ts
-import { supabase } from './supabase'
-
-export async function signIn(email: string, password: string) {
-  return supabase.auth.signInWithPassword({ email, password })
-}
-
-export async function signUp(email: string, password: string) {
-  return supabase.auth.signUp({ email, password })
-}
-
-export async function signOut() {
-  return supabase.auth.signOut()
-}
+export async function recommendFood(params: {
+  user_id: string
+  message: string
+  location?: string
+  date?: string        // 추가
+}): Promise<FoodRecommendResponse>
 ```
 
-### AUTH-2. 온보딩 플로우
-
-**수집 정보 (기존 DB 스키마 재활용):**
-
-```
-1. 이름 (display_name)
-2. 도시 (city) — 날씨 API용
-3. 동 단위 주소 (address) — 음식 추천용
-4. 성별 (gender)
-5. 나이 (age)
-6. 키 (height)
-7. 목표 체중 (goal_weight)
-8. 기상 시간 (wake_time)
-9. 취침 시간 (sleep_time)
+호출 시:
+```typescript
+recommendFood({
+  user_id,
+  message,
+  location,
+  date: new Date().toISOString().slice(0, 10),
+})
 ```
 
-**온보딩 완료 후:**
-- `users` 테이블에 유저 프로필 저장
-- 캐릭터 이미지 초기화 (neutral 상태)
-- 메인 화면으로 이동
+#### 1-2. n8n webhook URL 설정
+- `.env.local`에 n8n base URL 확인 (`http://localhost:5678`)
+- `vite.config.ts` proxy 설정 확인 (이미 완료)
+
+#### 1-3. 각 기능별 webhook 연동 확인
+- 채팅 입력 → `classifyMessage` → `dispatchToWebhooks` 흐름 연결
+- 음식추천은 `recommendFood` 별도 호출
 
 ---
 
-## 3단계 — 핵심 기능
+### Phase 2 — 채팅 UI 구현
 
-### MEAL-1. 식사 기록 (텍스트)
-
-**Python 변환 대상:** `cogs/meal.py`, `utils/nutrition.py`
-
-```typescript
-// src/lib/meal.ts
-async function analyzeMeal(text: string, userId: string) {
-  // 1. 식약처 API 칼로리 조회
-  // 2. fallback: GPT-4o-mini 칼로리 추정
-  // 3. Supabase meal_log 저장
-  // 4. hp/hunger 업데이트
-}
+#### 2-1. 메시지 입력 → 분류 → 전송 흐름
+```
+사용자 메시지 입력
+  → classifyMessage (GPT 분류)
+  → dispatchToWebhooks (n8n 병렬 호출)
+  → synthesizeResponse (GPT 합성)
+  → 채팅창에 응답 표시
 ```
 
-### MEAL-2. 식사 기록 (사진)
+#### 2-2. 응답 카드 렌더링
+- `restaurants` 배열 → 식당 카드 컴포넌트
+- `weather` 배열 → 날씨 카드 컴포넌트
+- 로딩 상태 처리 (각 webhook 응답 대기)
 
-```typescript
-// GPT-4o-mini Vision 활용
-async function analyzeMealPhoto(imageFile: File, userId: string) {
-  // 1. 이미지 → base64
-  // 2. GPT-4o-mini Vision 분석
-  // 3. 칼로리 추정 + meal_log 저장
-}
-```
-
-### WEIGHT-1. 체중 기록 + 추이 그래프
-
-**Python 변환 대상:** `cogs/weight.py`
-
-```typescript
-// recharts LineChart 활용
-// 최근 14일 체중 추이
-// 목표 체중 기준선 표시
-```
-
-### WEATHER-1. 날씨 표시
-
-**Python 변환 대상:** `cogs/weather.py`, `utils/image.py`
-
-```typescript
-// 기상청 API → 날씨 상태
-// 날씨 상태 → 캐릭터 이미지 선택 로직 (11종)
-// 기상 시간에 자동 반영
-```
+#### 2-3. 음식추천 전용 UI
+- A/B/C 경로별 응답 처리
+- 식당 카드에 추천 이유(`reason`) 표시
+- 알레르기 주의 표시
 
 ---
 
-## 4단계 — 확장 기능
+### Phase 3 — 실제 실행 테스트
 
-### SCHEDULE-1. 일정 관리
+#### 3-1. 전체 플로우 end-to-end 테스트
+순서:
+1. React에서 메시지 입력
+2. n8n webhook 호출 확인 (Network 탭)
+3. Supabase 데이터 저장 확인
+4. 응답 카드 렌더링 확인
 
-**Python 변환 대상:** `docs/bots/schedule/` (구상 단계 → 웹앱에서 구현)
+#### 3-2. 각 시나리오 테스트
+- "오늘 날씨 어때?" → 날씨 카드
+- "점심에 삼겹살 먹었어" → 식사 저장
+- "짬뽕 먹고 싶어" → 음식추천 B경로
+- "오늘 뭐 먹지?" → 음식추천 C경로 (5개 랜덤)
+- "내일 3시에 치과 예약" → 일정 저장
+- "오늘 58kg" → 체중 저장
 
-```typescript
-// 일정 등록 (제목, 날짜, 반복 여부)
-// 알림: 브라우저 Notification API + Discord Webhook
-// 일정 목록 뷰
-```
-
-### DIARY-1. 일기 + 감정 분석
-
-**Python 변환 대상:** `docs/bots/diary/` (구상 단계 → 웹앱에서 구현)
-
-```typescript
-// 일기 작성 (textarea)
-// GPT-4o-mini 감정 분석
-// 주간 감정 추이 차트
-```
-
-### EMAIL-1. 이메일 모니터링
-
-**Python 변환 대상:** `cogs/email_monitor.py`, `utils/mail.py`
-
-```
-주의: 네이버 IMAP은 서버사이드에서만 접근 가능.
-→ Supabase Edge Function 또는 n8n 워크플로우로 처리.
-→ n8n이 IMAP 폴링 → 새 메일 → Supabase DB 저장 → 웹앱 실시간 조회.
-```
+#### 3-3. 에러 케이스 처리
+- n8n 타임아웃 시 UI 처리
+- 분류 실패 시 fallback 메시지
 
 ---
 
-## 5단계 — n8n 연동
+### Phase 4 — 미결 사항
 
-### N8N-1. ML 의도 분류 파이프라인
+#### n8n
+- [ ] `새 날씨 등록` 노드 수정 (city 소스, created_at 값 확인)
+- [ ] 음식추천 C경로 알레르기 없는 식당 메뉴 데이터 채우기 (Supabase menu_items)
+- [ ] 이메일 webhook 연동
 
-```
-웹앱 → n8n 웹훅 → ML 모델 → 의도 분류 결과 반환
-                  ↕ (학습 데이터 축적)
-              intent_log (Supabase)
-```
-
-**초기 (GPT 라벨링):**
-- 유저 입력 → GPT-4o-mini 의도 분류
-- 결과 + 원문 → intent_log 저장
-
-**이후 (ML 전환):**
-- 50건+ 누적 → n8n에서 ML 모델 학습
-- ML 모델이 의도 분류 → GPT는 엔티티 추출만
-
-### N8N-2. 음식 추천
-
-```typescript
-// src/lib/n8n.ts
-async function requestFoodRecommendation(
-  userId: string,
-  address: string,
-  calRemaining: number,
-  mood: string = ''
-) {
-  const res = await axios.post(import.meta.env.VITE_N8N_FOOD_WEBHOOK_URL, {
-    user_id: userId,
-    address,
-    cal_remaining: calRemaining,
-    mood,
-  })
-  return res.data
-}
-```
-
-### N8N-3. 이메일 모니터링 워크플로우
-
-```
-n8n Cron (1분) → 네이버 IMAP 폴링 → 새 메일 감지
-  → Supabase email_log 저장
-  → 웹앱 실시간 반영 (Supabase Realtime)
-```
+#### React
+- [ ] Supabase Auth 로그인
+- [ ] 온보딩 플로우 (취향, 알레르기 입력)
+- [ ] 체중 추이 그래프 (recharts)
+- [ ] 주간 리포트 페이지
 
 ---
 
-## 6단계 — 알림 · 주간 리포트
-
-### REPORT-1. 주간 리포트 CSS 뷰
-
-```
-기존 Discord 임베드 → 웹앱 내 전용 리포트 페이지 (/report)
-  ─ 주간 칼로리 차트
-  ─ 체중 변화
-  ─ 감정 추이
-  ─ 스트릭 + 배지
-```
-
-### NOTIFY-1. Discord Webhook 발송
-
-```typescript
-// src/lib/discord.ts
-async function sendToDiscord(webhookUrl: string, content: object) {
-  await axios.post(webhookUrl, content)
-}
-
-// 주간 리포트: Discord Embed 형식으로 발송
-// 일정 알림: 단순 텍스트 또는 Embed
-```
-
-### NOTIFY-2. 브라우저 Push 알림 (PWA)
-
-```typescript
-// 일정 알림: Notification API
-// 서비스 워커 등록 → 백그라운드 알림 가능
-// 향후 Electron 패키징 시 OS 네이티브 알림으로 전환
-```
-
----
-
-## 미결 사항
+## 미결 사항 (장기)
 
 ```
 [ ] Supabase RLS 정책 설계 (유저별 데이터 격리)
-[ ] 이미지 생성 (NovelAI) 서버사이드 처리 방법
-    → Supabase Edge Function / n8n 워크플로우
-[ ] 이메일 모니터링 IMAP 처리 위치 확정 (Edge Function vs n8n)
 [ ] PWA vs Electron 패키징 방향 결정
-[ ] Discord Webhook URL 수령
+[ ] 이메일 모니터링 IMAP 처리 위치 확정 (Edge Function vs n8n)
+[ ] ML 의도 분류 파이프라인 (데이터 50건+ 누적 후)
 ```
-
----
-
-## 레거시 Python 봇 버그 (웹앱 전환 시 불필요)
-
-기존 NEXT.md의 Python 봇 버그 수정 항목들은 웹앱 전환으로 자동 해소됨.  
-Python 봇은 `develop` 브랜치에 보존. 웹앱 완성 후 아카이브.
