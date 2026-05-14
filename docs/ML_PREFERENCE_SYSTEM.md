@@ -246,29 +246,68 @@ CREATE INDEX IF NOT EXISTS idx_food_feedback_user_category
 
 ## 6. n8n 연동
 
-### 6-1. 음식 추천 — Softmax 점수 정렬 (`취향 정리` 노드 수정)
+### 6-1. 음식 추천 — 편향 방지 Softmax 정렬 (`취향 정리` 노드 수정)
 
 ```javascript
-// 유저 로짓 벡터 로드
+const TEMPERATURE = 1.5   // 분포 완화
+const EPSILON     = 0.10  // 최소 확률 바닥
+const GAMMA       = 0.95  // 시간 감쇠 (1일 단위)
+const K           = 7     // 카테고리 수
+
+const CONTEXT_BONUS = {
+  weather: {
+    '비':   { '한식': 0.15, '일식': 0.10 },
+    '눈':   { '한식': 0.20 },
+    '맑음': { '양식': 0.05, '디저트': 0.10 },
+    '흐림': { '중식': 0.05 }
+  },
+  meal_type: {
+    '아침': { '디저트': 0.10, '양식': 0.05 },
+    '점심': { '한식': 0.05, '분식': 0.05 },
+    '저녁': { '한식': 0.10, '중식': 0.05 },
+    '야식': { '분식': 0.15, '중식': 0.10 }
+  }
+}
+
+// ① 시간 감쇠 적용된 로짓 계산
+const today = new Date()
 const logits = $('user_preference_logits').all()
 const logitMap = {}
-logits.forEach(r => { logitMap[r.json.category] = r.json.logit ?? 0 })
-
-// Softmax 계산
-const categories = Object.keys(logitMap)
-const expValues = {}
-let expSum = 0
-categories.forEach(cat => {
-  expValues[cat] = Math.exp(logitMap[cat])
-  expSum += expValues[cat]
+logits.forEach(r => {
+  const daysSince = (today - new Date(r.json.updated_at)) / 86400000
+  logitMap[r.json.category] = (r.json.logit ?? 0) * Math.pow(GAMMA, daysSince)
 })
-const softmax = {}
-categories.forEach(cat => { softmax[cat] = expValues[cat] / expSum })
 
-// 식당 목록에 Softmax 확률 점수 부여 후 정렬
+// ② Temperature Softmax
+const categories = ['한식','중식','양식','분식','일식','디저트','기타']
+let expSum = 0
+const expMap = {}
+categories.forEach(cat => {
+  expMap[cat] = Math.exp((logitMap[cat] ?? 0) / TEMPERATURE)
+  expSum += expMap[cat]
+})
+
+// ③ Dirichlet Floor 적용
+const probs = {}
+categories.forEach(cat => {
+  probs[cat] = (1 - EPSILON) * (expMap[cat] / expSum) + EPSILON / K
+})
+
+// ④ 컨텍스트 보너스
+const body = $('음식 추천 입력').item.json.body
+const weather = body.weather ?? ''
+const mealType = body.meal_type ?? ''
+const weatherBonus = CONTEXT_BONUS.weather[weather] ?? {}
+const mealBonus = CONTEXT_BONUS.meal_type[mealType] ?? {}
+
+// ⑤ 식당 최종 점수 정렬
 const restaurants = $('식당1').all()
 return restaurants
-  .map(r => ({ ...r.json, score: softmax[r.json.category] ?? (1 / categories.length) }))
+  .map(r => {
+    const cat = r.json.category
+    const score = probs[cat] + (weatherBonus[cat] ?? 0) + (mealBonus[cat] ?? 0)
+    return { ...r.json, score }
+  })
   .sort((a, b) => b.score - a.score)
   .slice(0, 5)
   .map(r => ({ json: r }))
