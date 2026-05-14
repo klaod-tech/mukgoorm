@@ -261,6 +261,26 @@ export default function Settings() {
           {saving ? '저장 중...' : '저장하기'}
         </button>
 
+        {/* 월드컵 재도전 */}
+        <Section title="🏆 음식 이상형 월드컵">
+          <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
+            월드컵을 다시 하면 음식 선호도가 초기화돼요.<br />
+            추천 정확도를 높이고 싶을 때 재도전해보세요.
+          </p>
+          <button
+            onClick={() => navigate('/worldcup')}
+            style={{
+              background: 'transparent',
+              border: '1px solid #6c63ff',
+              borderRadius: 8, padding: '12px 20px',
+              color: '#6c63ff', fontSize: 14, cursor: 'pointer',
+              alignSelf: 'flex-start',
+            }}
+          >
+            월드컵 재도전
+          </button>
+        </Section>
+
         {/* 계정 관리 */}
         <Section title="🗑️ 계정 관리">
           <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
