@@ -294,6 +294,7 @@ export default function Home() {
         location: profile.village ?? '',
         message: menuName,
       })
+      setMenuState(null)
       setMessages(prev => [...prev, {
         id: Date.now(),
         role: 'bot',
