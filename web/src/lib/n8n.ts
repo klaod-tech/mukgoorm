@@ -328,3 +328,23 @@ export async function submitIntentFeedback(params: {
 }): Promise<void> {
   await axios.post('/webhook/food/feedback', params, { timeout: 5000 })
 }
+
+/** 월드컵 완료 → 선호도 초기화 */
+export async function sendWorldcupResult(params: {
+  user_id: string
+  champion: string
+  rounds: Array<{
+    round: number
+    winner: string
+    loser: string
+    winner_category: string
+    loser_category: string
+  }>
+}): Promise<{ message: string; top_categories: string[] }> {
+  const res = await axios.post<{ message: string; top_categories: string[] }>(
+    '/webhook/worldcup',
+    params,
+    { timeout: 10000 },
+  )
+  return res.data
+}
