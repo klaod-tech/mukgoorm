@@ -22,10 +22,9 @@ export default function Weight() {
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
-      .then(({ data }) => {
-        setLogs(data ?? [])
-        setLoading(false)
-      })
+      .then(({ data }) => { setLogs(data ?? []) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [user])
 
   const latest = logs[0]

@@ -31,10 +31,9 @@ export default function Meal() {
       .eq('user_id', user.id)
       .order('date', { ascending: false })
       .order('created_at', { ascending: false })
-      .then(({ data }) => {
-        setLogs(data ?? [])
-        setLoading(false)
-      })
+      .then(({ data }) => { setLogs(data ?? []) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [user])
 
   const grouped = logs.reduce<Record<string, MealLog[]>>((acc, log) => {

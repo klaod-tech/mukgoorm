@@ -24,10 +24,9 @@ export default function Weather() {
       .select('*')
       .eq('user_id', user.id)
       .order('date', { ascending: false })
-      .then(({ data }) => {
-        setLogs(data ?? [])
-        setLoading(false)
-      })
+      .then(({ data }) => { setLogs(data ?? []) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
   }, [user])
 
   if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
