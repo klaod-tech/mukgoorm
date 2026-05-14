@@ -6,6 +6,7 @@ import {
   dispatchToWebhooks,
   synthesizeResponse,
   callBotWebhook,
+  recommendFood,
   fetchRestaurantMenu,
   selectFood,
   submitIntentFeedback,
@@ -14,6 +15,7 @@ import {
   type MenuItem,
   type ClassifyResult,
   type IntentPath,
+  type CombinedResponse,
 } from '../lib/n8n'
 import { supabase } from '../lib/supabase'
 import { getTodayDiary } from '../lib/db'
@@ -142,11 +144,43 @@ export default function Home() {
         diaryConflict = await getTodayDiary(profile.user_id, classified.date)
       }
 
-      const combined = await dispatchToWebhooks(profile.user_id, text, classified, {
-        city: profile.city ?? '',
-        village: profile.village ?? '',
-        meal_type: getMealType(profile),
-      })
+      const hasFood = classified.bots.includes('음식추천')
+      const nonFoodClassified = { ...classified, bots: classified.bots.filter(b => b !== '음식추천') }
+
+      const [dispatchResult, foodResult] = await Promise.allSettled([
+        nonFoodClassified.bots.length > 0
+          ? dispatchToWebhooks(profile.user_id, text, nonFoodClassified, {
+              city: profile.city ?? '',
+              village: profile.village ?? '',
+              meal_type: getMealType(profile),
+            })
+          : Promise.resolve<CombinedResponse>({ messages: [], restaurants: [], weather: [], failed: [] }),
+        hasFood
+          ? recommendFood({
+              user_id: profile.user_id,
+              message: text,
+              location: profile.village ?? '',
+              date: classified.date,
+            })
+          : Promise.resolve(null),
+      ])
+
+      const combined: CombinedResponse = dispatchResult.status === 'fulfilled'
+        ? dispatchResult.value
+        : { messages: [], restaurants: [], weather: [], failed: [...nonFoodClassified.bots] }
+
+      if (hasFood) {
+        if (foodResult.status === 'fulfilled' && foodResult.value) {
+          const food = foodResult.value
+          combined.messages.push(food.message)
+          combined.restaurants.push(...food.restaurants)
+          combined.intent_log_id = food.intent_log_id
+          combined.food_path = food.path
+          combined.food_description = food.description
+        } else {
+          combined.failed.push('음식추천')
+        }
+      }
 
       const reply = await synthesizeResponse(
         profile.tamagotchi_name ?? '먹구름',
