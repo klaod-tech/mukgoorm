@@ -1,8 +1,8 @@
 # 먹구름(mukgoorm) — 팀 기술 개요서
 
-> **현재 버전**: v3.2 (Python) → 전환 중: React 웹앱  
-> **GitHub**: https://github.com/klaod-tech/mukgoorm  
-> **작성일**: 2026-04-30  
+> **버전**: React 웹앱 (웹 마이그레이션 완료)
+> **GitHub**: https://github.com/klaod-tech/mukgoorm
+> **최종 업데이트**: 2026-05-14
 > **브랜치**: `feat/web-migration`
 
 ---
@@ -11,237 +11,206 @@
 
 ### 한 줄 요약
 
-> 나만의 AI 캐릭터와 함께하는 **라이프스타일 관리 웹 애플리케이션**.
-
-### 상세 소개
-
-먹구름은 단순한 칼로리 계산 앱이 아닙니다.  
-유저가 **음식, 체중, 감정, 일정**을 기록하면, 나만의 캐릭터가 그 데이터를 바탕으로 오늘의 상태를 이미지와 대사로 **간접적으로** 전달합니다.
-
-숫자를 직접 보여주는 대신, 캐릭터의 표정과 한마디가 오늘 내 하루를 대신 말해줍니다.
-
-### 왜 Discord 봇에서 웹앱으로?
-
-| 문제 | 내용 |
-|------|------|
-| 프라이버시 한계 | 서버 관리자가 모든 유저 데이터를 볼 수 있음. Discord 구조상 기술적으로 막을 수 없음 |
-| 디자인 한계 | 임베드 커스텀 불가, 주간 리포트 가독성 최악 |
-| 확장성 한계 | 버튼/Modal UX 제약, 기능 추가마다 Discord Cog 분리 필요 |
-| 해결 방향 | React 웹앱 + Supabase Auth → 유저별 완전 격리 + 자유로운 UI |
-
-### 현재 구현된 기능 (Python 봇 v3.2 기준)
-
-- 식사 기록 (텍스트/사진) → 칼로리·영양소 분석 → 캐릭터 반응
-- 체중 기록 → 목표 체중까지의 변화 추적
-- 날씨·미세먼지 실시간 반영 → 캐릭터 이미지 자동 교체
-- ML 기반 개인화 칼로리 보정
-- 스트릭 + 배지 시스템 (7종)
-- 네이버 이메일 모니터링
-
-### 웹앱에서 추가될 기능
-
-- 일기 + 감정 분석 (캐릭터 반응)
-- 일정 관리 + 브라우저 알림
-- 음식 추천 (n8n 연동)
-- 주간 리포트 (CSS 풀 커스텀 뷰)
-- Discord Webhook + 이메일 발송
+> 음식 이상형 월드컵으로 취향을 수집하고, AI가 개인화된 음식을 추천하는 **라이프스타일 관리 웹 앱**.
 
 ### 핵심 철학
 
 ```
 "기록은 습관이고, 습관은 캐릭터에 녹아든다."
 
-유저가 꾸준히 기록할수록 캐릭터가 더 풍부하게 반응한다.
-데이터가 쌓일수록 ML이 개인화되고, 추천과 피드백이 정교해진다.
+유저가 꾸준히 기록할수록 ML 모델이 정교해지고,
+붐업/붐다운 피드백이 쌓일수록 추천이 개인화된다.
 ```
 
----
-
-## 2. 핵심 설계 원칙 (절대 변경 금지)
+### 핵심 설계 원칙
 
 | # | 원칙 |
 |---|------|
 | 1 | **hp/hunger/mood 수치 직접 노출 금지** — 이미지+대사로만 간접 표현 |
-| 2 | **날씨는 별도 알림 없음** — 기상 시간에 이미지 자동 교체로만 전달 |
-| 3 | **칼로리/영양소 수치는 오늘 요약 클릭 시에만 확인 가능** |
-| 4 | **각 기능은 자신이 소유한 DB 테이블에만 INSERT/UPDATE** |
+| 2 | **날씨는 별도 알림 없음** — 이미지 자동 교체로만 전달 |
+| 3 | **각 기능은 자신이 소유한 DB 테이블에만 INSERT/UPDATE** |
 
 ---
 
-## 3. 기술 스택
-
-### 신규 (React 웹앱)
+## 2. 기술 스택
 
 | 항목 | 내용 |
 |------|------|
-| 언어 | JavaScript / TypeScript |
+| 언어 | TypeScript |
 | 프레임워크 | React (Vite) |
 | 인증/DB | Supabase (Auth + PostgreSQL) |
 | AI | OpenAI GPT-4o-mini |
-| 자동화/ML | n8n |
-| 알림 | Discord Webhook · 이메일 SMTP |
-| 그래프 | recharts |
+| 자동화/ML | n8n (워크플로우 + Softmax 학습 파이프라인) |
 | HTTP | axios |
-
-### 레거시 (Python 봇 v3.2)
-
-| 항목 | 내용 |
-|------|------|
-| 언어 | Python 3.11+ |
-| Discord | discord.py 2.x |
-| AI | OpenAI GPT-4o |
-| DB | Supabase (psycopg2) |
-| ML | scikit-learn (Ridge / RandomForest) |
-| 스케줄러 | APScheduler |
+| 날씨 | 기상청 공공데이터 API |
+| 지도 | 카카오 좌표 API |
 
 ---
 
-## 4. 전체 아키텍처
+## 3. 전체 아키텍처
 
 ```
 브라우저 (React 웹앱)
   │
-  ├── Supabase Auth      — 유저 인증 · 세션 · RLS (유저별 완전 격리)
-  ├── Supabase DB        — 데이터 CRUD
-  ├── GPT-4o-mini        — AI 대화 · 분석 · 대사 생성
+  ├── Supabase Auth      — 이메일 로그인 · 세션 · RLS (유저별 완전 격리)
+  ├── Supabase DB        — 모든 데이터 CRUD
+  ├── GPT-4o-mini        — 메시지 의도 분류 · 봇 응답 합성 · 자연어 처리
   │
-  ├── n8n (별도 서버)
-  │     ├── ML 의도 분류 파이프라인
-  │     ├── 음식 추천 워크플로우
-  │     ├── 네이버 IMAP 폴링 (이메일 모니터링)
-  │     └── 리포트 이메일 발송
-  │
-  └── 알림 레이어
-        ├── Discord Webhook  — 주간 리포트 · 일정 Push
-        └── 이메일 SMTP      — 리포트 발송 (선택)
+  └── n8n (로컬 localhost:5678)
+        ├── /webhook/weather    날씨 조회 + 저장
+        ├── /webhook/meal       식사 기록
+        ├── /webhook/diary      일기 저장/수정
+        ├── /webhook/schedule   일정 저장/수정
+        ├── /webhook/weight     체중 기록
+        ├── /webhook/email      이메일 요약
+        ├── /webhook/food       음식 추천 (A/B/C + Softmax 정렬)
+        ├── /webhook/feedback   붐업/붐다운 → 로짓 업데이트
+        └── /webhook/worldcup   월드컵 완료 → 초기 선호도 설정
+```
+
+### 메시지 처리 흐름
+
+```
+유저 채팅 입력
+  → GPT-4o-mini: 의도 분류 (날씨/식사/일기/일정/체중/이메일/음식추천)
+  → 음식추천: recommendFood() 별도 호출
+  → 나머지: dispatchToWebhooks() 병렬 호출
+  → GPT-4o-mini: 봇 응답 합성
+  → 채팅창 렌더링 (말풍선 + 식당/날씨 카드)
 ```
 
 ---
 
-## 5. 웹앱 페이지 구조
+## 4. ML 선호도 시스템
+
+### 데이터 수집 경로
+
+1. **음식 이상형 월드컵** — 온보딩 시 16강 토너먼트로 초기 선호도 구축
+2. **붐업/붐다운** — 추천 카드에서 실시간 피드백 라벨링
+3. **실제 메뉴 선택** — `restaurant_log` 테이블 (약한 신호)
+
+### Softmax 학습 구조
 
 ```
-/               — 캐릭터 상태 메인 화면
-/login          — 로그인
-/onboarding     — 온보딩 (최초 1회)
-/meal           — 식사 기록
-/weight         — 체중 관리
-/weather        — 날씨
-/schedule       — 일정
-/diary          — 일기
-/email          — 이메일 모니터링
-/report         — 주간 리포트
-/settings       — 설정
+카테고리 One-hot 인코딩 (한식/중식/양식/분식/일식/디저트/기타)
+  → 로짓 벡터 θ (Supabase user_preference_logits 테이블)
+  → 피드백마다 θ += ±α (온라인 SGD)
+  → Temperature Softmax(θ / T) → 확률 분포
+  → 시간 감쇠 × Dirichlet Floor × 컨텍스트 보너스
+  → 추천 점수로 식당 정렬
 ```
+
+### 편향 방지 3계층
+
+| 계층 | 방법 | 역할 |
+|------|------|------|
+| Temperature (T=1.5) | Softmax 온도 조절 | 한 카테고리 독점 방지 |
+| 시간 감쇠 (γ=0.95/day) | 오래된 피드백 가중치 감소 | 오늘 기분 반영 |
+| Dirichlet Floor (ε=0.1) | 최소 확률 보장 | 어떤 카테고리도 0% 방지 |
+
+→ 상세: [ML_PREFERENCE_SYSTEM.md](ML_PREFERENCE_SYSTEM.md)
 
 ---
 
-## 6. DB 주요 테이블 (Supabase, 기존 스키마 재활용)
+## 5. 페이지 구조
 
-| 테이블 | 설명 |
+| 경로 | 설명 | 데이터 소스 |
+|------|------|------------|
+| `/login` | 이메일 로그인/회원가입 | Supabase Auth |
+| `/onboarding` | 최초 프로필 설정 → 월드컵 이동 | Supabase |
+| `/worldcup` | 16강 음식 이상형 월드컵 | n8n /webhook/worldcup |
+| `/` | AI 비서 채팅 메인 | GPT + n8n 복수 webhook |
+| `/meal` | 식사 기록 조회 | Supabase meal_log |
+| `/weight` | 체중 관리 | Supabase weight_log |
+| `/weather` | 날씨 기록 | Supabase weather_log |
+| `/schedule` | 일정 (완료 체크 포함) | Supabase schedule |
+| `/diary` | 일기 목록 | Supabase diary |
+| `/email` | 이메일 요약 목록 | Supabase email_log |
+| `/report` | 주간 통계 대시보드 | Supabase 복수 테이블 |
+| `/settings` | 프로필 수정 · 월드컵 재도전 | Supabase |
+
+---
+
+## 6. DB 테이블 현황
+
+| 테이블 | 역할 |
 |--------|------|
 | `users` | 유저 프로필, 설정, 신체정보, 시간 설정 |
-| `meal_log` | 식사 기록 (음식명, 칼로리, 영양소) |
+| `tamagotchi` | hp / hunger / mood 상태 |
+| `meal_log` | 식사 기록 (음식명, 칼로리) |
 | `weight_log` | 체중 기록 |
-| `schedules` | 일정 (제목, 날짜, 반복) |
-| `diary_log` | 일기 + 감정 분석 결과 |
-| `intent_log` | ML 학습용 의도 분류 데이터 |
-| `email_log` | 이메일 모니터링 기록 |
+| `schedule` | 일정 (제목, 날짜, 완료 여부) |
+| `diary` | 일기 + AI 요약 |
+| `weather_log` | 날씨 기록 |
+| `email_log` | 이메일 요약 기록 |
+| `restaurants` | 음식점 목록 |
+| `menu_items` | 음식점 메뉴 |
+| `restaurant_log` | 유저 메뉴 선택 이력 (ML 데이터) |
+| `food_feedback` | 붐업/붐다운 피드백 |
+| `intent_logs` | 음식 추천 A/B/C 분류 로그 |
+| `user_preference_logits` | Softmax 학습 파라미터 ← **ML 핵심** |
+| `worldcup_sessions` | 월드컵 진행 기록 |
 
 ---
 
-## 7. ML — 의도 분류 파이프라인
+## 7. n8n 워크플로우 현황
 
-수업 주제(AI 머신러닝)에 맞춰 ML이 중심 역할.
-
-```
-초기 단계: GPT-4o-mini 의도 분류 + 라벨링
-  → intent_log에 (message, intent, entity) 축적
-
-학습 단계: 유저별 50건+ 누적 시
-  → n8n에서 TF-IDF + LogisticRegression 학습
-  → ML 모델 배포
-
-운영 단계: ML이 의도 분류 → GPT는 엔티티 추출만
-  → GPT 비용 절감 + 개인화
-```
-
-### 의도 레이블
-
-| 레이블 | 예시 |
-|--------|------|
-| `meal` | "점심에 비빔밥 먹었어" |
-| `weight` | "몸무게 68.5kg" |
-| `diary` | "오늘 좀 힘들었어" |
-| `schedule` | "내일 오후 3시 병원" |
-| `email` | "메일 확인해줘" |
-| `none` | 일반 대화 |
+| webhook | 상태 | 담당 |
+|---------|------|------|
+| /weather | ✅ 완료 | n8n |
+| /meal | ✅ 완료 | n8n |
+| /diary | ✅ 완료 | n8n |
+| /schedule | ✅ 완료 | n8n |
+| /weight | ✅ 완료 | n8n |
+| /food (A/B/C 경로) | ✅ 완료 | n8n |
+| /email | ⚠️ 미연동 | n8n |
+| /feedback (로짓 업데이트) | ⏳ 구현 대기 | n8n ([가이드](guide/n8n_ml_nodes.md)) |
+| /worldcup | ⏳ 구현 대기 | n8n ([가이드](guide/n8n_ml_nodes.md)) |
+| /food (Softmax 정렬) | ⏳ 구현 대기 | n8n ([가이드](guide/n8n_ml_nodes.md)) |
 
 ---
 
-## 8. n8n 연동 현황
+## 8. 캐릭터 이미지 시스템
 
-| 워크플로우 | 상태 | 비고 |
-|-----------|------|------|
-| 음식 추천 | 구성됨 | 웹훅 URL 수령 후 즉시 연결 가능 |
-| 이메일 IMAP 폴링 | 예정 | 네이버 IMAP → Supabase 저장 |
-| ML 학습 파이프라인 | 예정 | intent_log 50건+ 누적 시 자동 학습 |
-| 리포트 이메일 발송 | 예정 | SMTP 워크플로우 |
+### 현재 이미지 (11종, `web/public/`)
 
----
-
-## 9. 작업 순서 (팀 공유용)
-
-```
-[1단계] React 기본 세팅
-  ─ Vite + React + TypeScript
-  ─ Supabase 연결
-  ─ 라우팅 + 레이아웃
-
-[2단계] 인증 + 핵심 기능
-  ─ Supabase Auth
-  ─ 온보딩 플로우
-  ─ 식사·체중·날씨·캐릭터 JS 변환
-
-[3단계] 확장 기능
-  ─ 일정·일기·이메일
-
-[4단계] n8n 연동
-  ─ ML 파이프라인
-  ─ 음식 추천
-
-[5단계] 알림·리포트
-  ─ 주간 리포트 CSS 뷰
-  ─ Discord Webhook + 이메일
-
-[6단계] 마무리 (선택)
-  ─ PWA / Electron 패키징
-```
-
----
-
-## 10. 유저 규모 및 설계 기준
-
-| 항목 | 내용 |
+| 파일 | 상황 |
 |------|------|
-| 현재 운영 | 2인 프라이빗 개발 환경 |
-| 목표 규모 | 최대 20인 소규모 |
-| 인증 | Supabase Auth + RLS — 관리자도 다른 유저 데이터 열람 불가 |
-| API 비용 | 20인 × GPT 호출 빈도 — 월 예산 산정 필요 |
-| n8n | 클라우드 n8n 또는 VPS 자체 호스팅 |
+| `cube.png` | 월드컵 미완료 또는 완료 후 24시간 이내 |
+| `normal.png` | 기본 상태 |
+| `cheer.png` | 기분 좋음 (mood > 70) |
+| `smile.png` | 평온 (mood > 50) |
+| `eat.png` | 방금 식사함 (hunger > 80) |
+| `tired.png` | 배고픔 / HP 위험 |
+| `upset.png` | 매우 배고픔 |
+| `rainy.png` | 비 오는 날 |
+| `snow.png` | 눈 오는 날 |
+| `hot.png` | 무더운 날 |
+| `warm.png` | 따뜻한 날 |
+
+### AI 생성 이미지 계획
+
+월드컵 완료 + 24시간 후 → AI 생성 이미지로 교체 예정.  
+현재는 발표용 기존 이미지 사용.  
+→ 상세: [CHARACTER_IMAGE_PLAN.md](CHARACTER_IMAGE_PLAN.md)
 
 ---
 
-## 11. 레거시 Python 봇 (v3.2)
+## 9. 발표 포인트
 
-`develop` 브랜치에 보존. 웹앱 완성 후 아카이브 예정.
+### ML 설명 (한 문장)
+> "음식 카테고리를 One-hot 인코딩한 특징 벡터에 사용자 피드백 라벨로 학습한 로짓을 Softmax 변환하여, 편향 없이 개인화된 추천 확률 분포를 만드는 온라인 학습 시스템"
 
-```
-bot.py          먹구름봇     오케스트레이터 · 온보딩 · 캐릭터
-bot_mail.py     메일봇       IMAP 폴링 · 이메일 알림   [운영 중]
-bot_meal.py     식사봇       사진 감지 · GPT Vision     [운영 중]
-bot_weather.py  날씨봇       기상청 API · 미세먼지       [운영 중]
-bot_weight.py   체중봇       체중 기록                  [skeleton]
-bot_diary.py    일기봇       [구상 단계 → 웹앱에서 구현]
-bot_schedule.py 일정봇       [구상 단계 → 웹앱에서 구현]
-```
+### 학술 용어 매핑
+
+| 우리 시스템 | 학술 용어 |
+|------------|---------|
+| 카테고리 One-hot | 특징 벡터 (Feature vector) |
+| 로짓 벡터 θ | 모델 파라미터 |
+| 붐업=1 / 붐다운=0 | 이진 레이블 (Binary label) |
+| θ 업데이트 | 온라인 SGD |
+| Softmax(θ/T) | Temperature-scaled 다항 로지스틱 회귀 |
+| 시간 감쇠 | 지수 이동 평균 (EMA) |
+| Floor ε/K | Dirichlet 사전 확률 |
+| 날씨/시간 보너스 | 맥락적 특징 (Contextual feature) |
+| 탐색-활용 균형 | Exploration-Exploitation Tradeoff |
