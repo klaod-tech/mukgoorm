@@ -25,15 +25,21 @@ export default function Meal() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('meal_log')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { setLogs(data ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('meal_log')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+          .order('created_at', { ascending: false })
+        setLogs(data ?? [])
+      } catch {
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [user])
 
   const grouped = logs.reduce<Record<string, MealLog[]>>((acc, log) => {

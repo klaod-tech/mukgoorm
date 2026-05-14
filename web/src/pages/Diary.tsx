@@ -17,14 +17,20 @@ export default function Diary() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('diary')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .then(({ data }) => { setEntries(data ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('diary')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+        setEntries(data ?? [])
+      } catch {
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [user])
 
   if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>

@@ -17,14 +17,20 @@ export default function Weight() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('weight_log')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .then(({ data }) => { setLogs(data ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('weight_log')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+        setLogs(data ?? [])
+      } catch {
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [user])
 
   const latest = logs[0]

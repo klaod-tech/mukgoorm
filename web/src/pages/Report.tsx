@@ -81,10 +81,13 @@ export default function Report() {
 
       // 체중 변화
       const latestWeight = weightData[0]?.weight ?? null
-      const weekAgoWeight = weightData.find(w => {
-        const diff = (new Date(weightData[0]?.date).getTime() - new Date(w.date).getTime()) / 86400000
-        return diff >= 6
-      })?.weight ?? null
+      const latestDate = weightData[0]?.date
+      const weekAgoWeight = latestDate
+        ? weightData.find(w => {
+            const diff = (new Date(latestDate).getTime() - new Date(w.date).getTime()) / 86400000
+            return diff >= 6
+          })?.weight ?? null
+        : null
 
       // 피드백 집계
       const feedbackLikes = feedbackData.filter(f => f.feedback === 'like').length

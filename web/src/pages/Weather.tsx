@@ -19,14 +19,20 @@ export default function Weather() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('weather_log')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('date', { ascending: false })
-      .then(({ data }) => { setLogs(data ?? []) })
-      .catch(() => {})
-      .finally(() => setLoading(false))
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('weather_log')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('date', { ascending: false })
+        setLogs(data ?? [])
+      } catch {
+      } finally {
+        setLoading(false)
+      }
+    }
+    load()
   }, [user])
 
   if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
