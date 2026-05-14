@@ -80,7 +80,7 @@ export default function Onboarding() {
         }),
         timeout,
       ])
-      navigate('/')
+      navigate('/worldcup')
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : JSON.stringify(e))
     } finally {

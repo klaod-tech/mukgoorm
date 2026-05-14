@@ -21,6 +21,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route element={<ProtectedRoute />}>
+          <Route path="/worldcup" element={<Worldcup />} />
           <Route element={<Layout />}>
             <Route path="/" element={<Home />} />
             <Route path="/meal" element={<Meal />} />
