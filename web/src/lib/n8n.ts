@@ -62,12 +62,10 @@ const BOT_WEBHOOK: Record<string, string> = {
   식사: '/webhook/meal',
   체중: '/webhook/weight',
   이메일: '/webhook/email',
-  음식추천: '/webhook/food',
+  // 음식추천은 recommendFood()로 별도 호출 — 여기 넣지 말 것
 }
 
-const BOT_TIMEOUT: Record<string, number> = {
-  음식추천: 10000,
-}
+const BOT_TIMEOUT: Record<string, number> = {}
 const DEFAULT_TIMEOUT = 15000
 
 const FEEDBACK_WEBHOOK = '/webhook/feedback'
