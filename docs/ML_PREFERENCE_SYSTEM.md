@@ -396,9 +396,11 @@ export async function sendFeedback(params: {
 ```
 1. "월드컵에서 치킨을 계속 선택하면 '분식' 로짓이 올라갑니다"
 2. "로짓을 Softmax에 통과시키면 카테고리별 선호 확률이 나옵니다"
-3. "붐업/붐다운이 라벨 — 이게 쌓일수록 확률 분포가 뾰족해집니다"
-4. (그래프 보여주기) "초기엔 고르다가 200회 후엔 한식이 70%를 차지합니다"
-5. "이 확률로 식당을 정렬하면 점점 내 입맛에 맞는 추천이 나옵니다"
+3. "붐업/붐다운이 라벨 — 이게 쌓일수록 분포가 선호 카테고리로 집중됩니다"
+4. (그래프) "하지만 한 카테고리가 독점하면 매일 같은 음식만 추천되죠"
+5. "그래서 Temperature로 분포를 완화하고, 오래된 피드백은 감쇠시키고,
+   모든 카테고리에 최소 확률을 보장해 다양성을 유지합니다"
+6. "비 오는 날엔 국물 음식 보너스 — 이미 수집 중인 날씨 데이터도 활용합니다"
 ```
 
 ### 학술 용어 매핑 (교수님 질문 대비)
@@ -408,8 +410,12 @@ export async function sendFeedback(params: {
 | 로짓 벡터 θ | 모델 파라미터 / 가중치 |
 | 붐업=1 / 붐다운=0 | 이진 레이블 (Binary label) |
 | 피드백마다 θ 업데이트 | 온라인 SGD (Stochastic Gradient Descent) |
-| Softmax(θ) | 다항 로지스틱 회귀 출력 |
+| Softmax(θ / T) | Temperature-scaled 다항 로지스틱 회귀 |
 | score = P(category\|user) | 추천 점수 (Relevance score) |
+| 시간 감쇠 γ^days | 지수 이동 평균 (EMA) 가중치 |
+| Floor ε/K 보장 | Dirichlet 사전 확률 / 라플라스 스무딩 |
+| 컨텍스트 보너스 | 맥락적 특징 (Contextual feature) |
+| 탐색-활용 균형 | Exploration-Exploitation Tradeoff |
 
 ---
 
