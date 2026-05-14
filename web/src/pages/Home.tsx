@@ -89,6 +89,9 @@ function getMealType(profile: {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 
+// 큐브 진화 상태
+type EvoState = 'no_worldcup' | 'cube' | 'evolved'
+
 export default function Home() {
   const { user, profile } = useUser()
   const [tamagotchi, setTamagotchi] = useState<Tamagotchi | null>(null)
@@ -100,6 +103,7 @@ export default function Home() {
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const [menuState, setMenuState] = useState<MenuState | null>(null)
   const [activeIntentLogId, setActiveIntentLogId] = useState<string | null>(null)
+  const [evoState, setEvoState] = useState<EvoState>('evolved')
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,6 +116,21 @@ export default function Home() {
     if (!user) return
     supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setTamagotchi(data) })
+
+    // 월드컵 완료 여부 → 큐브 진화 상태 결정
+    supabase
+      .from('worldcup_sessions')
+      .select('created_at')
+      .eq('user_id', user.id)
+      .eq('completed', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!data) { setEvoState('no_worldcup'); return }
+        const hoursSince = (Date.now() - new Date(data.created_at).getTime()) / 3600000
+        setEvoState(hoursSince < 24 ? 'cube' : 'evolved')
+      })
   }, [user])
 
   useEffect(() => {
@@ -124,9 +143,13 @@ export default function Home() {
     return () => clearInterval(t)
   }, [loading])
 
-  const characterImage = tamagotchi
-    ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp)
-    : '/normal.png'
+  const characterImage = (() => {
+    if (evoState === 'no_worldcup') return '/cube.png'
+    if (evoState === 'cube') return '/cube.png'
+    return tamagotchi
+      ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp)
+      : '/normal.png'
+  })()
 
   // ── 메시지 전송 ──────────────────────────────────────────────
 
@@ -328,7 +351,13 @@ export default function Home() {
         <div>
           <div style={{ color: '#aaa', fontSize: 13 }}>{profile?.tamagotchi_name}의 오늘</div>
           <div style={{ color: '#fff', fontSize: 15, marginTop: 4 }}>
-            {loading ? '생각 중...' : '날씨, 식사, 일정, 맛집 뭐든지 물어봐 🌧️'}
+            {loading
+              ? '생각 중...'
+              : evoState === 'no_worldcup'
+                ? '월드컵을 완료해야 캐릭터가 태어나요 🥚'
+                : evoState === 'cube'
+                  ? 'AI가 나만의 캐릭터를 만드는 중... 🌀'
+                  : '날씨, 식사, 일정, 맛집 뭐든지 물어봐 🌧️'}
           </div>
         </div>
       </div>
