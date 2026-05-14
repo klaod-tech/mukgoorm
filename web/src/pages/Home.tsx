@@ -471,12 +471,22 @@ export default function Home() {
 function RestaurantCard({
   restaurant: r,
   onMenuRequest,
+  onFeedback,
   isMenuOpen,
 }: {
   restaurant: Restaurant
   onMenuRequest: (r: Restaurant) => void
+  onFeedback: (r: Restaurant, feedback: 'like' | 'dislike') => void
   isMenuOpen: boolean
 }) {
+  const [voted, setVoted] = useState<'like' | 'dislike' | null>(null)
+
+  function handleVote(f: 'like' | 'dislike') {
+    if (voted) return
+    setVoted(f)
+    onFeedback(r, f)
+  }
+
   return (
     <div style={{
       background: isMenuOpen ? '#1e1e3a' : '#16213e',
@@ -502,11 +512,35 @@ function RestaurantCard({
         >
           {isMenuOpen ? '메뉴 보는 중' : '메뉴 보기 →'}
         </button>
-        {r.link && (
-          <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#555', textDecoration: 'none' }}>
-            지도 →
-          </a>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {r.link && (
+            <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#555', textDecoration: 'none' }}>
+              지도 →
+            </a>
+          )}
+          <button
+            onClick={() => handleVote('like')}
+            disabled={!!voted}
+            style={{
+              background: voted === 'like' ? '#1a3a1a' : 'none',
+              border: `1px solid ${voted === 'like' ? '#4caf50' : '#2a2a4a'}`,
+              borderRadius: 8, padding: '4px 8px',
+              color: voted === 'like' ? '#4caf50' : '#555',
+              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+            }}
+          >👍</button>
+          <button
+            onClick={() => handleVote('dislike')}
+            disabled={!!voted}
+            style={{
+              background: voted === 'dislike' ? '#3a1a1a' : 'none',
+              border: `1px solid ${voted === 'dislike' ? '#ff6b6b' : '#2a2a4a'}`,
+              borderRadius: 8, padding: '4px 8px',
+              color: voted === 'dislike' ? '#ff6b6b' : '#555',
+              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+            }}
+          >👎</button>
+        </div>
       </div>
     </div>
   )
