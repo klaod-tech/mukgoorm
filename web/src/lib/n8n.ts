@@ -248,6 +248,7 @@ export async function sendFeedback(params: {
   user_id: string
   restaurant_id: string
   food_name: string
+  category: string
   feedback: 'like' | 'dislike'
 }) {
   await axios.post(FEEDBACK_WEBHOOK, params, { timeout: 5000 })

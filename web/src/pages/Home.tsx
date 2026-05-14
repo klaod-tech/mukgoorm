@@ -228,6 +228,21 @@ export default function Home() {
     }
   }
 
+  // ── 식당 붐업/붐다운 → 로짓 업데이트 ────────────────────────
+
+  async function handleRestaurantFeedback(restaurant: Restaurant, feedback: 'like' | 'dislike') {
+    if (!profile) return
+    try {
+      await sendFeedback({
+        user_id: profile.user_id,
+        restaurant_id: restaurant.restaurant_id,
+        food_name: restaurant.food_name,
+        category: restaurant.category,
+        feedback,
+      })
+    } catch { /* silent — 피드백 실패는 UX 방해 안 함 */ }
+  }
+
   // ── 2단계: 식당 선택 → 메뉴 조회 ────────────────────────────
 
   async function handleMenuRequest(restaurant: Restaurant) {
