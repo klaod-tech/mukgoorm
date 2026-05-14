@@ -9,6 +9,7 @@ import {
   recommendFood,
   fetchRestaurantMenu,
   selectFood,
+  sendFeedback,
   submitIntentFeedback,
   type Restaurant,
   type WeatherData,
@@ -398,6 +399,7 @@ export default function Home() {
                     key={i}
                     restaurant={r}
                     onMenuRequest={handleMenuRequest}
+                    onFeedback={handleRestaurantFeedback}
                     isMenuOpen={menuState?.restaurant.restaurant_id === r.restaurant_id}
                   />
                 ))}
