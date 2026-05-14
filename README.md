@@ -1,147 +1,159 @@
 # 먹구름 (mukgoorm)
 
-라이프스타일 관리 웹 애플리케이션.  
-음식·체중·날씨·일정·이메일·일기를 **캐릭터 이미지와 대사로 간접 전달**하는 1인 1캐릭터 서비스.
+> 나만의 AI 미소녀 캐릭터와 함께하는 라이프스타일 관리 웹 애플리케이션
 
-> 현재 구현: **v3.2 (Python Discord 봇)** | 전환 목표: **React 웹앱 (JavaScript)**  
-> 개발 브랜치: `feat/web-migration`
-
----
-
-## 전환 배경
-
-### Discord 봇의 한계
-
-| 문제 | 원인 | 해결 방법 |
-|------|------|----------|
-| 프라이버시 | 관리자가 모든 유저 쓰레드 열람 가능 (Discord 구조상 막을 수 없음) | 웹앱 자체 인증으로 완전 격리 |
-| 가독성 | 임베드 디자인 제한 (이모티콘 외 커스텀 불가) | CSS 자유 활용 |
-| 기능 제약 | 버튼/Modal 기반 UX 한계 | 웹 UI로 자유로운 인터랙션 |
-| 리포트 품질 | Discord 임베드 주간 리포트 가독성 최악 | HTML/CSS 리포트 뷰 |
-
-### 새 구조
-
-```
-React 웹앱 (메인 UI)
-  ├── Supabase (데이터, 인증)
-  ├── GPT-4o-mini (AI 대화, 분석)
-  ├── n8n (ML 파이프라인 · 자동화)
-  └── Discord Webhook (알림 · 주간 리포트 발송) — 선택사항
-```
-
-Discord는 **알림·리포트 발송 채널**로만 사용. 메인 인터페이스는 웹앱.
+음식·체중·날씨·일정·이메일·일기를 기록하면, 캐릭터가 이미지와 대사로 오늘의 상태를 간접 전달한다.  
+음식 이상형 월드컵으로 수집한 선호도를 **Softmax 기반 온라인 학습**으로 음식 추천에 반영한다.
 
 ---
 
-## 기술 스택 (신규)
+## 기술 스택
 
 | 항목 | 내용 |
 |------|------|
-| 언어 | JavaScript / TypeScript |
-| 프레임워크 | React (Vite) |
-| 데이터 | Supabase (PostgreSQL + Auth) |
+| 프레임워크 | React (Vite) + TypeScript |
+| 인증 / DB | Supabase (Auth + PostgreSQL) |
 | AI | OpenAI GPT-4o-mini |
-| 자동화/ML | n8n (워크플로우 · ML 파이프라인) |
-| 알림 | Discord Webhook · 이메일 (선택) |
-| 이미지 | NovelAI (캐릭터 이미지, 기존 유지) |
+| 자동화 / ML | n8n (워크플로우 + Softmax 학습 파이프라인) |
 | 날씨 | 기상청 공공데이터 API |
-| 영양 | 식품의약품안전처 식품영양성분 DB API |
 
 ---
 
-## 기능 목록
+## 주요 기능
 
-| 기능 | 상태 | 설명 |
-|------|------|------|
-| 캐릭터 상태 | 구현 예정 | hp/hunger/mood → 이미지+대사로 간접 표현 |
-| 식사 기록 | 구현 예정 | 텍스트/사진 입력 → GPT-4o-mini 칼로리 분석 |
-| 체중 관리 | 구현 예정 | 기록·추이 그래프·목표 달성 |
-| 날씨 | 구현 예정 | 기상청 API → 캐릭터 이미지 자동 반영 |
-| 일정 | 구현 예정 | 등록·알림·반복 |
-| 일기 | 구현 예정 | 작성·감정 분석 |
-| 이메일 모니터링 | 구현 예정 | 네이버 IMAP 폴링 · 알림 |
-| 주간 리포트 | 구현 예정 | CSS 기반 리포트 뷰 · Discord/이메일 발송 |
-| 음식 추천 | 구현 예정 | n8n → 주변 식당 + 잔여 칼로리 기반 추천 |
-| ML 의도 분류 | 구현 예정 | n8n 파이프라인 · GPT → ML 점진 전환 |
-
----
-
-## 핵심 원칙 (유지)
-
-1. **hp/hunger/mood 수치는 사용자에게 절대 직접 노출 금지** — 이미지+대사로만 간접 표현
-2. **날씨는 별도 알림 없음** — 기상 시간에 이미지 자동 교체로만 전달
-3. **칼로리/영양소 수치는 오늘 요약 클릭 시에만 확인 가능**
-4. **각 기능은 자신이 소유한 DB 테이블에만 INSERT/UPDATE**
-
----
-
-## 작업 순서
-
-```
-[1단계] React 프로젝트 기본 세팅
-  - Vite + React + TypeScript
-  - Supabase client 연결
-  - 라우팅 구조 (react-router)
-
-[2단계] 인증 · 유저 프로필
-  - Supabase Auth (이메일 로그인)
-  - 온보딩 플로우 (이름·도시·목표체중 등록)
-
-[3단계] 핵심 기능 JavaScript 변환
-  - 캐릭터 상태 (이미지 + GPT 대사)
-  - 식사 기록 (텍스트 + 사진)
-  - 체중 기록 + 추이 그래프
-  - 날씨 표시
-
-[4단계] 확장 기능
-  - 일정 관리
-  - 일기 + 감정 분석
-  - 이메일 모니터링
-
-[5단계] n8n 연동
-  - ML 의도 분류 파이프라인
-  - 음식 추천 워크플로우
-
-[6단계] 알림 · 리포트
-  - 주간 리포트 CSS 뷰
-  - Discord Webhook 발송
-  - 이메일 발송 (선택)
-```
-
----
-
-## 기존 Python 봇 (v3.2 레거시)
-
-`main` / `develop` 브랜치에 Python Discord 봇 코드 유지.  
-웹앱 전환 완료 후 아카이브 예정.
-
-```
-bot.py          먹구름봇     오케스트레이터 · 온보딩 · 캐릭터
-bot_mail.py     메일봇       IMAP 폴링 · 이메일 알림
-bot_meal.py     식사봇       사진 감지 · GPT Vision · 칼로리
-bot_weather.py  날씨봇       기상청 API · 미세먼지
-bot_weight.py   체중봇       체중 기록 [skeleton]
-bot_diary.py    일기봇       [구상 단계]
-bot_schedule.py 일정봇       [구상 단계]
-```
-
----
-
-## 유저 규모 및 설계 기준
-
-| 항목 | 내용 |
+| 기능 | 상태 |
 |------|------|
-| 현재 운영 | 2인 프라이빗 개발 환경 |
-| 목표 규모 | 최대 20인 소규모 서버 |
-| 인증 | Supabase Auth (유저별 완전 격리) |
-| DB 연결 | Supabase 커넥션 풀 — 20인 기준 모니터링 필요 |
-| API 비용 | GPT 호출 빈도 × 20인 기준 월 예산 계획 |
+| 채팅 기반 AI 비서 (홈) | ✅ 완료 |
+| 음식 이상형 월드컵 (온보딩) | ✅ 완료 |
+| 큐브 → 캐릭터 진화 시스템 | ✅ 완료 |
+| 음식 추천 A/B/C 경로 | ✅ n8n 완료 |
+| 붐업/붐다운 → ML 학습 | ✅ React 완료 / n8n 연결 대기 |
+| Softmax 선호도 정렬 | ⏳ n8n 팀원 작업 중 |
+| 식사 기록 뷰 | ✅ 완료 |
+| 체중 관리 뷰 | ✅ 완료 |
+| 날씨 뷰 | ✅ 완료 |
+| 일정 뷰 | ✅ 완료 |
+| 일기 뷰 | ✅ 완료 |
+| 이메일 모니터링 뷰 | ✅ 완료 |
+| 주간 리포트 | ✅ 완료 |
+| 설정 | ✅ 완료 |
 
 ---
 
-## GitHub
+## 로컬 실행
 
-- Repo: https://github.com/klaod-tech/mukgoorm
-- 메인 브랜치: `main`
-- 레거시(Python 봇): `develop`
-- 웹앱 전환: `feat/web-migration` ← **현재 작업 브랜치**
+```bash
+cd web
+npm install
+cp .env.example .env.local  # 환경변수 입력
+npm run dev
+```
+
+### 필요한 환경변수 (`.env.local`)
+
+```
+VITE_SUPABASE_URL=
+VITE_SUPABASE_ANON_KEY=
+VITE_OPENAI_API_KEY=
+VITE_N8N_BASE_URL=http://localhost:5678
+```
+
+### n8n 실행
+
+```bash
+# n8n 로컬 실행 (포트 5678)
+npx n8n
+# 워크플로우: n8n/AI 비서 v3.json 임포트
+```
+
+---
+
+## 아키텍처
+
+```
+브라우저 (React 웹앱)
+  │
+  ├── Supabase Auth      — 로그인 · 세션 · 유저별 데이터 격리
+  ├── Supabase DB        — 데이터 CRUD
+  ├── GPT-4o-mini        — 메시지 분류 · 봇 응답 합성
+  │
+  └── n8n (로컬 or 클라우드)
+        ├── 날씨 / 식사 / 일기 / 일정 / 체중 / 이메일 webhook
+        ├── 음식 추천 (A/B/C 경로 + Softmax 정렬)
+        └── ML 선호도 학습 (피드백 → 로짓 업데이트)
+```
+
+### 메시지 처리 흐름
+
+```
+유저 입력
+  → GPT-4o-mini 의도 분류 (React)
+  → 해당 n8n webhook 병렬 호출
+  → GPT-4o-mini 응답 합성 (React)
+  → 채팅창 렌더링
+```
+
+---
+
+## ML 선호도 시스템
+
+음식 이상형 월드컵 → 붐업/붐다운 피드백 → Softmax 확률 분포로 추천 정렬
+
+- **학습**: 피드백마다 카테고리별 로짓 업데이트 (온라인 SGD)
+- **추론**: Temperature Softmax + 시간 감쇠 + Dirichlet Floor + 날씨/시간대 컨텍스트 보너스
+- **편향 방지**: 한 카테고리 독점 방지 · 오래된 피드백 감쇠 · 최소 확률 보장
+
+→ 상세: [docs/ML_PREFERENCE_SYSTEM.md](docs/ML_PREFERENCE_SYSTEM.md)
+
+---
+
+## DB 마이그레이션
+
+```bash
+# Supabase SQL Editor에서 순서대로 실행
+supabase/schemaV1.sql   # 기본 테이블
+supabase/schemaV2.sql   # ML 선호도 테이블 (worldcup_sessions, user_preference_logits)
+```
+
+---
+
+## 페이지 구조
+
+| 경로 | 설명 |
+|------|------|
+| `/login` | 로그인 · 회원가입 |
+| `/onboarding` | 최초 프로필 설정 |
+| `/worldcup` | 음식 이상형 월드컵 |
+| `/` | AI 비서 채팅 (메인) |
+| `/meal` | 식사 기록 |
+| `/weight` | 체중 관리 |
+| `/weather` | 날씨 기록 |
+| `/schedule` | 일정 |
+| `/diary` | 일기 |
+| `/email` | 이메일 모니터링 |
+| `/report` | 주간 리포트 |
+| `/settings` | 설정 · 월드컵 재도전 |
+
+---
+
+## 문서
+
+| 파일 | 설명 |
+|------|------|
+| [docs/ML_PREFERENCE_SYSTEM.md](docs/ML_PREFERENCE_SYSTEM.md) | Softmax ML 선호도 시스템 설계 |
+| [docs/CHARACTER_IMAGE_PLAN.md](docs/CHARACTER_IMAGE_PLAN.md) | AI 캐릭터 이미지 생성 기획 |
+| [docs/N8N_WEBHOOK_SPEC.md](docs/N8N_WEBHOOK_SPEC.md) | n8n webhook API 계약서 |
+| [docs/guide/n8n_ml_nodes.md](docs/guide/n8n_ml_nodes.md) | n8n ML 노드 구현 가이드 (팀원용) |
+| [docs/CRAWLING_AUTOMATION.md](docs/CRAWLING_AUTOMATION.md) | 음식점 데이터 크롤링 |
+| [docs/TEAM_OVERVIEW.md](docs/TEAM_OVERVIEW.md) | 팀 기술 개요서 |
+| [docs/legacy/](docs/legacy/) | Python Discord 봇 v3.2 문서 (아카이브) |
+
+---
+
+## 브랜치
+
+| 브랜치 | 설명 |
+|--------|------|
+| `feat/web-migration` | React 웹앱 (현재 개발) |
+| `main` | 최신 안정 버전 |
+| `develop` | Python Discord 봇 v3.2 (레거시, 아카이브) |
