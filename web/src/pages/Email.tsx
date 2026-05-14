@@ -19,16 +19,21 @@ export default function Email() {
 
   useEffect(() => {
     if (!user) return
-    supabase
-      .from('email_log')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(30)
-      .then(({ data }) => {
+    const load = async () => {
+      try {
+        const { data } = await supabase
+          .from('email_log')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(30)
         setLogs(data ?? [])
+      } catch {
+      } finally {
         setLoading(false)
-      })
+      }
+    }
+    load()
   }, [user])
 
   if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>

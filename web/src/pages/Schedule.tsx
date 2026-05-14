@@ -32,7 +32,14 @@ export default function Schedule() {
 
   async function toggleDone(id: string, current: boolean) {
     setItems(prev => prev.map(i => i.id === id ? { ...i, is_done: !current } : i))
-    await supabase.from('schedule').update({ is_done: !current, updated_at: new Date().toISOString() }).eq('id', id)
+    const { error } = await supabase
+      .from('schedule')
+      .update({ is_done: !current, updated_at: new Date().toISOString() })
+      .eq('id', id)
+    if (error) {
+      // 실패 시 롤백
+      setItems(prev => prev.map(i => i.id === id ? { ...i, is_done: current } : i))
+    }
   }
 
   const todo = items.filter(i => !i.is_done)
