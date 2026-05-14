@@ -12,6 +12,7 @@ import Report from './pages/Report'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
 import Onboarding from './pages/Onboarding'
+import Worldcup from './pages/Worldcup'
 
 export default function App() {
   return (
