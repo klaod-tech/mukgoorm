@@ -244,7 +244,6 @@ const EPSILON     = 0.10  // 최소 확률 보장 (어떤 카테고리도 0%가 
 const GAMMA       = 0.95  // 시간 감쇠율 (1일 기준, 낮을수록 오래된 기록 빨리 소멸)
 const K           = 7     // 카테고리 개수 (변경 금지)
 
-// 날씨/시간대별 보너스 점수
 const CONTEXT_BONUS = {
   weather: {
     '비':   { '한식': 0.15, '일식': 0.10 },
@@ -260,18 +259,16 @@ const CONTEXT_BONUS = {
   }
 }
 
-// ① 시간 감쇠 적용 로짓 계산
-// 오래된 피드백일수록 가중치가 줄어들어 오늘 기분에 덜 영향을 줌
+// ① 직전 노드(로짓 전체 조회)에서 받은 로짓에 시간 감쇠 적용
 const today = new Date()
-const logitRows = $('로짓 전체 조회').all()
+const logitRows = $input.all()   // 로짓 전체 조회 결과
 const logitMap = {}
 logitRows.forEach(r => {
   const daysSince = (today - new Date(r.json.updated_at)) / 86400000
   logitMap[r.json.category] = (r.json.logit ?? 0) * Math.pow(GAMMA, daysSince)
 })
 
-// ② Temperature Softmax 계산
-// exp(logit / T) → 정규화 → 카테고리별 선호 확률
+// ② Temperature Softmax
 const categories = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']
 let expSum = 0
 const expMap = {}
@@ -280,47 +277,29 @@ categories.forEach(cat => {
   expSum += expMap[cat]
 })
 
-// ③ Dirichlet Floor 적용
-// 어떤 카테고리도 0%가 되지 않도록 최소 확률 EPSILON/K 보장
+// ③ Dirichlet Floor — 어떤 카테고리도 0%가 되지 않도록 보장
 const probs = {}
 categories.forEach(cat => {
   probs[cat] = (1 - EPSILON) * (expMap[cat] / expSum) + EPSILON / K
 })
 
-// ④ 컨텍스트 보너스 (날씨·식사시간 — 이미 수집 중인 데이터 활용)
+// ④ 컨텍스트 보너스
 const body = $('음식 추천 입력').item.json.body
 const weatherBonus = CONTEXT_BONUS.weather[body.weather ?? ''] ?? {}
 const mealBonus    = CONTEXT_BONUS.meal_type[body.meal_type ?? ''] ?? {}
 
-// 다음 노드(5개 출력)에서 사용할 데이터 전달
-return [{ json: { probs, weatherBonus, mealBonus } }]
-```
-
----
-
-### Step 3 — `5개 출력` 노드 코드 교체
-
-1. `5개 출력` 노드 더블클릭
-2. 기존 코드 전체 선택 후 아래로 **완전히 교체**:
-
-```javascript
-// 취향 정리 노드에서 계산된 확률값 수신
-const { probs, weatherBonus, mealBonus } = $('취향 정리').item.json
-
-// 모든 식당 목록 가져오기
-const restaurants = $input.all()
-
+// ⑤ 식당 목록($('식당1'))에 점수 부여 후 정렬
+const restaurants = $('식당1').all()
 return restaurants
   .map(r => {
     const cat = r.json.category ?? '기타'
-    // 최종 점수 = Softmax 확률 + 날씨 보너스 + 식사시간 보너스
     const score = (probs[cat] ?? 1 / 7)
                 + (weatherBonus[cat] ?? 0)
                 + (mealBonus[cat] ?? 0)
     return { json: { ...r.json, score } }
   })
-  .sort((a, b) => b.json.score - a.json.score)  // 점수 높은 순 정렬
-  .slice(0, 5)                                   // 상위 5개만
+  .sort((a, b) => b.json.score - a.json.score)
+  .slice(0, 5)
 ```
 
 ---
