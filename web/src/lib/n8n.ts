@@ -287,6 +287,7 @@ export async function recommendFood(params: {
   user_id: string
   message: string
   location?: string
+  date?: string
 }): Promise<FoodRecommendResponse> {
   const res = await axios.post<FoodRecommendResponse>(
     '/webhook/food',
