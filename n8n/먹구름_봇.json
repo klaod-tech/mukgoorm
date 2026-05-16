@@ -1,5 +1,5 @@
 {
-  "name": "음식 추천 v2",
+  "name": "먹구름 봇",
   "nodes": [
     {
       "parameters": {
@@ -131,18 +131,18 @@
       "parameters": {
         "operation": "getAll",
         "tableId": "schedule",
-        "limit": 1,
+        "limit": 10,
         "filters": {
           "conditions": [
             {
               "keyName": "user_id",
               "condition": "eq",
-              "keyValue": "={{ $('일정 입력').item.json.body.user_id }}"
+              "keyValue": "={{ $('일정 감지').item.json.body.user_id }}"
             },
             {
               "keyName": "date",
               "condition": "gte",
-              "keyValue": "={{ $('일정 입력').item.json.body.date }}"
+              "keyValue": "={{ $('일정 감지').item.json.body.date }}"
             }
           ]
         }
@@ -369,7 +369,7 @@
           "conditions": [
             {
               "id": "c11a2117-d600-4964-a0d1-bd9a0dbf1517",
-              "leftValue": "={{ $('일정 입력').item.json.body.is_update }}",
+              "leftValue": "={{ $('일정 감지').item.json.body.is_update }}",
               "rightValue": "",
               "operator": {
                 "type": "object",
@@ -609,7 +609,7 @@
     {
       "parameters": {
         "promptType": "=define",
-        "text": "=당신은 사용자의 일정을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('일정 입력').item.json.body.message_future }}\n\n반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[규칙]\n- 시간이 언급되지 않으면 time은 빈 문자열\n- 장소가 언급되지 않으면 location은 빈 문자열\n- is_done은 항상 false\n\n[출력 형식]\n{\n  \"title\": \"일정 제목\",\n  \"description\": \"일정 상세 내용\",\n  \"location\": \"장소 또는 빈 문자열\",\n  \"date\": \"yyyy-MM-dd\",\n  \"time\": \"HH:mm 또는 빈 문자열\",\n  \"is_done\": false\n}",
+        "text": "=당신은 사용자의 일정을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('일정 감지').item.json.body.message_future }}\n\n반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[규칙]\n- 시간이 언급되지 않으면 time은 빈 문자열\n- 장소가 언급되지 않으면 location은 빈 문자열\n- is_done은 항상 false\n\n[출력 형식]\n{\n  \"title\": \"일정 제목\",\n  \"description\": \"일정 상세 내용\",\n  \"location\": \"장소 또는 빈 문자열\",\n  \"date\": \"yyyy-MM-dd\",\n  \"time\": \"HH:mm 또는 빈 문자열\",\n  \"is_done\": false\n}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -624,7 +624,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=당신은 사용자의 체중과 건강을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('체중 관리 입력').item.json.body.message_past }}\n\n[사용자 기본 정보]\nheight: {{ $('Edit Fields5').item.json.height }}\ngender: {{ $('Edit Fields5').item.json.gender }}\nage: {{ $('Edit Fields5').item.json.age }}\ninit_weight: {{ $('Edit Fields5').item.json.init_weight }}\ngoal_weight: {{ $('Edit Fields5').item.json.goal_weight }}\ndaily_cal_target: {{ $('Edit Fields5').item.json.daily_cal_target }}\n\n위 정보를 바탕으로 반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[BMI 계산 공식]\nBMI = 체중(kg) ÷ (키(m) × 키(m))\n소수점 첫째 자리까지 반올림\n\n[규칙]\n- 체중 언급이 없으면 weight와 bmi 둘 다 null로 출력\n- 체중 언급이 있을 때만 BMI 계산 후 출력\n- note는 사용자가 언급한 내용 기반으로 건강 관련 한 줄 메모. 언급이 없으면 빈 문자열\n\n[출력 형식]\n{\n  \"date\": \"yyyy-MM-dd\",\n  \"weight\": 체중(숫자) 또는 null,\n  \"bmi\": BMI(숫자) 또는 null,\n  \"note\": \"건강 관련 한 줄 메모\"\n}",
+        "text": "=당신은 사용자의 체중과 건강을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('체중 관리 입력').item.json.body.message_past }}\n\n[사용자 기본 정보]\nheight: {{ $('Edit Fields5').item.json.height }}\ngender: {{ $('Edit Fields5').item.json.gender }}\nage: {{ $('Edit Fields5').item.json.age }}\ninit_weight: {{ $('Edit Fields5').item.json.init_weight }}\ngoal_weight: {{ $('Edit Fields5').item.json.goal_weight }}\ndaily_cal_target: {{ $('Edit Fields5').item.json.daily_cal_target }}\n\n위 정보를 바탕으로 반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[BMI 계산 공식]\nBMI = 체중(kg) ÷ (키(m) × 키(m))\n소수점 첫째 자리까지 반올림\n\n[규칙]\n- 체중 언급이 없으면 weight와 bmi 둘 다 null로 출력\n- 체중 언급이 있을 때만 BMI 계산 후 출력\n- note는 오늘 식사/운동 내용 기반으로 건강 관련 한 줄 메모\n\n[출력 형식]\n{\n  \"date\": \"yyyy-MM-dd\",\n  \"weight\": 체중(숫자) 또는 null,\n  \"bmi\": BMI(숫자) 또는 null,\n  \"note\": \"건강 관련 한 줄 메모\"\n}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
@@ -671,39 +671,39 @@
             },
             {
               "fieldId": "low_temperature",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.low_temperature }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.low_temperature }}"
             },
             {
               "fieldId": "high_temperature",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.high_temperature }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.high_temperature }}"
             },
             {
               "fieldId": "sky",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.sky }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.sky }}"
             },
             {
               "fieldId": "rain",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.rain }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.rain }}"
             },
             {
               "fieldId": "wind_speed",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.windSpeed }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.windSpeed }}"
             },
             {
               "fieldId": "pm10",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm10 }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.pm10 }}"
             },
             {
               "fieldId": "pm25",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm25 }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.pm25 }}"
             },
             {
               "fieldId": "pm10_grade",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm10_grade }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.pm10_grade }}"
             },
             {
               "fieldId": "pm25_grade",
-              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm25_grade }}"
+              "fieldValue": "=={{ $('Code in JavaScript4').item.json.pm25_grade }}"
             },
             {
               "fieldId": "created_at",
@@ -873,7 +873,7 @@
           "fieldValues": [
             {
               "fieldId": "user_id",
-              "fieldValue": "={{ $('일정 입력').item.json.body.user_id }}"
+              "fieldValue": "={{ $('일정 감지').item.json.body.user_id }}"
             },
             {
               "fieldId": "title",
@@ -963,7 +963,7 @@
           "fieldValues": [
             {
               "fieldId": "user_id",
-              "fieldValue": "={{ $('일정 입력').item.json.body.user_id }}"
+              "fieldValue": "={{ $('일정 감지').item.json.body.user_id }}"
             },
             {
               "fieldId": "title",
@@ -1255,7 +1255,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const all = $input.all();\n\n// ── 최저/최고 기온 + 하늘상태 ─────────────────────────────────────────\nconst low_temperature  = all[0].json.low_temperature;\nconst high_temperature = all[0].json.high_temperature;\nconst sky              = all[0].json.sky;\n\n// ── 초단기실황 ──────────────────────────────────────────────────────\nconst realtimeRaw = all[1].json.response?.body?.items?.item;\nconst realtimeItems = Array.isArray(realtimeRaw) ? realtimeRaw : (realtimeRaw ? [realtimeRaw] : []);\n\nconst realtime = {};\nrealtimeItems.forEach(item => { realtime[item.category] = item.obsrValue; });\n\n// ── 미세먼지 ────────────────────────────────────────────────────────\nconst dust = all[2].json.response?.body?.items?.[0];\n\n// ── 코드 매핑 ────────────────────────────────────────────────────────\nconst ptyCode  = { '0': '없음', '1': '비', '2': '비/눈', '3': '눈', '4': '소나기' };\nconst gradeMap = { '1': '좋음', '2': '보통', '3': '나쁨', '4': '매우나쁨' };\n\nreturn [{\n  temperature:     realtime['T1H']  ?? '알 수 없음',\n  low_temperature,\n  high_temperature,\n  sky,\n  rain:            ptyCode[realtime['PTY']] ?? '없음',\n  humidity:        realtime['REH']  ?? '알 수 없음',\n  windSpeed:       realtime['WSD']  ?? '알 수 없음',\n  pm25:            dust?.pm25Value  ?? '알 수 없음',\n  pm10:            dust?.pm10Value  ?? '알 수 없음',\n  pm25_grade:      gradeMap[dust?.pm25Grade]  ?? '알 수 없음',\n  pm10_grade:      gradeMap[dust?.pm10Grade]  ?? '알 수 없음',\n}];"
+        "jsCode": "const all = $input.all();\n\n// ── 최저/최고 기온 ───────────────────────────────────────────────────\nconst low_temperature  = all[0].json.low_temperature;\nconst high_temperature = all[0].json.high_temperature;\n\n// ── 초단기실황 ──────────────────────────────────────────────────────\nconst realtimeRaw = all[1].json.response?.body?.items?.item;\nconst realtimeItems = Array.isArray(realtimeRaw) ? realtimeRaw : (realtimeRaw ? [realtimeRaw] : []);\n\nconst realtime = {};\nrealtimeItems.forEach(item => { realtime[item.category] = item.obsrValue; });\n\n// ── 미세먼지 ────────────────────────────────────────────────────────\nconst dust = all[2].json.response?.body?.items?.[0];\n\n// ── 코드 매핑 ────────────────────────────────────────────────────────\nconst skyCode  = { '1': '맑음', '3': '구름많음', '4': '흐림' };\nconst ptyCode  = { '0': '없음', '1': '비', '2': '비/눈', '3': '눈', '4': '소나기' };\nconst gradeMap = { '1': '좋음', '2': '보통', '3': '나쁨', '4': '매우나쁨' };\n\nreturn [{\n  temperature:     realtime['T1H']  ?? '알 수 없음',\n  low_temperature,\n  high_temperature,\n  sky:             skyCode[realtime['SKY']] ?? '알 수 없음',\n  rain:            ptyCode[realtime['PTY']] ?? '없음',\n  humidity:        realtime['REH']  ?? '알 수 없음',\n  windSpeed:       realtime['WSD']  ?? '알 수 없음',\n  pm25:            dust?.pm25Value  ?? '알 수 없음',\n  pm10:            dust?.pm10Value  ?? '알 수 없음',\n  pm25_grade:      gradeMap[dust?.pm25Grade]  ?? '알 수 없음',\n  pm10_grade:      gradeMap[dust?.pm10Grade]  ?? '알 수 없음',\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1268,7 +1268,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.first().json.response?.body?.items?.item;\nconst forecastItems = Array.isArray(items) ? items : (items ? [items] : []);\n\nconst today = forecastItems[0]?.fcstDate;\n\nlet low_temperature  = '알 수 없음';\nlet high_temperature = '알 수 없음';\nlet sky = '알 수 없음';\n\nconst skyCode = { '1': '맑음', '3': '구름많음', '4': '흐림' };\n\nforecastItems.forEach(item => {\n  if (item.fcstDate !== today) return;\n  if (item.category === 'TMN') low_temperature  = item.fcstValue;\n  if (item.category === 'TMX') high_temperature = item.fcstValue;\n  if (item.category === 'SKY' && sky === '알 수 없음') sky = skyCode[item.fcstValue] ?? '알 수 없음';\n});\n\nreturn [{ low_temperature, high_temperature, sky }];"
+        "jsCode": "const items = $input.first().json.response?.body?.items?.item;\nconst forecastItems = Array.isArray(items) ? items : (items ? [items] : []);\n\n// today를 input 데이터에서 직접 추출\nconst today = forecastItems[0]?.fcstDate;\n\nlet low_temperature  = '알 수 없음';\nlet high_temperature = '알 수 없음';\n\nforecastItems.forEach(item => {\n  if (item.fcstDate !== today) return;\n  if (item.category === 'TMN') low_temperature  = item.fcstValue;\n  if (item.category === 'TMX') high_temperature = item.fcstValue;\n});\n\nreturn [{ low_temperature, high_temperature }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1424,6 +1424,23 @@
       ],
       "id": "5e7ccaf6-d0dd-4fd2-bac3-80db2bc5fb05",
       "name": "체중 관리 출력"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedule",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -4976,
+        96
+      ],
+      "id": "22b0cab4-3b65-4317-a748-968d7be67a11",
+      "name": "일정 감지",
+      "webhookId": "ad14deab-8a8b-4a6e-9348-c70980340d3f"
     },
     {
       "parameters": {
@@ -1626,7 +1643,7 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        -2784,
+        -2992,
         1008
       ],
       "id": "172c93fb-68f8-4709-b683-a7c877b606ea",
@@ -1639,7 +1656,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2480,
+        -2688,
         800
       ],
       "id": "a37863cf-337e-4728-9e07-7d4c1fb61d46",
@@ -1652,7 +1669,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -2256,
+        -2464,
         800
       ],
       "id": "6f88e863-51ef-4aa9-80a1-9ae624d7fa59",
@@ -1665,7 +1682,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2480,
+        -2688,
         1024
       ],
       "id": "19569fe5-0158-47b3-b5a1-0813a36cac6a",
@@ -1678,11 +1695,31 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -2256,
+        -2464,
         1024
       ],
       "id": "82e07850-99fe-4eb7-b610-8fbc162e7b53",
       "name": "B: 음식 추천 출력"
+    },
+    {
+      "parameters": {
+        "model": "gpt-4o-mini",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2720,
+        1456
+      ],
+      "id": "0a84b05f-c6d5-4d93-8bbf-06210f1bff04",
+      "name": "C: OpenAI 모델",
+      "credentials": {
+        "openAiApi": {
+          "id": "IW726D82T1QCYVjf",
+          "name": "OpenAI account"
+        }
+      }
     },
     {
       "parameters": {
@@ -1691,7 +1728,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        -1664,
+        -1872,
         1296
       ],
       "id": "363ef4a0-4045-418a-ad68-8301731ac1f0",
@@ -1711,7 +1748,7 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        -3312,
+        -3520,
         1200
       ],
       "id": "e6967bc7-b502-4c7f-aca5-79353423697d",
@@ -1726,13 +1763,13 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=다음 메시지를 A/B/C로 분류하세요.\n\n메시지: {{ $('음식 추천 입력').item.json.body.message }}\n\n분류 기준:\nB: 메시지에 특정 음식명이 포함된 경우 (짬뽕, 돈까스, 라면, 피자 등)\n   → 음식명이 하나라도 있으면 무조건 B\nC: 음식명 없이 막연하게 추천 요청하는 경우\n\nA 경로는 시스템이 별도로 처리하므로 A는 선택하지 마세요.\n\n반드시 B 또는 C 중 하나만 출력하세요.",
+        "text": "=당신은 사용자의 음식 관련 메시지를 분석해서 의도를 분류하는 AI입니다.\n\n[식당 목록]\n{{ $('식당 메뉴 연동1').first().json.restaurants.map(r => r.name).join(', ') }}\n\n[분류 기준]\n\nA: 사용자가 위 식당 목록에 있는 식당 이름을 직접 언급한 경우\n   예시) \"맥도날드 메뉴 보여줘\", \"노브랜드버거 뭐 있어?\", \"백소정 가고 싶은데\"\n\nB: 사용자가 특정 음식명 또는 메뉴명을 언급하며 그것을 파는 식당을 찾는 경우\n   예시) \"짬뽕 먹고 싶어\", \"삼겹살 어디서 먹을 수 있어?\", \"피자 파는 데 알려줘\"\n\nC: 특정 식당이나 메뉴 없이 막연하게 추천을 요청하는 경우\n   예시) \"오늘 뭐 먹지?\", \"추천해줘\", \"맛있는 거 먹고 싶어\", \"점심 뭐 먹을까\"\n\n[규칙]\n- 반드시 A, B, C 중 하나만 출력\n- 다른 텍스트, 설명, 이유 절대 출력 금지\n- 식당 이름이 애매하게 언급되어도 목록에 있으면 A로 분류\n- 음식 종류(한식, 중식 등)만 말하는 경우는 C로 분류\n\n[출력 형식]\nA",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -3312,
+        -3520,
         1024
       ],
       "id": "d16baec2-0a78-4b3b-a7a9-37b7e45ed260",
@@ -1745,7 +1782,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2976,
+        -3184,
         1024
       ],
       "id": "8464ee52-6faa-45f4-8710-8e7e3a95cae7",
@@ -1814,21 +1851,12 @@
       "parameters": {
         "operation": "getAll",
         "tableId": "menu_items",
-        "limit": 5,
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "restaurant_id",
-              "condition": "eq",
-              "keyValue": "={{ $json.id }}"
-            }
-          ]
-        }
+        "returnAll": true
       },
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -3696,
+        -3904,
         1024
       ],
       "id": "f757bcb1-964d-4eba-a499-ddd5ca655cd3",
@@ -1847,7 +1875,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -3504,
+        -3712,
         1024
       ],
       "id": "12414411-2be1-408b-8c3f-1a226d063a2a",
@@ -1864,35 +1892,35 @@
             },
             {
               "fieldId": "restaurant_id",
-              "fieldValue": "={{ $json.restaurant_id }}"
+              "fieldValue": "=$json.restaurant_id"
             },
             {
               "fieldId": "reason",
-              "fieldValue": "={{ $json.reason }}"
+              "fieldValue": "=$json.reason"
             },
             {
               "fieldId": "location",
               "fieldValue": "={{ $('음식 추천 입력').item.json.body.location }}"
             },
             {
-              "fieldId": "category",
-              "fieldValue": "={{ $json.matched_tags_text }}"
+              "fieldId": "meal_type",
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.meal_type }}"
             },
             {
               "fieldId": "matched_tags",
-              "fieldValue": "={{ JSON.parse($('취향 정리').item.json.food_preferences) }}"
+              "fieldValue": "={{ $('취향 정리').item.json.food_preferences }}"
             },
             {
-              "fieldId": "allergens",
-              "fieldValue": "={{ $json.allergens }}"
+              "fieldId": "excluded_allergens",
+              "fieldValue": "={{ $('취향 정리').item.json.allergies }}"
             },
             {
               "fieldId": "date",
-              "fieldValue": "={{ $('음식 추천 입력').item.json.body.date ?? $now.setZone('Asia/Seoul').format('yyyy-MM-dd') }}"
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.date }}"
             },
             {
               "fieldId": "menu_items",
-              "fieldValue": "={{ $json.menu_items_text }}"
+              "fieldValue": "$json.menu_name"
             },
             {
               "fieldId": "user_message",
@@ -1904,8 +1932,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -1376,
-        1456
+        -1872,
+        1440
       ],
       "id": "aa59a0d2-cefb-4ddd-890d-07c712fdf291",
       "name": "추천된 가게 등록1",
@@ -1923,8 +1951,8 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        -1664,
-        1440
+        -2176,
+        1424
       ],
       "id": "7ae9e75c-d919-4844-a395-edf46d4193c5",
       "name": "Loop Over Items1"
@@ -1932,13 +1960,13 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=당신은 탕정 지역 맛집을 추천해주는 음식 추천 AI입니다.\n\n[사용자 정보]\n선호 음식: {{ $('취향 정리').first().json.food_preferences }}\n알레르기: {{ $('취향 정리').first().json.allergies }}\n요청 메시지: {{ $('음식 추천 입력').first().json.body.message }}\n\n[추천 가능한 식당 목록]\n{{ $('5개 출력').all().map(r =>\n  `- [${r.json.is_preferred ? '선호' : '랜덤'}] ${r.json.name} (${(r.json.category || []).join(', ')}): ${r.json.description || ''} | 주소: ${r.json.address} | 전화: ${r.json.phone || '없음'} | ID: ${r.json.id}`\n).join('\\n') }}\n\n[추천 규칙]\n- 위 목록의 5개 식당을 모두 추천\n- 알레르기({{ $json.allergies }}) 관련 메뉴가 있는 식당은 \n  reason 끝에 \"(알레르기 주의)\" 추가, 제외하지 말 것\n- 반드시 5개 모두 추천\n- [선호] 식당 2개: reason에 \"선호 음식 기반 추천\" 명시\n- [랜덤] 식당 3개: reason에 \"오늘의 랜덤 추천\" 명시\n- 추천 이유는 사용자 입장에서 공감 가게 한 줄로 작성\n- 마크다운 코드블록 절대 사용 금지\n- 반드시 아래 JSON 형식으로만 출력\n\n[출력 형식]\n{\n  \"message\": \"오늘 이런 곳 어때요? 한 줄 요약\",\n  \"recommendations\": [\n    {\n      \"restaurant_id\": \"uuid\",\n      \"food_name\": \"가게이름\",\n      \"category\": [\"카테고리\"],\n      \"location\": \"주소\",\n      \"description\": \"가게 설명\",\n      \"phone\": \"전화번호\",\n      \"link\": \"링크\",\n      \"reason\": \"추천 이유\"\n    }\n  ]\n}",
+        "text": "=당신은 탕정 지역 맛집을 추천해주는 음식 추천 AI입니다.\n\n[사용자 정보]\n선호 음식: {{ $('취향 정리').first().json.food_preferences }}\n알레르기: {{ $('취향 정리').first().json.allergies }}\n요청 메시지: {{ $('취향 정리').first().json.message }}\n\n[추천 가능한 식당 목록]\n{{ $('식당1').all().map(r => \n  `- ${r.json.name} (${r.json.category.join(', ')}): ${r.json.description || ''}` \n).join('\\n') }}\n\n[추천 규칙]\n- 반드시 위 식당 목록에 있는 가게만 추천\n- 알레르기 항목이 포함된 식당은 절대 추천 금지\n- 반드시 아래 순서와 개수로 추천:\n  1. 사용자의 food_preferences와 일치하는 카테고리 가게 1개 (reason에 \"선호 음식 기반 추천\" 명시)\n  2. 완전 무작위 가게 2개 (reason에 \"오늘의 랜덤 추천\" 명시)\n- 총 3개 추천, 순서 반드시 위 순서대로\n- 추천 이유는 사용자 입장에서 공감가게 한 줄로 작성\n- 마크다운 코드블록 절대 사용 금지\n- 반드시 아래 JSON 형식으로만 출력\n\n[출력 형식]\n{\n  \"message\": \"오늘 이런 곳 어때요? 한 줄 요약\",\n  \"recommendations\": [\n    {\n      \"restaurant_id\": \"uuid\",\n      \"food_name\": \"가게이름\",\n      \"category\": [\"카테고리\"],\n      \"location\": \"주소\",\n      \"description\": \"가게 설명\",\n      \"phone\": \"전화번호\",\n      \"link\": \"링크\",\n      \"reason\": \"이 가게를 추천하는 이유\"\n    }\n  ]\n}",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -2480,
+        -2688,
         1296
       ],
       "id": "5f387c8c-6a01-44b1-bdb9-ccdb2be4616b",
@@ -1996,12 +2024,12 @@
     },
     {
       "parameters": {
-        "jsCode": "const raw = $input.first().json.output || '';\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch(e) {\n  const match = raw.match(/```(?:json)?\\n([\\s\\S]*?)\\n```/);\n  try {\n    parsed = match ? JSON.parse(match[1]) : { message: '추천 결과를 봐요!', recommendations: [] };\n  } catch(e2) {\n    parsed = { message: '추천 결과봐요!', recommendations: [] };\n  }\n}\n\nconst allMenus = $('메뉴1').all();\nconst d = $('의도 분류').first().json;\n\nconst enriched = (parsed.recommendations || []).map(r => {\n  const menus = allMenus.filter(m => m.json.restaurant_id === r.restaurant_id);\n  return {\n    ...r,\n    menu_items_text: menus.map(m => m.json.menu_name).join(', ') || '정보 없음',\n    allergens: [...new Set(menus.flatMap(m => m.json.allergens || []))].join(', ') || '정보 없음',\n    matched_tags_text: [...new Set(menus.flatMap(m => m.json.tags || []))].join(', ') || '정보 없음',\n  };\n});\n\nreturn [{ json: {\n  path: 'C',\n  description: d.description,\n  message: parsed.message || '취향에 맞는 식당을 골랐어요!',\n  restaurants: enriched,\n  keyword: d.keyword,\n  user_id: d.user_id,\n} }];\n"
+        "jsCode": "const raw = $input.first().json.output || '';\nlet parsed;\n\ntry {\n  parsed = JSON.parse(raw);\n} catch(e) {\n  const match = raw.match(/```(?:json)?\\n?([\\s\\S]*?)\\n?```/);\n  try { \n    parsed = match ? JSON.parse(match[1]) : { message: '추천 결과예요!', recommendations: [] }; \n  } catch(e2) { \n    parsed = { message: '추천 결과예요!', recommendations: [] }; \n  }\n}\n\nconst d = $('의도 분류').first().json;\n\nreturn [{ json: {\n  path: 'C',\n  description: d.description,\n  message: parsed.message || '취향에 맞는 식당을 골라봤어요!',\n  restaurants: parsed.recommendations || [],\n  keyword: d.keyword,\n  user_id: d.user_id\n} }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2144,
+        -2352,
         1296
       ],
       "id": "cdbf6468-53f6-4cbc-95c3-4e115acd470a",
@@ -2022,73 +2050,142 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "schedule",
-        "responseMode": "responseNode",
-        "options": {}
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('키워드 추출').item.json.user_id }}"
+            }
+          ]
+        }
       },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2.1,
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
       "position": [
-        -4976,
-        96
+        -4304,
+        1200
       ],
-      "id": "22b0cab4-3b65-4317-a748-968d7be67a11",
-      "name": "일정 입력",
-      "webhookId": "ad14deab-8a8b-4a6e-9348-c70980340d3f"
-    },
-    {
-      "parameters": {
-        "jsCode": "const restaurants = $input.all();\nconst preferences = $('취향 정리').first().json.food_preferences || [];\n\n// 취향 맞는 것 / 안 맞는 것 분리\nconst matched = restaurants.filter(r => {\n  const cats = r.json.category || [];\n  return cats.some(cat => preferences.includes(cat));\n});\nconst unmatched = restaurants.filter(r => {\n  const cats = r.json.category || [];\n  return !cats.some(cat => preferences.includes(cat));\n});\n\n// 각각 셔플\nconst shuffledMatched = matched.sort(() => Math.random() - 0.5);\nconst shuffledUnmatched = unmatched.sort(() => Math.random() - 0.5);\n\n// 취향 2개 + 랜덤 3개 (취향이 2개 미만이면 나머지를 랜덤으로 채움)\nconst picked = [\n  ...shuffledMatched.slice(0, 2),\n  ...shuffledUnmatched.slice(0, 3),\n].slice(0, 5);\n\nreturn picked;"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -3888,
-        1024
-      ],
-      "id": "bd26cb47-bc6a-46c7-bbb1-a2a2bccd64b6",
-      "name": "5개 출력"
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
-        },
-        "builtInTools": {},
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        -2480,
-        1472
-      ],
-      "id": "38565d01-2468-4fe9-98bd-b2a1c39ce832",
-      "name": "OpenAI Chat Model9",
+      "id": "softmax-node-01",
+      "name": "로짓 조회",
       "credentials": {
-        "openAiApi": {
-          "id": "IW726D82T1QCYVjf",
-          "name": "OpenAI account"
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
         }
       }
     },
     {
       "parameters": {
-        "fieldToSplitOut": "restaurants",
-        "options": {}
+        "jsCode": "const items = $input.all();\nconst logit_map = {};\nconst updated_at_map = {};\nitems.forEach(item => {\n  const { category, logit, updated_at } = item.json;\n  if (category) {\n    logit_map[category] = logit ?? 0;\n    updated_at_map[category] = updated_at ?? null;\n  }\n});\nreturn [{ json: { logit_map, updated_at_map } }];"
       },
-      "type": "n8n-nodes-base.splitOut",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4096,
+        1200
+      ],
+      "id": "softmax-node-02",
+      "name": "로짓 집계"
+    },
+    {
+      "parameters": {
+        "jsCode": "const T = 1.5, EPS = 0.10, GAMMA = 0.95, K = 7;\nconst CATS = ['한식','중식','양식','분식','일식','디저트','기타'];\n\nconst logitData = $('로짓 집계').first().json;\nconst logitMap = logitData.logit_map || {};\nconst uaMap = logitData.updated_at_map || {};\n\nconst today = new Date();\nconst eff = {};\nCATS.forEach(cat => {\n  const logit = logitMap[cat] ?? 0;\n  const ua = uaMap[cat];\n  const days = ua ? (today - new Date(ua)) / 86400000 : 0;\n  eff[cat] = logit * Math.pow(GAMMA, days);\n});\n\nlet sum = 0;\nconst exp = {};\nCATS.forEach(cat => { exp[cat] = Math.exp((eff[cat] || 0) / T); sum += exp[cat]; });\nconst probs = {};\nCATS.forEach(cat => { probs[cat] = (1 - EPS) * exp[cat] / sum + EPS / K; });\n\nconst restaurants = $input.first().json.restaurants || [];\nconst sorted = [...restaurants]\n  .map(r => ({ ...r, _score: probs[r.category || '기타'] || EPS/K }))\n  .sort((a, b) => b._score - a._score);\n\nreturn [{ json: { restaurants: sorted } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3616,
+        1024
+      ],
+      "id": "softmax-node-03",
+      "name": "Softmax 정렬"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ ($('피드백 입력').item.json.body || $('피드백 입력').item.json).user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        -1904,
-        1440
+        -4300,
+        900
       ],
-      "id": "2ec5f248-d822-44cd-afa8-f5b0314d1fe0",
-      "name": "Split Out"
+      "id": "softmax-node-04",
+      "name": "피드백 현재 로짓",
+      "credentials": {
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('피드백 입력').first().json;\nconst body = raw.body || raw;\nconst { user_id, category, feedback } = body;\nconst alpha = feedback === 'like' ? 0.2 : -0.2;\nconst existing = $input.all().find(i => i.json.category === category);\nconst currentLogit = existing ? (existing.json.logit ?? 0) : 0;\nconst currentCount = existing ? (existing.json.sample_count ?? 0) : 0;\nreturn [{ json: {\n  user_id,\n  category,\n  logit: Math.round((currentLogit + alpha) * 1000) / 1000,\n  sample_count: currentCount + 1,\n  updated_at: new Date().toISOString()\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -4100,
+        900
+      ],
+      "id": "softmax-node-05",
+      "name": "피드백 로짓 계산"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/user_preference_logits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify([$json]) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -3900,
+        900
+      ],
+      "id": "softmax-node-06",
+      "name": "피드백 로짓 저장",
+      "credentials": {
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -2579,6 +2676,17 @@
         ]
       ]
     },
+    "일정 감지": {
+      "main": [
+        [
+          {
+            "node": "일정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "체중 관리 등록": {
       "main": [
         [
@@ -2591,6 +2699,39 @@
       ]
     },
     "음식 피드백": {
+      "main": [
+        [
+          {
+            "node": "피드백 현재 로짓",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 현재 로짓": {
+      "main": [
+        [
+          {
+            "node": "피드백 로짓 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 로짓 계산": {
+      "main": [
+        [
+          {
+            "node": "피드백 로짓 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 로짓 저장": {
       "main": [
         [
           {
@@ -2613,6 +2754,28 @@
       ]
     },
     "취향 정리": {
+      "main": [
+        [
+          {
+            "node": "로짓 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 조회": {
+      "main": [
+        [
+          {
+            "node": "로짓 집계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 집계": {
       "main": [
         [
           {
@@ -2670,6 +2833,17 @@
         ]
       ]
     },
+    "C: OpenAI 모델": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Food",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "OpenAI Chat Model": {
       "ai_languageModel": [
         [
@@ -2718,7 +2892,7 @@
       "main": [
         [
           {
-            "node": "5개 출력",
+            "node": "메뉴1",
             "type": "main",
             "index": 0
           }
@@ -2737,6 +2911,17 @@
       ]
     },
     "식당 메뉴 연동1": {
+      "main": [
+        [
+          {
+            "node": "Softmax 정렬",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Softmax 정렬": {
       "main": [
         [
           {
@@ -2807,12 +2992,12 @@
       "main": [
         [
           {
-            "node": "C: 음식 추천 출력",
+            "node": "Loop Over Items1",
             "type": "main",
             "index": 0
           },
           {
-            "node": "Split Out",
+            "node": "C: 음식 추천 출력",
             "type": "main",
             "index": 0
           }
@@ -2829,61 +3014,6 @@
           }
         ]
       ]
-    },
-    "일정 입력": {
-      "main": [
-        [
-          {
-            "node": "일정",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "5개 출력": {
-      "main": [
-        [
-          {
-            "node": "메뉴1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "OpenAI Chat Model9": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "Food",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Split Out": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "추천된 가게 등록1": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "active": false,
@@ -2891,7 +3021,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "3d2fada9-6ac4-4303-ab6f-faa3a2442e3c",
+  "versionId": "d60b22c1-7bee-4a86-8988-0f423140f35d",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "ec60635b53f669a2b7838b571b95c4bbf51e85d782a484e319bb15b6b2af08b5"
