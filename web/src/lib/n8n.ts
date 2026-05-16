@@ -313,6 +313,7 @@ export async function selectFood(params: {
   user_id: string
   restaurant_id: string
   menu_name: string
+  category: string   // 로짓 업데이트 (θ += 0.1)에 사용
   location?: string
   tags?: string
   message?: string

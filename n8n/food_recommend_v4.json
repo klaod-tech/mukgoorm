@@ -2047,6 +2047,121 @@
       ],
       "id": "b960a2cf-531e-483e-be68-d62add48efad",
       "name": "날씨 응답 포멧"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('키워드 추출').item.json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [-4304, 1200],
+      "id": "softmax-node-01",
+      "name": "로짓 조회",
+      "credentials": {
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst logit_map = {};\nconst updated_at_map = {};\nitems.forEach(item => {\n  const { category, logit, updated_at } = item.json;\n  if (category) {\n    logit_map[category] = logit ?? 0;\n    updated_at_map[category] = updated_at ?? null;\n  }\n});\nreturn [{ json: { logit_map, updated_at_map } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-4096, 1200],
+      "id": "softmax-node-02",
+      "name": "로짓 집계"
+    },
+    {
+      "parameters": {
+        "jsCode": "const T = 1.5, EPS = 0.10, GAMMA = 0.95, K = 7;\nconst CATS = ['한식','중식','양식','분식','일식','디저트','기타'];\n\nconst logitData = $('로짓 집계').first().json;\nconst logitMap = logitData.logit_map || {};\nconst uaMap = logitData.updated_at_map || {};\n\nconst today = new Date();\nconst eff = {};\nCATS.forEach(cat => {\n  const logit = logitMap[cat] ?? 0;\n  const ua = uaMap[cat];\n  const days = ua ? (today - new Date(ua)) / 86400000 : 0;\n  eff[cat] = logit * Math.pow(GAMMA, days);\n});\n\nlet sum = 0;\nconst exp = {};\nCATS.forEach(cat => { exp[cat] = Math.exp((eff[cat] || 0) / T); sum += exp[cat]; });\nconst probs = {};\nCATS.forEach(cat => { probs[cat] = (1 - EPS) * exp[cat] / sum + EPS / K; });\n\nconst restaurants = $input.first().json.restaurants || [];\nconst sorted = [...restaurants]\n  .map(r => ({ ...r, _score: probs[r.category || '기타'] || EPS/K }))\n  .sort((a, b) => b._score - a._score);\n\nreturn [{ json: { restaurants: sorted } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-3616, 1024],
+      "id": "softmax-node-03",
+      "name": "Softmax 정렬"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ ($('피드백 입력').item.json.body || $('피드백 입력').item.json).user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [-4300, 900],
+      "id": "softmax-node-04",
+      "name": "피드백 현재 로짓",
+      "credentials": {
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('피드백 입력').first().json;\nconst body = raw.body || raw;\nconst { user_id, category, feedback } = body;\nconst alpha = feedback === 'like' ? 0.2 : -0.2;\nconst existing = $input.all().find(i => i.json.category === category);\nconst currentLogit = existing ? (existing.json.logit ?? 0) : 0;\nconst currentCount = existing ? (existing.json.sample_count ?? 0) : 0;\nreturn [{ json: {\n  user_id,\n  category,\n  logit: Math.round((currentLogit + alpha) * 1000) / 1000,\n  sample_count: currentCount + 1,\n  updated_at: new Date().toISOString()\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-4100, 900],
+      "id": "softmax-node-05",
+      "name": "피드백 로짓 계산"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/user_preference_logits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Prefer", "value": "resolution=merge-duplicates" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify([$json]) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [-3900, 900],
+      "id": "softmax-node-06",
+      "name": "피드백 로짓 저장",
+      "credentials": {
+        "supabaseApi": {
+          "id": "DAeVvjGCSU38eRDw",
+          "name": "Supabase account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -2563,6 +2678,39 @@
       "main": [
         [
           {
+            "node": "피드백 현재 로짓",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 현재 로짓": {
+      "main": [
+        [
+          {
+            "node": "피드백 로짓 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 로짓 계산": {
+      "main": [
+        [
+          {
+            "node": "피드백 로짓 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 로짓 저장": {
+      "main": [
+        [
+          {
             "node": "Respond to Webhook",
             "type": "main",
             "index": 0
@@ -2582,6 +2730,28 @@
       ]
     },
     "취향 정리": {
+      "main": [
+        [
+          {
+            "node": "로짓 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 조회": {
+      "main": [
+        [
+          {
+            "node": "로짓 집계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 집계": {
       "main": [
         [
           {
@@ -2717,6 +2887,17 @@
       ]
     },
     "식당 메뉴 연동1": {
+      "main": [
+        [
+          {
+            "node": "Softmax 정렬",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Softmax 정렬": {
       "main": [
         [
           {

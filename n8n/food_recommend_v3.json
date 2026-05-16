@@ -496,14 +496,79 @@
     },
     {
       "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ ($('메뉴 선택 입력').item.json.body || $('메뉴 선택 입력').item.json).user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [976, 2992],
+      "id": "menu-select-logit-01",
+      "name": "메뉴선택 현재 로짓",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('메뉴 선택 입력').first().json;\nconst body = raw.body || raw;\nconst { user_id, category } = body;\nif (!category) return [{ json: { skipped: true } }];\nconst existing = $input.all().find(i => i.json.category === category);\nconst currentLogit = existing ? (existing.json.logit ?? 0) : 0;\nconst currentCount = existing ? (existing.json.sample_count ?? 0) : 0;\nreturn [{ json: {\n  user_id,\n  category,\n  logit: Math.round((currentLogit + 0.1) * 1000) / 1000,\n  sample_count: currentCount + 1,\n  updated_at: new Date().toISOString()\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1200, 2992],
+      "id": "menu-select-logit-02",
+      "name": "메뉴선택 로짓 계산"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hauqlkowokezfxcgejzp.supabase.co/rest/v1/user_preference_logits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Prefer", "value": "resolution=merge-duplicates" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify([$json]) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1424, 2992],
+      "id": "menu-select-logit-03",
+      "name": "메뉴선택 로짓 저장",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [
-        976,
-        2992
-      ],
+      "position": [1648, 2992],
       "id": "a74deda6-299f-4c8d-a8b1-5772f55fca59",
       "name": "선택 완료 출력"
     },
@@ -985,7 +1050,7 @@
       "main": [
         [
           {
-            "node": "선택 응답 포맷",
+            "node": "메뉴선택 현재 로짓",
             "type": "main",
             "index": 0
           }
@@ -997,6 +1062,39 @@
         [
           {
             "node": "선택 완료 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴선택 현재 로짓": {
+      "main": [
+        [
+          {
+            "node": "메뉴선택 로짓 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴선택 로짓 계산": {
+      "main": [
+        [
+          {
+            "node": "메뉴선택 로짓 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴선택 로짓 저장": {
+      "main": [
+        [
+          {
+            "node": "선택 응답 포맷",
             "type": "main",
             "index": 0
           }

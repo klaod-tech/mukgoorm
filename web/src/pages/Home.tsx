@@ -291,6 +291,7 @@ export default function Home() {
         user_id: profile.user_id,
         restaurant_id: restaurant.restaurant_id,
         menu_name: menuName,
+        category: restaurant.category,
         location: profile.village ?? '',
         message: menuName,
       })
