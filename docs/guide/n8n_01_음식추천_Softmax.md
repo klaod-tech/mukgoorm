@@ -1,4 +1,4 @@
-# Step 1 — 먹구름봇: 음식 추천 Softmax 정렬 적용
+# Step 1 — 먹구름봇: 음식 추천 Softmax 적용
 
 > ⬅️ [목차](n8n_ml_nodes.md) | ⬅️ [Step 0 먼저 완료](n8n_00_setup.md)  
 > ⏱️ 예상 소요 시간: 20분  
@@ -8,7 +8,7 @@
 
 ## 목표
 
-음식 추천 흐름에 **Softmax 정렬**을 추가합니다.  
+음식 추천 흐름에 **Softmax**을 추가합니다.  
 유저별 로짓을 읽어서 취향에 맞는 카테고리 식당이 위로 올라오게 합니다.
 
 ### 수정 전 흐름
@@ -18,13 +18,13 @@
 
 ### 수정 후 흐름
 ```
-취향 정리(Set) → [로짓 조회] → [로짓 집계] → 식당1(Supabase) → 메뉴1 → 식당 메뉴 연동1 → [Softmax 정렬] → Decision(AI) → ...
-                  ↑ 신규         ↑ 신규                                                          ↑ 신규
+취향 정리(Set) → [로짓 조회] → [로짓 집계] → 식당1(Supabase) → 메뉴 → 식당 메뉴 연동1 → [Softmax] → Decision(AI) → ...
+                  ↑ 신규         ↑ 신규                                                       ↑ 신규
 ```
 
 > 📌 **노드 위치 중요**  
 > - `로짓 조회`, `로짓 집계`는 `취향 정리` → `식당1` **사이**에 삽입  
-> - `Softmax 정렬`은 `식당 메뉴 연동1` → `Decision` **사이**에 삽입
+> - `Softmax`는 `식당 메뉴 연동1` → `Decision` **사이**에 삽입
 
 ---
 
@@ -58,20 +58,20 @@
 | **Table** | `user_preference_logits` |
 | **Return All** | ✅ 체크 (7개 카테고리 전부 가져와야 함) |
 
-3. **Filters** 섹션 → **Add Filter**:
+3. **Always Output Data** → ✅ 체크 (신규 유저 0행 처리용)
+
+4. **Filters** 섹션 → **Add Filter**:
 
 ```
 Key Name  : user_id
 Condition : equal
-Key Value : {{ $('키워드 추출').item.json.user_id }}
+Key Value : {{ ($('키워드 추출').item.json.body || $('키워드 추출').item.json).user_id }}
 ```
 
-> ⚠️ `$('키워드 추출')` 부분은 실제 워크플로우에서  
-> user_id를 들고 있는 노드 이름으로 바꿔야 합니다.  
-> 노드 이름이 다르면 n8n에서 에러가 납니다.  
-> (보통 `키워드 추출` 또는 `음식 추천 입력` 노드가 user_id를 가짐)
+> ⚠️ n8n 버전에 따라 webhook body가 `body.user_id` 또는 `user_id` 형태로 올 수 있어  
+> 두 경우 모두 처리하는 표현식입니다.
 
-4. 노드 이름 → `로짓 조회` 로 변경
+5. 노드 이름 → `로짓 조회` 로 변경
 
 ---
 
@@ -124,7 +124,7 @@ return [{ json: { logit_map, updated_at_map } }]
 
 ---
 
-## 1-4. Softmax 정렬 노드 추가
+## 1-4. Softmax 노드 추가
 
 **`식당 메뉴 연동1` → `Decision` 사이에 삽입합니다.**
 
@@ -137,7 +137,7 @@ return [{ json: { logit_map, updated_at_map } }]
 
 ```javascript
 // ────────────────────────────────────────────────
-// Softmax 정렬 노드
+// Softmax 노드
 // ────────────────────────────────────────────────
 // 목적:
 //   식당 메뉴 연동1이 만든 restaurants 배열을
@@ -168,13 +168,10 @@ const today = new Date()
 const effectiveLogits = {}
 
 CATS.forEach(cat => {
-  const logit     = logitMap[cat] ?? 0
-  const lastUpdate = updatedAtMap[cat]
-  const daysSince  = lastUpdate
-    ? (today - new Date(lastUpdate)) / 86400000
+  const daysSince = updatedAtMap[cat]
+    ? (today.getTime() - new Date(updatedAtMap[cat]).getTime()) / 86400000
     : 0
-
-  effectiveLogits[cat] = logit * Math.pow(GAMMA, daysSince)
+  effectiveLogits[cat] = (logitMap[cat] ?? 0) * Math.pow(GAMMA, daysSince)
 })
 
 // ③ Temperature Softmax 적용
@@ -196,21 +193,21 @@ CATS.forEach(cat => {
 })
 
 // ⑤ 식당에 점수 부여 후 정렬
-//    category가 없으면 '기타' 처리
+//    restaurants.category는 Supabase text[] 배열이므로 첫 번째 값 사용
 const restaurants = $input.first().json.restaurants || []
 
 const sorted = [...restaurants]
   .map(r => ({
     ...r,
-    _score: probs[r.category || '기타'] || (EPS / K)
+    _score: probs[(Array.isArray(r.category) ? r.category[0] : r.category) || '기타'] || (EPS / K)
   }))
   .sort((a, b) => b._score - a._score)  // 높은 점수 먼저
 
 return [{ json: { restaurants: sorted } }]
 ```
 
-3. 노드 이름 → `Softmax 정렬` 로 변경
-4. `Softmax 정렬` 출력을 **`Decision`** 에 연결
+3. 노드 이름 → `Softmax` 로 변경
+4. `Softmax` 출력을 **`Decision`** 에 연결
 
 ---
 
@@ -221,17 +218,17 @@ return [{ json: { restaurants: sorted } }]
 ```
 취향 정리(Set)
     ↓
-로짓 조회(Supabase - Get Many, user_preference_logits)
+로짓 조회(Supabase - Get Many, user_preference_logits, Always Output Data ✅)
     ↓
 로짓 집계(Code - 7개 row → 1개 map)
     ↓
 식당1(Supabase - Get Many, restaurants)
     ↓
-메뉴1(Supabase - Get Many, menu_items)
+메뉴(Supabase - Get Many, menu_items)
     ↓
 식당 메뉴 연동1(Code - 식당+메뉴 합치기)
     ↓
-Softmax 정렬(Code - Temperature+Decay+Floor)
+Softmax(Code - Temperature+Decay+Floor)
     ↓
 Decision(AI Agent)
     ↓
@@ -281,19 +278,19 @@ Content-Type: application/json
 
 ### 성공 기준
 - 응답의 `restaurants` 배열 상위에 **한식** 카테고리 식당이 오면 성공
-- 응답에 `_score` 필드가 붙어있으면 Softmax 정렬이 작동 중
+- 응답에 `_score` 필드가 붙어있으면 Softmax이 작동 중
 
 ---
 
 ## ✅ Step 1 체크리스트
 
 ```
-[ ] 취향 정리 → 식당1 사이에 로짓 조회 노드 삽입
-[ ] 로짓 집계 노드 추가 및 코드 적용
-[ ] 식당 메뉴 연동1 → Decision 사이에 Softmax 정렬 노드 삽입
-[ ] 전체 연결 순서 확인 (끊어진 연결 없는지)
-[ ] Save → Active 확인
-[ ] 테스트: 한식 선호 유저에게 한식 식당이 상위로 오는지 확인
+[x] 취향 정리 → 식당1 사이에 로짓 조회 노드 삽입 (Always Output Data ✅)
+[x] 로짓 집계 노드 추가 및 코드 적용
+[x] 식당 메뉴 연동1 → Decision 사이에 Softmax 노드 삽입
+[x] C: 응답 포맷 category 배열 → string 변환 처리
+[x] 전체 연결 순서 확인
+[x] 완료 (2026-05-18)
 ```
 
 완료 → [Step 2: 피드백 로짓 업데이트](n8n_02_피드백_로짓.md) 진행
