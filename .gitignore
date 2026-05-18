@@ -19,6 +19,9 @@ web/.env.local
 
 # PPT / 발표 자료
 ppt/
+~$*.pptx
+~$*.xlsx
+~$*.docx
 
 # 에디터
 .DS_Store
