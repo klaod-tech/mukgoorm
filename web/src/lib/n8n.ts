@@ -15,6 +15,7 @@ export interface Restaurant {
   phone: string
   reason: string
   link: string
+  menus?: MenuItem[]
 }
 
 export interface WeatherData {
@@ -251,7 +252,8 @@ export async function sendFeedback(params: {
   category: string
   feedback: 'like' | 'dislike'
 }) {
-  await axios.post(FEEDBACK_WEBHOOK, params, { timeout: 5000 })
+  const { feedback, ...rest } = params
+  await axios.post(FEEDBACK_WEBHOOK, { ...rest, reaction: feedback }, { timeout: 5000 })
 }
 
 // ── 음식 추천 v2: 3단계 분리 API ──────────────────────────────
@@ -296,19 +298,7 @@ export async function recommendFood(params: {
   return res.data
 }
 
-/** 2단계: 식당 메뉴 조회 */
-export async function fetchRestaurantMenu(params: {
-  restaurant_id: string
-}): Promise<MenuResponse> {
-  const res = await axios.post<MenuResponse>(
-    '/webhook/food/menu',
-    params,
-    { timeout: 5000 },
-  )
-  return res.data
-}
-
-/** 3단계: 메뉴 선택 기록 */
+/** 2단계: 메뉴 선택 기록 */
 export async function selectFood(params: {
   user_id: string
   restaurant_id: string

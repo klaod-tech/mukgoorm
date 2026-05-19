@@ -1,150 +1,114 @@
 # 다음 작업 목록
 
-> 최종 업데이트: 2026-05-14
-> 브랜치: `exp`
+> 최종 업데이트: 2026-05-19  
+> 브랜치: `feat/web-migration`
 
 ---
 
-## 완료된 작업 (n8n)
+## ✅ 완료된 작업
 
+### n8n (먹구름_봇v2)
 | 항목 | 상태 |
 |---|---|
-| 날씨 webhook (sky/rain 추출, 응답 포맷) | ✅ |
+| 날씨 webhook | ✅ |
 | 식사 webhook | ✅ |
-| 일기 webhook (is_update boolean 오류 수정) | ✅ |
-| 일정 webhook (Agent 중복 실행 수정) | ✅ |
-| 체중 webhook (메시지 직접 분석) | ✅ |
-| 음식추천 A경로 | ✅ |
-| 음식추천 B경로 (Decision 노드 메시지 변수 수정) | ✅ |
-| 음식추천 C경로 (5개 랜덤 선택 + Loop + restaurant_log 저장) | ✅ |
+| 일기 webhook | ✅ |
+| 일정 webhook | ✅ |
+| 체중 webhook | ✅ |
+| 음식추천 A/B/C 경로 (Softmax 정렬) | ✅ |
+| 피드백 로짓 ±0.2 (Step 2) | ✅ |
+| B/C 경로 응답에 menus 포함 | ✅ |
+
+### React
+| 항목 | 상태 |
+|---|---|
+| 피드백 버튼 UI (선택 시 glow 효과, 중복 클릭 방지) | ✅ |
+| `sendFeedback` → POST body에서 `reaction` 키로 변환 | ✅ |
+| `Restaurant` interface에 `menus?: MenuItem[]` 추가 | ✅ |
+| `fetchRestaurantMenu` 제거 → `restaurant.menus` 직접 사용 | ✅ |
+
+### Supabase
+| 항목 | 상태 |
+|---|---|
+| `food_feedback` 테이블에 `restaurant_id` 컬럼 추가 | ✅ |
+| `user_preference_logits` 온보딩 시 0으로 초기화 | ✅ |
 
 ---
 
-## 내일 작업 계획
+## 🚨 긴급 / 우선순위 높음
 
-### Phase 1 — React ↔ n8n 연결
+### [긴급 1] 알레르기 기능 폐기 + 음식명 키워드 추출로 교체
 
-#### 1-1. `recommendFood` 함수에 date 추가
-파일: [web/src/lib/n8n.ts](web/src/lib/n8n.ts)
+**폐기:** `allergens`, `allergies` 관련 로직 전체 제거
 
-```typescript
-export async function recommendFood(params: {
-  user_id: string
-  message: string
-  location?: string
-  date?: string        // 추가
-}): Promise<FoodRecommendResponse>
-```
+**신규:** 메뉴 이름에서 핵심 음식 키워드 추출
+- `온정돈까스` → `돈까스`
+- `로티세리 치킨 타코 샐러드` → `치킨, 타코, 샐러드`
 
-호출 시:
-```typescript
-recommendFood({
-  user_id,
-  message,
-  location,
-  date: new Date().toISOString().slice(0, 10),
-})
-```
-
-#### 1-2. n8n webhook URL 설정
-- `.env.local`에 n8n base URL 확인 (`http://localhost:5678`)
-- `vite.config.ts` proxy 설정 확인 (이미 완료)
-
-#### 1-3. 각 기능별 webhook 연동 확인
-- 채팅 입력 → `classifyMessage` → `dispatchToWebhooks` 흐름 연결
-- 음식추천은 `recommendFood` 별도 호출
+**영향 범위:**
+- n8n: C경로 `Food` 프롬프트에서 알레르기 조건 제거, 태그 기반 매칭에 추출 키워드 활용
+- n8n: `식당 메뉴 연동1` 또는 응답 포맷에서 `allergens` 필드 제거
+- React: `Restaurant` interface에서 `allergens` 제거
+- Supabase: `menu_items.allergens` 컬럼 사용 중단 (삭제는 선택)
 
 ---
 
-### Phase 2 — 채팅 UI 구현
+## 🔲 진행 중 — Step 3-3
 
-#### 2-1. 메시지 입력 → 분류 → 전송 흐름
+### [우선순위 2] n8n: `/food/select` webhook 추가 (로짓 +0.1)
+
+`먹구름_봇v2` 캔버스에 추가할 흐름:
+
 ```
-사용자 메시지 입력
-  → classifyMessage (GPT 분류)
-  → dispatchToWebhooks (n8n 병렬 호출)
-  → synthesizeResponse (GPT 합성)
-  → 채팅창에 응답 표시
+메뉴 선택 입력 (Webhook - path: food/select)
+    → 방문 기록 저장 (Supabase Create - restaurant_log)
+    → 메뉴선택 현재 로짓 (Supabase Get Many - user_preference_logits)
+    → 메뉴선택 로짓 계산 (Code - +0.1)
+    → 로짓 업데이트 (Supabase Update - user_preference_logits)
+    → 선택 완료 출력 (Respond to Webhook)
 ```
 
-#### 2-2. 응답 카드 렌더링
-- `restaurants` 배열 → 식당 카드 컴포넌트
-- `weather` 배열 → 날씨 카드 컴포넌트
-- 로딩 상태 처리 (각 webhook 응답 대기)
-
-#### 2-3. 음식추천 전용 UI
-- A/B/C 경로별 응답 처리
-- 식당 카드에 추천 이유(`reason`) 표시
-- 알레르기 주의 표시
+상세 설정 → [docs/guide/n8n_03_메뉴선택_로짓.md](docs/guide/n8n_03_메뉴선택_로짓.md)
 
 ---
 
-### Phase 3 — 실제 실행 테스트
+## 📋 다음 작업 순서
 
-#### 3-1. 전체 플로우 end-to-end 테스트
-순서:
-1. React에서 메시지 입력
-2. n8n webhook 호출 확인 (Network 탭)
-3. Supabase 데이터 저장 확인
-4. 응답 카드 렌더링 확인
+### [우선순위 3] Step 4 — 월드컵 webhook 추가 (먹구름_봇v2)
 
-#### 3-2. 각 시나리오 테스트
-- "오늘 날씨 어때?" → 날씨 카드
-- "점심에 삼겹살 먹었어" → 식사 저장
-- "짬뽕 먹고 싶어" → 음식추천 B경로
-- "오늘 뭐 먹지?" → 음식추천 C경로 (5개 랜덤)
-- "내일 3시에 치과 예약" → 일정 저장
-- "오늘 58kg" → 체중 저장
+```
+월드컵 입력 (Webhook - path: worldcup)
+    → 현재 로짓 (Supabase Get Many)
+    → 월드컵 계산 (Code - 델타 누적 + Softmax)
+    → 세션 저장 (HTTP Request - worldcup_sessions)
+    → 로짓 저장 (HTTP Request - user_preference_logits upsert)
+    → 최종 응답 (Code)
+    → 응답 (Respond to Webhook)
+```
 
-#### 3-3. 에러 케이스 처리
-- n8n 타임아웃 시 UI 처리
-- 분류 실패 시 fallback 메시지
+상세 설정 → [docs/guide/n8n_04_worldcup.md](docs/guide/n8n_04_worldcup.md)
 
 ---
 
-### Phase 4 — 미결 사항
+### [우선순위 4] Step 5 — 테스트 및 검증
 
-#### n8n
-- [ ] `새 날씨 등록` 노드 수정 (city 소스, created_at 값 확인)
-- [ ] 음식추천 C경로 알레르기 없는 식당 메뉴 데이터 채우기 (Supabase menu_items)
-- [ ] 이메일 webhook 연동
-- [ ] **음식추천 A/B/C 경로 메뉴 조회 구조 수정** (아래 상세 참고)
-
-#### 음식추천 메뉴 조회 구조 수정 상세
-
-**문제**: `5개 출력` 노드가 Decision **이전** 메인 흐름에 있어서 A/B 경로도 랜덤 5개 식당의 메뉴만 조회됨. 유저가 언급한 식당/메뉴가 그 5개 안에 없으면 조회 불가.
-
-**현재 잘못된 구조:**
 ```
-식당1 (45개) → 5개 출력 (랜덤 5개) → 메뉴1 → Decision → A/B/C
+[ ] 음식 추천 → 식당 카드 클릭 → 메뉴 패널 표시 확인
+[ ] 메뉴 선택 → user_preference_logits logit +0.1 확인
+[ ] 피드백 👍 → logit +0.2 확인
+[ ] 피드백 👎 → logit -0.2 확인
+[ ] 월드컵 완료 → worldcup_sessions 저장 + logit 업데이트 확인
+[ ] 음식 추천 → Softmax 정렬 반영 확인 (피드백 후 재추천 시 변화)
 ```
-
-**수정 목표 구조:**
-```
-식당1 (45개) → Decision → A경로: 언급된 식당 ID로 메뉴 직접 조회
-                        → B경로: 키워드로 menu_items 전체 텍스트 검색
-                        → C경로: 5개 출력 → 메뉴1 → Food AI
-```
-
-**수정 작업:**
-1. `5개 출력` + `메뉴1` 노드를 메인 흐름에서 분리 → C경로 분기 이후로 이동
-2. A경로: 식당명 추출 → 해당 restaurant_id로 메뉴 조회
-3. B경로: 키워드로 menu_items 텍스트 검색 (Supabase `ilike` 또는 `fts`)
-4. C경로: 기존 `5개 출력` → `메뉴1` 구조 유지
-
-#### React
-- [ ] Supabase Auth 로그인
-- [ ] 온보딩 플로우 (취향, 알레르기 입력)
-- [ ] 체중 추이 그래프 (recharts)
-- [ ] 주간 리포트 페이지
 
 ---
 
-## 미결 사항 (장기)
+### 미결 사항 (장기)
 
 ```
+[ ] n8n Railway 배포 (팀 공유 인스턴스)
 [ ] Supabase RLS 정책 설계 (유저별 데이터 격리)
+[ ] 이메일 webhook 연동
 [ ] PWA vs Electron 패키징 방향 결정
-[ ] 이메일 모니터링 IMAP 처리 위치 확정 (Edge Function vs n8n)
-[ ] ML 의도 분류 파이프라인 (데이터 50건+ 누적 후)
+[ ] 회원탈퇴 후 재로그인 버그 수정
 ```

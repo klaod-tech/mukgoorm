@@ -7,7 +7,6 @@ import {
   synthesizeResponse,
   callBotWebhook,
   recommendFood,
-  fetchRestaurantMenu,
   selectFood,
   sendFeedback,
   submitIntentFeedback,
@@ -269,14 +268,14 @@ export default function Home() {
 
   // ── 2단계: 식당 선택 → 메뉴 조회 ────────────────────────────
 
-  async function handleMenuRequest(restaurant: Restaurant) {
-    setMenuState({ restaurant, menus: [], loading: true, selected: null, feedbackDone: false })
-    try {
-      const result = await fetchRestaurantMenu({ restaurant_id: restaurant.restaurant_id })
-      setMenuState(prev => prev ? { ...prev, menus: result.menus, loading: false } : null)
-    } catch {
-      setMenuState(prev => prev ? { ...prev, loading: false } : null)
-    }
+  function handleMenuRequest(restaurant: Restaurant) {
+    setMenuState({
+      restaurant,
+      menus: restaurant.menus ?? [],
+      loading: false,
+      selected: null,
+      feedbackDone: false,
+    })
   }
 
   // ── 3단계: 메뉴 선택 → 기록 저장 ────────────────────────────
@@ -552,22 +551,28 @@ function RestaurantCard({
             onClick={() => handleVote('like')}
             disabled={!!voted}
             style={{
-              background: voted === 'like' ? '#1a3a1a' : 'none',
+              background: voted === 'like' ? '#1a4a1a' : 'none',
               border: `1px solid ${voted === 'like' ? '#4caf50' : '#2a2a4a'}`,
               borderRadius: 8, padding: '4px 8px',
-              color: voted === 'like' ? '#4caf50' : '#555',
-              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+              color: voted === 'like' ? '#6ddf70' : '#555',
+              fontSize: voted === 'like' ? 15 : 13,
+              cursor: voted ? 'default' : 'pointer',
+              boxShadow: voted === 'like' ? '0 0 8px #4caf5088' : 'none',
+              transition: 'all 0.2s',
             }}
           >👍</button>
           <button
             onClick={() => handleVote('dislike')}
             disabled={!!voted}
             style={{
-              background: voted === 'dislike' ? '#3a1a1a' : 'none',
+              background: voted === 'dislike' ? '#4a1a1a' : 'none',
               border: `1px solid ${voted === 'dislike' ? '#ff6b6b' : '#2a2a4a'}`,
               borderRadius: 8, padding: '4px 8px',
-              color: voted === 'dislike' ? '#ff6b6b' : '#555',
-              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+              color: voted === 'dislike' ? '#ff9090' : '#555',
+              fontSize: voted === 'dislike' ? 15 : 13,
+              cursor: voted ? 'default' : 'pointer',
+              boxShadow: voted === 'dislike' ? '0 0 8px #ff6b6b88' : 'none',
+              transition: 'all 0.2s',
             }}
           >👎</button>
         </div>
