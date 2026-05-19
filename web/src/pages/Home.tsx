@@ -652,8 +652,8 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
           {menu.tags?.map(tag => (
             <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#2a2a4a', color: '#6c63ff' }}>{tag}</span>
           ))}
-          {menu.allergens?.map(a => (
-            <span key={a} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#3a2a1a', color: '#f5a623' }}>⚠️ {a}</span>
+          {menu.keywords?.map(kw => (
+            <span key={kw} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#1a2a3a', color: '#63b3ff' }}>{kw}</span>
           ))}
         </div>
       </div>

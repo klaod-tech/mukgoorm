@@ -275,7 +275,7 @@ export interface MenuItem {
   price: number | null
   description: string | null
   tags: string[] | null
-  allergens: string[] | null
+  keywords: string[] | null
 }
 
 export interface MenuResponse {

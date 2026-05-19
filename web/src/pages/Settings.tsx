@@ -4,7 +4,6 @@ import { supabase } from '../lib/supabase'
 import { updateUserProfile } from '../lib/db'
 import { useUser } from '../hooks/useUser'
 
-const ALLERGY_OPTIONS = ['유제품', '글루텐', '견과류', '해산물', '달걀', '돼지고기']
 const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
 
 export default function Settings() {
@@ -26,7 +25,6 @@ export default function Settings() {
     height: '',
     init_weight: '',
     goal_weight: '',
-    allergies: [] as string[],
     food_preferences: [] as string[],
     wake_time: '',
     breakfast_time: '',
@@ -49,7 +47,6 @@ export default function Settings() {
       height: String(profile.height ?? ''),
       init_weight: String(profile.init_weight ?? ''),
       goal_weight: String(profile.goal_weight ?? ''),
-      allergies: profile.allergies ?? [],
       food_preferences: profile.food_preferences ?? [],
       wake_time: profile.wake_time ?? '',
       breakfast_time: profile.breakfast_time ?? '',
@@ -66,7 +63,7 @@ export default function Settings() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function toggleArray(key: 'allergies' | 'food_preferences', value: string) {
+  function toggleArray(key: 'food_preferences', value: string) {
     setForm(f => ({
       ...f,
       [key]: f[key].includes(value)
@@ -90,7 +87,6 @@ export default function Settings() {
         height: Number(form.height) || null,
         init_weight: Number(form.init_weight) || null,
         goal_weight: Number(form.goal_weight) || null,
-        allergies: form.allergies,
         food_preferences: form.food_preferences,
         wake_time: form.wake_time,
         breakfast_time: form.breakfast_time,
@@ -183,13 +179,6 @@ export default function Settings() {
 
         {/* 식단 */}
         <Section title="🥗 식단 설정">
-          <Field label="알레르기">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {ALLERGY_OPTIONS.map(opt => (
-                <TagBtn key={opt} label={opt} active={form.allergies.includes(opt)} onClick={() => toggleArray('allergies', opt)} />
-              ))}
-            </div>
-          </Field>
           <Field label="음식 선호도">
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {PREFERENCE_OPTIONS.map(opt => (

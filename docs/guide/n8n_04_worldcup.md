@@ -29,7 +29,24 @@
 
 ---
 
+## 월드컵 페어 구성 규칙 (React)
+
+React Worldcup 페이지에서 Supabase `menu_items`를 가져와 페어를 구성할 때:
+
+1. **음료/뷔페 키워드 제외**: `keywords` 배열에 아래 키워드가 있으면 제외
+   ```
+   소주, 맥주, 사케, 막걸리, 청주, 모주, 사이다, 콜라, 주스, 에이드, 식혜, 라떼, 뷔페
+   ```
+
+2. **category 매핑**: 각 메뉴의 `keywords[0]`을 `KEYWORD_CATEGORY_MAP`으로 변환  
+   → 매핑 테이블 전체: [n8n_ml_nodes.md](n8n_ml_nodes.md#keyword--logit_category-매핑)
+
+3. **rounds 데이터**: 각 라운드마다 `winner_category`, `loser_category` 포함
+
+---
+
 ## React에서 보내는 데이터 형태
+
 ```json
 {
   "user_id": "유저UUID",
@@ -39,7 +56,7 @@
       "round": 1,
       "winner": "돈까스",
       "loser": "피자",
-      "winner_category": "분식",
+      "winner_category": "일식",
       "loser_category": "양식"
     }
   ]
@@ -311,9 +328,9 @@ Content-Type: application/json
   "user_id": "test_user_999",
   "champion": "돈까스",
   "rounds": [
-    { "round": 1, "winner": "돈까스", "loser": "피자", "winner_category": "분식", "loser_category": "양식" },
+    { "round": 1, "winner": "돈까스", "loser": "피자", "winner_category": "일식", "loser_category": "양식" },
     { "round": 1, "winner": "삼겹살", "loser": "짜장면", "winner_category": "한식", "loser_category": "중식" },
-    { "round": 2, "winner": "돈까스", "loser": "삼겹살", "winner_category": "분식", "loser_category": "한식" }
+    { "round": 2, "winner": "돈까스", "loser": "삼겹살", "winner_category": "일식", "loser_category": "한식" }
   ]
 }
 ```
@@ -322,14 +339,14 @@ Content-Type: application/json
 ```json
 {
   "message": "선호도 분석 완료! 👑 돈까스이(가) 우승했어요",
-  "top_categories": ["분식", "한식", "..."],
-  "softmax": { "분식": 0.42, "한식": 0.28, ... },
+  "top_categories": ["일식", "한식", "..."],
+  "softmax": { "일식": 0.42, "한식": 0.28, ... },
   "champion": "돈까스"
 }
 ```
 
 **Supabase 확인:**
-- `user_preference_logits` → `user_id=test_user_999` 행 7개 (분식 logit 가장 높음)
+- `user_preference_logits` → `user_id=test_user_999` 행 7개 (일식 logit 가장 높음)
 - `worldcup_sessions` → 세션 1개 생성
 - 같은 user_id로 재실행 → logit이 덮어써지지 않고 누적되어야 함
 
@@ -356,10 +373,10 @@ Content-Type: application/json
 ## 🎉 전체 완료!
 
 ```
-[ ] Step 0: Supabase 테이블 생성 확인
-[ ] Step 1: 먹구름봇v2 음식 추천 Softmax 정렬 적용
-[ ] Step 2: 먹구름봇v2 피드백 로짓 ±0.2 업데이트
-[ ] Step 3: 먹구름봇v2 메뉴 선택 로짓 +0.1 업데이트
+[x] Step 0: Supabase 테이블 생성 확인
+[x] Step 1: 먹구름봇v2 음식 추천 Softmax 정렬 적용
+[x] Step 2: 먹구름봇v2 피드백 로짓 ±0.2 업데이트
+[ ] Step 3: 먹구름봇v2 메뉴 선택 로짓 +0.1 업데이트 (3-3만 미완)
 [ ] Step 4: 먹구름봇v2 월드컵 로짓 업데이트
 ```
 

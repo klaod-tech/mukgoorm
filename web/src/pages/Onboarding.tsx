@@ -20,7 +20,6 @@ export default function Onboarding() {
     height: '',
     init_weight: '',
     goal_weight: '',
-    allergies: [] as string[],
     food_preferences: [] as string[],
     wake_time: '07:00',
     breakfast_time: '08:00',
@@ -36,7 +35,7 @@ export default function Onboarding() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function toggleArray(key: 'allergies' | 'food_preferences', value: string) {
+  function toggleArray(key: 'food_preferences', value: string) {
     setForm(f => ({
       ...f,
       [key]: f[key].includes(value)
@@ -67,7 +66,6 @@ export default function Onboarding() {
           height: Number(form.height),
           init_weight: Number(form.init_weight),
           goal_weight: Number(form.goal_weight),
-          allergies: form.allergies,
           food_preferences: form.food_preferences,
           wake_time: form.wake_time,
           breakfast_time: form.breakfast_time,
@@ -88,7 +86,6 @@ export default function Onboarding() {
     }
   }
 
-  const ALLERGY_OPTIONS = ['유제품', '글루텐', '견과류', '해산물', '달걀', '돼지고기']
   const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
 
   return (
@@ -143,15 +140,6 @@ export default function Onboarding() {
             <input placeholder="키 (cm)" type="number" value={form.height} onChange={e => set('height', e.target.value)} style={inputStyle} />
             <input placeholder="현재 체중 (kg)" type="number" value={form.init_weight} onChange={e => set('init_weight', e.target.value)} style={inputStyle} />
             <input placeholder="목표 체중 (kg)" type="number" value={form.goal_weight} onChange={e => set('goal_weight', e.target.value)} style={inputStyle} />
-
-            <div>
-              <p style={{ color: '#aaa', fontSize: 13, margin: '0 0 8px' }}>알레르기 (복수 선택)</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {ALLERGY_OPTIONS.map(opt => (
-                  <button key={opt} onClick={() => toggleArray('allergies', opt)} style={{ ...tagBtn, background: form.allergies.includes(opt) ? '#6c63ff' : '#16213e' }}>{opt}</button>
-                ))}
-              </div>
-            </div>
 
             <div>
               <p style={{ color: '#aaa', fontSize: 13, margin: '0 0 8px' }}>음식 선호도 (복수 선택)</p>
