@@ -303,10 +303,9 @@ export async function selectFood(params: {
   user_id: string
   restaurant_id: string
   menu_name: string
-  category: string   // 로짓 업데이트 (θ += 0.1)에 사용
+  keywords: string[] // 로짓 업데이트 — n8n에서 keywords→category 매핑 처리
   location?: string
-  tags?: string
-  message?: string
+  date?: string
 }): Promise<void> {
   await axios.post('/webhook/food/select', params, { timeout: 5000 })
 }

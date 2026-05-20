@@ -66,6 +66,7 @@ CREATE TABLE menu_items (
   calories      integer,
   allergens     text[],
   tags          text[],
+  keywords      text[],
   is_available  boolean DEFAULT true,
   created_at    timestamp with time zone DEFAULT now()
 );

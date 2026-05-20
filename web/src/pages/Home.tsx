@@ -283,6 +283,7 @@ export default function Home() {
   async function handleMenuSelect(menuName: string) {
     if (!menuState || !profile) return
     const { restaurant } = menuState
+    const selectedMenu = menuState.menus.find(m => m.menu_name === menuName)
     setMenuState(prev => prev ? { ...prev, selected: menuName } : null)
 
     try {
@@ -290,9 +291,9 @@ export default function Home() {
         user_id: profile.user_id,
         restaurant_id: restaurant.restaurant_id,
         menu_name: menuName,
-        category: restaurant.category,
+        keywords: selectedMenu?.keywords ?? [],
         location: profile.village ?? '',
-        message: menuName,
+        date: new Date().toISOString().slice(0, 10),
       })
       setMessages(prev => [...prev, {
         id: Date.now(),
