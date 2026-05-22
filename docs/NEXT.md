@@ -1,6 +1,6 @@
 # 다음 작업 목록
 
-> 최종 업데이트: 2026-05-20  
+> 최종 업데이트: 2026-05-22  
 > 브랜치: `feat/web-migration`
 
 ---
@@ -43,87 +43,41 @@
 
 ---
 
-## 🔲 n8n 버그 수정 필요 (v4)
+## n8n 버그 현황 (`음식 추천 v2 (13).json`)
 
-`먹구름_봇v4.json`에 존재하는 미수정 버그 목록입니다.  
 n8n 캔버스에서 직접 수정 후 Save → Active 확인.
 
 ---
 
-### [우선순위 1] 피드백 로직 — `피드백 현재 로직` 테이블 오류
+### ✅ [완료] 피드백 로직 — `피드백 현재 로직` 테이블 오류
 
-`피드백 현재 로직` Supabase 노드가 `food_feedback`을 조회 중.  
-`food_feedback`에는 `logit`/`sample_count` 컬럼이 없어서 로짓이 항상 0에서 시작됩니다.
+`피드백 현재 로직` 노드 테이블을 `user_preference_logits`으로 수정 완료.
 
-**수정:**
-- 노드 이름: `피드백 현재 로직`
-- Table: `food_feedback` → **`user_preference_logits`** 로 변경
-- Filter: `user_id = {{ $('피드백 입력').item.json.body.user_id }}`
-
-상세: [docs/guide/n8n_02_피드백_로짓.md](docs/guide/n8n_02_피드백_로짓.md)
+상세: [guide/n8n_02_피드백_로짓.md](guide/n8n_02_피드백_로짓.md)
 
 ---
 
-### [우선순위 2] 메뉴 선택 — `메뉴 선택 로직 계산` exists 누락
+### ✅ [완료] 메뉴 선택 — `메뉴 선택 로직 계산` exists 누락
 
-`메뉴 선택 로직 계산` Code 노드 출력에 `exists` 필드가 없습니다.  
-뒤의 `정보 수정 여부1` IF 노드가 `$json.exists`를 확인하는데, 항상 `undefined` → false → 항상 Create → 두 번째 선택 시 PRIMARY KEY 오류.
+`메뉴 선택 로직 계산` Code 노드 return에 `exists: !!existing` / `exists: !!existingSkip` 추가 완료.
 
-**수정:** `메뉴 선택 로직 계산` Code 노드 return 블록에 `exists` 추가.
-
-skip 경로:
-```javascript
-return [{ json: {
-  user_id: body.user_id, category: '_skip', logit: 0, sample_count: 0,
-  updated_at: new Date().toISOString(),
-  exists: false  // ← 추가
-}}]
-```
-
-일반 경로 return:
-```javascript
-return [{
-  json: {
-    user_id: body.user_id,
-    category,
-    logit: Math.round(((existing?.json.logit ?? 0) + ALPHA) * 1000) / 1000,
-    sample_count: (existing?.json.sample_count ?? 0) + 1,
-    updated_at: new Date().toISOString(),
-    exists: !!existing  // ← 추가
-  }
-}]
-```
-
-상세: [docs/guide/n8n_03_메뉴선택_로짓.md](docs/guide/n8n_03_메뉴선택_로짓.md)
+상세: [guide/n8n_03_메뉴선택_로짓.md](guide/n8n_03_메뉴선택_로짓.md)
 
 ---
 
-### [우선순위 3] 월드컵 — `Code in JavaScript` 노드 참조 + 응답 형식
+### 월드컵 — `Code in JavaScript` 노드 참조 + 응답 형식
 
-**버그 1 — 노드 참조 오류:**
+**✅ 버그 1 — 노드 참조 오류:** `$('월드컵 로직 계산')` 수정 완료.
 
-`Code in JavaScript` 노드 코드를 아래로 교체:
-```javascript
-const data = $('월드컵 로직 계산').first().json  // '월드컵 계산' → '월드컵 로직 계산'
+**🔲 버그 2 — 응답 형식 오류 (미수정):**
 
-return [{
-  json: {
-    message: `선호도 분석 완료! 👑 ${data.champion}이(가) 우승했어요`,
-    top_categories: data.top_categories
-  }
-}]
+`피드백 확인1` 노드 Response Body — `top_categories`가 응답에서 누락됨:
+```
+현재: ={{ JSON.stringify({ ok: true, category: $json.category }) }}
+수정: ={{ JSON.stringify($json) }}
 ```
 
-**버그 2 — 응답 형식 오류:**
-
-`피드백 확인1` 노드 Response Body:
-```
-={{ JSON.stringify({ ok: true, category: $json.category }) }}
-↓ 수정
-={{ JSON.stringify($json) }}
-```
-
-상세: [docs/guide/n8n_04_worldcup.md](docs/guide/n8n_04_worldcup.md)
+상세: [guide/n8n_04_worldcup.md](guide/n8n_04_worldcup.md)
 
 ---
 

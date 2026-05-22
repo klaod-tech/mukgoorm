@@ -9,7 +9,6 @@ import {
   recommendFood,
   selectFood,
   sendFeedback,
-  submitIntentFeedback,
   type Restaurant,
   type WeatherData,
   type MenuItem,
@@ -30,7 +29,6 @@ interface Message {
   weather?: WeatherData[]
   classified?: string[]
   failed?: string[]
-  intent_log_id?: string
   food_path?: IntentPath
   food_description?: string
 }
@@ -41,8 +39,7 @@ interface MenuState {
   restaurant: Restaurant
   menus: MenuItem[]
   loading: boolean
-  selected: string | null       // 선택한 menu_name
-  feedbackDone: boolean
+  selected: string | null
 }
 
 interface PendingDiaryUpdate {
@@ -101,7 +98,6 @@ export default function Home() {
   const [showDiaryModal, setShowDiaryModal] = useState(false)
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const [menuState, setMenuState] = useState<MenuState | null>(null)
-  const [activeIntentLogId, setActiveIntentLogId] = useState<string | null>(null)
   const [evoState, setEvoState] = useState<EvoState>('evolved')
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -197,7 +193,6 @@ export default function Home() {
           const food = foodResult.value
           combined.messages.push(food.message)
           combined.restaurants.push(...food.restaurants)
-          combined.intent_log_id = food.intent_log_id
           combined.food_path = food.path
           combined.food_description = food.description
         } else {
@@ -218,16 +213,10 @@ export default function Home() {
         weather: combined.weather.length > 0 ? combined.weather : undefined,
         classified: classified.bots,
         failed: combined.failed.length > 0 ? combined.failed : undefined,
-        intent_log_id: combined.intent_log_id,
         food_path: combined.food_path,
         food_description: combined.food_description,
       }
       setMessages(prev => [...prev, botMsg])
-
-      // 음식 추천이 있으면 intent_log_id 활성화
-      if (combined.intent_log_id) {
-        setActiveIntentLogId(combined.intent_log_id)
-      }
 
       if (diaryConflict) {
         setPendingDiary({
@@ -274,7 +263,6 @@ export default function Home() {
       menus: restaurant.menus ?? [],
       loading: false,
       selected: null,
-      feedbackDone: false,
     })
   }
 
@@ -307,17 +295,6 @@ export default function Home() {
         text: '기록 저장에 실패했어 😥',
       }])
     }
-  }
-
-  // ── ML 피드백 ────────────────────────────────────────────────
-
-  async function handleIntentFeedback(isCorrect: boolean, truePath?: IntentPath) {
-    if (!activeIntentLogId) return
-    setActiveIntentLogId(null)
-    setMenuState(prev => prev ? { ...prev, feedbackDone: true } : null)
-    try {
-      await submitIntentFeedback({ intent_log_id: activeIntentLogId, is_correct: isCorrect, true_path: truePath })
-    } catch { /* silent */ }
   }
 
   // ── 일기 덮어쓰기 ────────────────────────────────────────────
@@ -445,10 +422,8 @@ export default function Home() {
       {menuState && (
         <MenuPanel
           state={menuState}
-          intentLogId={activeIntentLogId}
           onMenuSelect={handleMenuSelect}
           onClose={() => setMenuState(null)}
-          onIntentFeedback={handleIntentFeedback}
         />
       )}
 
@@ -584,18 +559,14 @@ function RestaurantCard({
 
 function MenuPanel({
   state,
-  intentLogId,
   onMenuSelect,
   onClose,
-  onIntentFeedback,
 }: {
   state: MenuState
-  intentLogId: string | null
   onMenuSelect: (menuName: string) => void
   onClose: () => void
-  onIntentFeedback: (isCorrect: boolean, truePath?: IntentPath) => void
 }) {
-  const { restaurant, menus, loading, selected, feedbackDone } = state
+  const { restaurant, menus, loading, selected } = state
 
   return (
     <div style={{
@@ -629,11 +600,6 @@ function MenuPanel({
           />
         ))}
       </div>
-
-      {/* ML 피드백 바 — 선택 완료 후 + 피드백 미완료 시 */}
-      {selected && intentLogId && !feedbackDone && (
-        <IntentFeedbackBar onFeedback={onIntentFeedback} />
-      )}
     </div>
   )
 }
@@ -680,47 +646,6 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
       </div>
     </div>
   )
-}
-
-function IntentFeedbackBar({ onFeedback }: { onFeedback: (isCorrect: boolean, truePath?: IntentPath) => void }) {
-  const [showCorrect, setShowCorrect] = useState(false)
-
-  return (
-    <div style={{
-      borderTop: '1px solid #2a2a4a', padding: '12px 20px',
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
-      {!showCorrect ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: '#888' }}>추천이 원하던 것과 맞았어?</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => onFeedback(true)}
-              style={{ background: '#1a3a1a', border: '1px solid #4caf50', borderRadius: 8, padding: '5px 12px', color: '#4caf50', fontSize: 12, cursor: 'pointer' }}
-            >맞아 👍</button>
-            <button
-              onClick={() => setShowCorrect(true)}
-              style={{ background: '#3a1a1a', border: '1px solid #ff6b6b', borderRadius: 8, padding: '5px 12px', color: '#ff6b6b', fontSize: 12, cursor: 'pointer' }}
-            >아니야 👎</button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#aaa' }}>어떤 방식으로 찾길 원했어?</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => onFeedback(false, 'A')} style={feedbackBtnStyle}>식당 이름으로</button>
-            <button onClick={() => onFeedback(false, 'B')} style={feedbackBtnStyle}>메뉴 이름으로</button>
-            <button onClick={() => onFeedback(false, 'C')} style={feedbackBtnStyle}>그냥 추천으로</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const feedbackBtnStyle: React.CSSProperties = {
-  background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8,
-  padding: '5px 10px', color: '#aaa', fontSize: 11, cursor: 'pointer',
 }
 
 function WeatherCard({ weather: w }: { weather: WeatherData }) {

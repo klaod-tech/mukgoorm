@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { sendWorldcupResult } from '../lib/n8n'
+import { supabase } from '../lib/supabase'
 
 interface Food {
   name: string
   category: string
-  emoji: string
+  image: string
 }
 
 interface RoundResult {
@@ -18,26 +18,81 @@ interface RoundResult {
 }
 
 const FOOD_POOL: Food[] = [
-  { name: '삼겹살',    category: '한식',   emoji: '🥩' },
-  { name: '김치찌개',  category: '한식',   emoji: '🍲' },
-  { name: '비빔밥',    category: '한식',   emoji: '🍚' },
-  { name: '순대국밥',  category: '한식',   emoji: '🍜' },
-  { name: '짜장면',    category: '중식',   emoji: '🍝' },
-  { name: '짬뽕',     category: '중식',   emoji: '🌊' },
-  { name: '탕수육',    category: '중식',   emoji: '🍱' },
-  { name: '마라탕',    category: '중식',   emoji: '🌶️' },
-  { name: '피자',     category: '양식',   emoji: '🍕' },
-  { name: '스테이크',  category: '양식',   emoji: '🥩' },
-  { name: '파스타',    category: '양식',   emoji: '🍝' },
-  { name: '햄버거',    category: '양식',   emoji: '🍔' },
-  { name: '치킨',     category: '분식',   emoji: '🍗' },
-  { name: '족발',     category: '한식',   emoji: '🍖' },
-  { name: '떡볶이',    category: '분식',   emoji: '🌶️' },
-  { name: '아이스크림', category: '디저트', emoji: '🍦' },
+  // ── 한식 16개
+  { name: '삼겹살',     category: '한식',   image: '/foods/samgyeopsal.png' },
+  { name: '김치찌개',   category: '한식',   image: '/foods/kimchijjigae.png' },
+  { name: '비빔밥',     category: '한식',   image: '/foods/bibimbap.png' },
+  { name: '순대국밥',   category: '한식',   image: '/foods/sundaegukbap.png' },
+  { name: '족발',      category: '한식',   image: '/foods/jokbal.png' },
+  { name: '갈비찜',     category: '한식',   image: '/foods/galbijjim.png' },
+  { name: '된장찌개',   category: '한식',   image: '/foods/doenjangjjigae.png' },
+  { name: '불고기',     category: '한식',   image: '/foods/bulgogi.png' },
+  { name: '닭갈비',     category: '한식',   image: '/foods/dakgalbi.png' },
+  { name: '삼계탕',     category: '한식',   image: '/foods/samgyetang.png' },
+  { name: '해장국',     category: '한식',   image: '/foods/haejanguk.png' },
+  { name: '냉면',      category: '한식',   image: '/foods/naengmyeon.png' },
+  { name: '칼국수',     category: '한식',   image: '/foods/kalguksu.png' },
+  { name: '보쌈',      category: '한식',   image: '/foods/bossam.png' },
+  { name: '잡채',      category: '한식',   image: '/foods/japchae.png' },
+  { name: '갈비탕',     category: '한식',   image: '/foods/galbitang.png' },
+  // ── 중식 8개
+  { name: '짜장면',     category: '중식',   image: '/foods/jajangmyeon.png' },
+  { name: '짬뽕',      category: '중식',   image: '/foods/jjambbong.png' },
+  { name: '탕수육',     category: '중식',   image: '/foods/tangsuyuk.png' },
+  { name: '마라탕',     category: '중식',   image: '/foods/maratang.png' },
+  { name: '마파두부',   category: '중식',   image: '/foods/mapadubu.png' },
+  { name: '딤섬',      category: '중식',   image: '/foods/dimsum.png' },
+  { name: '깐풍기',     category: '중식',   image: '/foods/kkampunggi.png' },
+  { name: '양장피',     category: '중식',   image: '/foods/yangjangpi.png' },
+  // ── 양식 8개
+  { name: '피자',      category: '양식',   image: '/foods/pizza.png' },
+  { name: '스테이크',   category: '양식',   image: '/foods/steak.png' },
+  { name: '파스타',     category: '양식',   image: '/foods/pasta.png' },
+  { name: '햄버거',     category: '양식',   image: '/foods/hamburger.png' },
+  { name: '리조또',     category: '양식',   image: '/foods/risotto.png' },
+  { name: '바비큐립',   category: '양식',   image: '/foods/bbqrib.png' },
+  { name: '샐러드',     category: '양식',   image: '/foods/salad.png' },
+  { name: '클럽샌드위치', category: '양식',  image: '/foods/clubsandwich.png' },
+  // ── 분식 8개
+  { name: '치킨',      category: '분식',   image: '/foods/chicken.png' },
+  { name: '떡볶이',     category: '분식',   image: '/foods/tteokbokki.png' },
+  { name: '순대',      category: '분식',   image: '/foods/sundae.png' },
+  { name: '어묵',      category: '분식',   image: '/foods/eomuk.png' },
+  { name: '라면',      category: '분식',   image: '/foods/ramyeon.png' },
+  { name: '김밥',      category: '분식',   image: '/foods/gimbap.png' },
+  { name: '핫도그',     category: '분식',   image: '/foods/hotdog.png' },
+  { name: '붕어빵',     category: '분식',   image: '/foods/bungeoppang.png' },
+  // ── 일식 8개
+  { name: '초밥',      category: '일식',   image: '/foods/chobap.png' },
+  { name: '라멘',      category: '일식',   image: '/foods/ramen.png' },
+  { name: '우동',      category: '일식',   image: '/foods/udong.png' },
+  { name: '돈까스',     category: '일식',   image: '/foods/donkkaseu.png' },
+  { name: '타코야키',   category: '일식',   image: '/foods/takoyaki.png' },
+  { name: '텐동',      category: '일식',   image: '/foods/tendon.png' },
+  { name: '야키토리',   category: '일식',   image: '/foods/yakitori.png' },
+  { name: '오마카세',   category: '일식',   image: '/foods/omakase.png' },
+  // ── 디저트 8개
+  { name: '아이스크림',  category: '디저트', image: '/foods/icecream.png' },
+  { name: '케이크',     category: '디저트', image: '/foods/cake.png' },
+  { name: '마카롱',     category: '디저트', image: '/foods/macaron.png' },
+  { name: '와플',      category: '디저트', image: '/foods/waffle.png' },
+  { name: '빙수',      category: '디저트', image: '/foods/bingsu.png' },
+  { name: '타르트',     category: '디저트', image: '/foods/tart.png' },
+  { name: '크레이프',   category: '디저트', image: '/foods/crepe.png' },
+  { name: '도넛',      category: '디저트', image: '/foods/donut.png' },
+  // ── 기타 8개
+  { name: '쌀국수',     category: '기타',   image: '/foods/pho.png' },
+  { name: '팟타이',     category: '기타',   image: '/foods/padthai.png' },
+  { name: '인도카레',   category: '기타',   image: '/foods/indiancurry.png' },
+  { name: '타코',      category: '기타',   image: '/foods/taco.png' },
+  { name: '케밥',      category: '기타',   image: '/foods/kebab.png' },
+  { name: '훠궈',      category: '기타',   image: '/foods/huoguo.png' },
+  { name: '곱창',      category: '기타',   image: '/foods/gobchang.png' },
+  { name: '감바스',     category: '기타',   image: '/foods/gambas.png' },
 ]
 
 const ROUND_LABEL: Record<number, string> = {
-  1: '16강', 2: '8강', 3: '4강', 4: '결승',
+  1: '64강', 2: '32강', 3: '16강', 4: '8강', 5: '4강', 6: '결승',
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -63,7 +118,7 @@ export default function Worldcup() {
   const [topCategories, setTopCategories] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  const totalMatches = 15
+  const totalMatches = 63
   const progress = roundResults.length / totalMatches
   const currentPair = pairs[pairIndex]
 
@@ -102,12 +157,55 @@ export default function Worldcup() {
     if (!profile) { navigate('/'); return }
     setSubmitting(true)
     try {
-      const res = await sendWorldcupResult({
-        user_id: profile.user_id,
-        champion: champ.name,
-        rounds: results,
+      const userId = profile.user_id
+      const CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']
+
+      const { data: currentLogits } = await supabase
+        .from('user_preference_logits')
+        .select('category, logit, sample_count')
+        .eq('user_id', userId)
+
+      const currentMap: Record<string, { logit: number; sample_count: number }> = {}
+      currentLogits?.forEach(r => {
+        currentMap[r.category] = { logit: r.logit ?? 0, sample_count: r.sample_count ?? 0 }
       })
-      setTopCategories(res.top_categories ?? [])
+
+      const deltaMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
+      results.forEach(r => {
+        if (r.winner_category in deltaMap) deltaMap[r.winner_category] += 0.5
+        if (r.loser_category in deltaMap) deltaMap[r.loser_category] -= 0.3
+      })
+
+      const now = new Date().toISOString()
+      const rows = CATS.map(cat => ({
+        user_id: userId,
+        category: cat,
+        logit: Math.round(((currentMap[cat]?.logit ?? 0) + deltaMap[cat]) * 1000) / 1000,
+        sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
+        updated_at: now,
+      }))
+
+      await Promise.all([
+        supabase.from('user_preference_logits').upsert(rows, { onConflict: 'user_id,category' }),
+        supabase.from('worldcup_sessions').insert({
+          user_id: userId,
+          champion: champ.name,
+          rounds: results,
+          completed: true,
+        }),
+      ])
+
+      const T = 1.5, EPS = 0.1, K = 7
+      let expSum = 0
+      const expMap: Record<string, number> = {}
+      rows.forEach(r => { expMap[r.category] = Math.exp(r.logit / T); expSum += expMap[r.category] })
+      const top = Object.entries(expMap)
+        .map(([cat, exp]) => ({ cat, p: (1 - EPS) * exp / expSum + EPS / K }))
+        .sort((a, b) => b.p - a.p)
+        .slice(0, 3)
+        .map(e => e.cat)
+
+      setTopCategories(top)
     } catch {
       // 실패해도 결과 화면은 보여줌
     } finally {
@@ -123,7 +221,7 @@ export default function Worldcup() {
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
       }}>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-          <div style={{ fontSize: 88, lineHeight: 1 }}>{champion.emoji}</div>
+          <img src={champion.image} alt={champion.name} style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 24, boxShadow: '0 0 40px #6c63ff66' }} />
           <div>
             <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>🏆 최종 우승</div>
             <div style={{ color: '#fff', fontSize: 34, fontWeight: 800 }}>{champion.name}</div>
@@ -239,7 +337,7 @@ function FoodCard({ food, onPick }: { food: Food; onPick: () => void }) {
         boxShadow: pressed ? '0 0 24px #6c63ff44' : 'none',
       }}
     >
-      <div style={{ fontSize: 64, lineHeight: 1 }}>{food.emoji}</div>
+      <img src={food.image} alt={food.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 16 }} />
       <div style={{ color: '#fff', fontSize: 17, fontWeight: 700 }}>{food.name}</div>
       <div style={{
         fontSize: 11, padding: '3px 12px', borderRadius: 10,

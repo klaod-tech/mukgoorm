@@ -51,7 +51,6 @@ export interface CombinedResponse {
   restaurants: Restaurant[]
   weather: WeatherData[]
   failed: string[]
-  intent_log_id?: string
   food_path?: IntentPath
   food_description?: string
 }
@@ -173,8 +172,6 @@ export async function dispatchToWebhooks(
 
       if (data.weather) combined.weather.push(data.weather as WeatherData)
 
-      // v2 음식 추천 전용 필드
-      if (data.intent_log_id) combined.intent_log_id = data.intent_log_id as string
       if (data.path) combined.food_path = data.path as IntentPath
       if (data.description) combined.food_description = data.description as string
     } else {
@@ -266,7 +263,6 @@ export interface FoodRecommendResponse {
   message: string
   restaurants: Restaurant[]
   keyword: string
-  intent_log_id?: string
 }
 
 export interface MenuItem {
@@ -310,31 +306,3 @@ export async function selectFood(params: {
   await axios.post('/webhook/food/select', params, { timeout: 5000 })
 }
 
-/** ML 피드백: 의도 분류 결과가 맞았는지 */
-export async function submitIntentFeedback(params: {
-  intent_log_id: string
-  is_correct: boolean
-  true_path?: IntentPath
-}): Promise<void> {
-  await axios.post('/webhook/food/feedback', params, { timeout: 5000 })
-}
-
-/** 월드컵 완료 → 선호도 초기화 */
-export async function sendWorldcupResult(params: {
-  user_id: string
-  champion: string
-  rounds: Array<{
-    round: number
-    winner: string
-    loser: string
-    winner_category: string
-    loser_category: string
-  }>
-}): Promise<{ message: string; top_categories: string[] }> {
-  const res = await axios.post<{ message: string; top_categories: string[] }>(
-    '/webhook/worldcup',
-    params,
-    { timeout: 10000 },
-  )
-  return res.data
-}
