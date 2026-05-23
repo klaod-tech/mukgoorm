@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUser } from '../hooks/useUser'
 import { selectCharacterImage } from '../lib/image'
+import { getCharacterGen, resumeOrStartGeneration, type CharacterGen } from '../lib/characterGen'
 import {
   classifyMessage,
   dispatchToWebhooks,
@@ -99,6 +100,7 @@ export default function Home() {
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const [menuState, setMenuState] = useState<MenuState | null>(null)
   const [evoState, setEvoState] = useState<EvoState>('evolved')
+  const [charGen, setCharGen] = useState<CharacterGen | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -112,20 +114,42 @@ export default function Home() {
     supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setTamagotchi(data) })
 
-    // 월드컵 완료 여부 → 큐브 진화 상태 결정
-    supabase
-      .from('worldcup_sessions')
-      .select('created_at')
-      .eq('user_id', user.id)
-      .eq('completed', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) { setEvoState('no_worldcup'); return }
-        const hoursSince = (Date.now() - new Date(data.created_at).getTime()) / 3600000
-        setEvoState(hoursSince < 24 ? 'cube' : 'evolved')
-      })
+    // 월드컵 완료 여부 + 캐릭터 생성 상태 확인
+    ;(async () => {
+      const { data: session } = await supabase
+        .from('worldcup_sessions')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!session) { setEvoState('no_worldcup'); return }
+
+      const gen = await getCharacterGen(user.id)
+      setCharGen(gen)
+
+      if (gen?.status === 'done') {
+        setEvoState('evolved')
+      } else {
+        setEvoState('cube')
+        // 생성 시작 or 이어서 — 백그라운드에서 실행
+        const { data: logits } = await supabase
+          .from('user_preference_logits')
+          .select('category, logit')
+          .eq('user_id', user.id)
+          .order('logit', { ascending: false })
+          .limit(1)
+        const topCategory = logits?.[0]?.category ?? '한식'
+
+        resumeOrStartGeneration(user.id, topCategory).then(async () => {
+          const updated = await getCharacterGen(user.id)
+          setCharGen(updated)
+          if (updated?.status === 'done') setEvoState('evolved')
+        })
+      }
+    })()
   }, [user])
 
   useEffect(() => {
@@ -141,9 +165,15 @@ export default function Home() {
   const characterImage = (() => {
     if (evoState === 'no_worldcup') return '/cube.png'
     if (evoState === 'cube') return '/cube.png'
+    const generated = {
+      normal: charGen?.normal_url,
+      happy:  charGen?.happy_url,
+      tired:  charGen?.tired_url,
+      eating: charGen?.eating_url,
+    }
     return tamagotchi
-      ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp)
-      : '/normal.png'
+      ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp, generated)
+      : (charGen?.normal_url ?? '/normal.png')
   })()
 
   // ── 메시지 전송 ──────────────────────────────────────────────

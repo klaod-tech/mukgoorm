@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { supabase } from '../lib/supabase'
@@ -16,6 +16,8 @@ interface RoundResult {
   winner_category: string
   loser_category: string
 }
+
+type TournamentSize = 16 | 32 | 64
 
 const FOOD_POOL: Food[] = [
   // ── 한식 16개
@@ -91,8 +93,31 @@ const FOOD_POOL: Food[] = [
   { name: '감바스',     category: '기타',   image: '/foods/gambas.png' },
 ]
 
-const ROUND_LABEL: Record<number, string> = {
-  1: '64강', 2: '32강', 3: '16강', 4: '8강', 5: '4강', 6: '결승',
+const ROUND_LABELS: Record<TournamentSize, Record<number, string>> = {
+  64: { 1: '64강', 2: '32강', 3: '16강', 4: '8강', 5: '4강', 6: '결승' },
+  32: { 1: '32강', 2: '16강', 3: '8강', 4: '4강', 5: '결승' },
+  16: { 1: '16강', 2: '8강', 3: '4강', 4: '결승' },
+}
+
+const TOTAL_MATCHES: Record<TournamentSize, number> = { 64: 63, 32: 31, 16: 15 }
+
+// 카테고리별 비율 유지하며 N개 선택 (한식 25%, 나머지 각 12.5%)
+function buildFoodPool(size: TournamentSize): Food[] {
+  if (size === 64) return shuffle(FOOD_POOL)
+
+  const groups: Record<string, Food[]> = {}
+  FOOD_POOL.forEach(f => {
+    if (!groups[f.category]) groups[f.category] = []
+    groups[f.category].push(f)
+  })
+
+  const ratio = size / FOOD_POOL.length
+  const result: Food[] = []
+  Object.values(groups).forEach(foods => {
+    const count = Math.round(foods.length * ratio)
+    result.push(...shuffle(foods).slice(0, count))
+  })
+  return shuffle(result)
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -105,11 +130,22 @@ function makePairs(foods: Food[]): Food[][] {
   return pairs
 }
 
+const SIZE_OPTIONS: { size: TournamentSize; label: string; desc: string; time: string }[] = [
+  { size: 16, label: '16강', desc: '15번 선택', time: '약 3분' },
+  { size: 32, label: '32강', desc: '31번 선택', time: '약 7분' },
+  { size: 64, label: '64강', desc: '63번 선택', time: '약 15분' },
+]
+
 export default function Worldcup() {
   const navigate = useNavigate()
   const { profile } = useUser()
 
-  const [pairs, setPairs] = useState<Food[][]>(() => makePairs(shuffle(FOOD_POOL)))
+  const [checking, setChecking] = useState(true)
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+  const [previousChampion, setPreviousChampion] = useState<string | null>(null)
+
+  const [tournamentSize, setTournamentSize] = useState<TournamentSize | null>(null)
+  const [pairs, setPairs] = useState<Food[][]>([])
   const [pairIndex, setPairIndex] = useState(0)
   const [roundNumber, setRoundNumber] = useState(1)
   const [roundResults, setRoundResults] = useState<RoundResult[]>([])
@@ -118,9 +154,33 @@ export default function Worldcup() {
   const [topCategories, setTopCategories] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  const totalMatches = 63
-  const progress = roundResults.length / totalMatches
-  const currentPair = pairs[pairIndex]
+  useEffect(() => {
+    if (!profile) return
+    async function checkCompleted() {
+      const { data } = await supabase
+        .from('worldcup_sessions')
+        .select('champion')
+        .eq('user_id', profile!.user_id)
+        .eq('completed', true)
+        .limit(1)
+      if (data && data.length > 0) {
+        setAlreadyCompleted(true)
+        setPreviousChampion(data[0].champion)
+      }
+      setChecking(false)
+    }
+    checkCompleted()
+  }, [profile])
+
+  function startTournament(size: TournamentSize) {
+    const pool = buildFoodPool(size)
+    setTournamentSize(size)
+    setPairs(makePairs(pool))
+    setPairIndex(0)
+    setRoundNumber(1)
+    setRoundResults([])
+    setPendingWinners([])
+  }
 
   async function handlePick(winner: Food, loser: Food) {
     const result: RoundResult = {
@@ -170,20 +230,24 @@ export default function Worldcup() {
         currentMap[r.category] = { logit: r.logit ?? 0, sample_count: r.sample_count ?? 0 }
       })
 
+      // 초기 데이터 수집용이므로 낮은 점수 적용: 승리 +0.3, 탈락 -0.1
       const deltaMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
       results.forEach(r => {
-        if (r.winner_category in deltaMap) deltaMap[r.winner_category] += 0.5
-        if (r.loser_category in deltaMap) deltaMap[r.loser_category] -= 0.3
+        if (r.winner_category in deltaMap) deltaMap[r.winner_category] += 0.3
+        if (r.loser_category in deltaMap) deltaMap[r.loser_category] -= 0.1
       })
 
       const now = new Date().toISOString()
-      const rows = CATS.map(cat => ({
-        user_id: userId,
-        category: cat,
-        logit: Math.round(((currentMap[cat]?.logit ?? 0) + deltaMap[cat]) * 1000) / 1000,
-        sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
-        updated_at: now,
-      }))
+      const rows = CATS.map(cat => {
+        const raw = (currentMap[cat]?.logit ?? 0) + deltaMap[cat]
+        return {
+          user_id: userId,
+          category: cat,
+          logit: Math.max(-10, Math.min(10, Math.round(raw * 1000) / 1000)),
+          sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
+          updated_at: now,
+        }
+      })
 
       await Promise.all([
         supabase.from('user_preference_logits').upsert(rows, { onConflict: 'user_id,category' }),
@@ -212,6 +276,97 @@ export default function Worldcup() {
       setSubmitting(false)
     }
   }
+
+  // ── 로딩 화면 ────────────────────────────────────────────────
+  if (checking) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0f0f23', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#555', fontSize: 14 }}>확인 중...</div>
+      </div>
+    )
+  }
+
+  // ── 이미 완료 화면 ──────────────────────────────────────────
+  if (alreadyCompleted) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0f0f23',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+      }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+          <div style={{ fontSize: 48 }}>🏆</div>
+          <div>
+            <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>이미 완료한 월드컵</div>
+            <div style={{ color: '#fff', fontSize: 22, fontWeight: 800 }}>
+              {previousChampion ? `${previousChampion}이(가) 우승했어요!` : '월드컵을 완료했어요'}
+            </div>
+            <div style={{ color: '#555', fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
+              월드컵은 한 번만 참여할 수 있어요.<br />
+              이후 취향은 음식 추천과 피드백으로 쌓여요 🌧️
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: '#6c63ff', border: 'none', borderRadius: 16,
+              padding: '14px 48px', color: '#fff',
+              fontSize: 16, fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            먹구름 만나러 가기 →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 강 선택 화면 ─────────────────────────────────────────────
+  if (!tournamentSize) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0f0f23',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: 24,
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 10, letterSpacing: 1 }}>음식 이상형 월드컵</div>
+          <div style={{ color: '#fff', fontSize: 26, fontWeight: 800 }}>몇 강으로 할까요?</div>
+          <div style={{ color: '#555', fontSize: 13, marginTop: 8 }}>
+            한 번만 참여할 수 있어요. 신중하게 골라봐요!
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 340 }}>
+          {SIZE_OPTIONS.map(({ size, label, desc, time }) => (
+            <button
+              key={size}
+              onClick={() => startTournament(size)}
+              style={{
+                background: '#1a1a2e', border: '2px solid #2a2a4a',
+                borderRadius: 16, padding: '20px 24px',
+                cursor: 'pointer', textAlign: 'left',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                transition: 'border-color 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#6c63ff')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4a')}
+            >
+              <div>
+                <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{label}</div>
+                <div style={{ color: '#555', fontSize: 13, marginTop: 4 }}>{desc}</div>
+              </div>
+              <div style={{ color: '#6c63ff', fontSize: 13 }}>{time}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const totalMatches = TOTAL_MATCHES[tournamentSize]
+  const roundLabel = ROUND_LABELS[tournamentSize]
+  const progress = roundResults.length / totalMatches
+  const currentPair = pairs[pairIndex]
 
   // ── 결과 화면 ────────────────────────────────────────────────
   if (champion) {
@@ -284,7 +439,7 @@ export default function Worldcup() {
           <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
             음식 이상형 월드컵
             <span style={{ color: '#6c63ff', marginLeft: 8, fontSize: 14 }}>
-              {ROUND_LABEL[roundNumber]}
+              {roundLabel[roundNumber]}
             </span>
           </div>
           <div style={{ color: '#555', fontSize: 13 }}>
