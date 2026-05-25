@@ -147,7 +147,7 @@ NODE_FUNCTION_ALLOW_EXTERNAL=imap,mailparser n8n start
 
 n8n 대시보드 → **Workflows** → **Import from file**
 
-`n8n/음식 추천 v2 (13).json` 파일 선택 후 Import.
+`n8n/n8nV6.json` 파일 선택 후 Import.
 
 ---
 
@@ -281,7 +281,9 @@ mukgoorm/
 │   │   ├── lib/            # n8n 연동, Supabase, ML 유틸
 │   │   └── hooks/          # useUser 등
 │   └── public/foods/       # 음식 이미지 (70개+)
-├── n8n/                    # n8n 워크플로우 JSON
+├── n8n/
+│   ├── n8nV6.json          # 최신 워크플로우 (IMAP 이메일 기능 포함)
+│   └── n8nV5.json          # 이전 버전
 ├── supabase/               # DB 스키마
 ├── scripts/                # 유틸 스크립트 (이미지 생성 등)
 ├── docs/                   # 상세 문서
