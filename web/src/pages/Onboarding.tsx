@@ -120,14 +120,16 @@ export default function Onboarding() {
             placeholder="캐릭터 이름 (예: 뭉치)"
             value={form.tamagotchi_name}
             onChange={e => set('tamagotchi_name', e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleNext()}
             style={inputStyle}
+            autoFocus
           />
         )}
 
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input placeholder="도시 (예: 서울)" value={form.city} onChange={e => set('city', e.target.value)} style={inputStyle} />
-            <input placeholder="동 단위 주소 (예: 역삼동)" value={form.village} onChange={e => set('village', e.target.value)} style={inputStyle} />
+            <input placeholder="도시 (예: 서울)" value={form.city} onChange={e => set('city', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} autoFocus />
+            <input placeholder="동 단위 주소 (예: 역삼동)" value={form.village} onChange={e => set('village', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
             <p style={{ color: '#888', fontSize: 12, margin: 0 }}>도시는 날씨, 동 주소는 맛집 추천에 사용돼요. 맛집 추천 시 별도 장소를 말하지 않으면 여기 기준으로 찾아줘요.</p>
             <div style={{
               background: '#16213e', border: '1px solid #6c63ff44',
@@ -152,10 +154,10 @@ export default function Onboarding() {
                 <button onClick={() => set('gender', 'female')} style={{ ...genderBtn, flex: 1, background: form.gender === 'female' ? '#6c63ff' : '#16213e' }}>여성</button>
               </div>
             </div>
-            <input placeholder="나이" type="number" value={form.age} onChange={e => set('age', e.target.value)} style={inputStyle} />
-            <input placeholder="키 (cm)" type="number" value={form.height} onChange={e => set('height', e.target.value)} style={inputStyle} />
-            <input placeholder="현재 체중 (kg)" type="number" value={form.init_weight} onChange={e => set('init_weight', e.target.value)} style={inputStyle} />
-            <input placeholder="목표 체중 (kg)" type="number" value={form.goal_weight} onChange={e => set('goal_weight', e.target.value)} style={inputStyle} />
+            <input placeholder="나이" type="number" value={form.age} onChange={e => set('age', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
+            <input placeholder="키 (cm)" type="number" value={form.height} onChange={e => set('height', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
+            <input placeholder="현재 체중 (kg)" type="number" value={form.init_weight} onChange={e => set('init_weight', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
+            <input placeholder="목표 체중 (kg)" type="number" value={form.goal_weight} onChange={e => set('goal_weight', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
           </div>
         )}
 
