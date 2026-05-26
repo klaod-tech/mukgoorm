@@ -86,7 +86,6 @@ function WheelCol({
       <div
         ref={ref}
         onScroll={handleScroll}
-        onWheel={handleWheel}
         style={{
           height: '100%',
           overflowY: 'scroll',
