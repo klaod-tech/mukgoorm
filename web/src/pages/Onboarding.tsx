@@ -110,7 +110,7 @@ export default function Onboarding() {
           <h2 style={{ color: '#fff', margin: '0 0 4px', fontSize: 20 }}>
             {step === 0 && '🐾 캐릭터 이름을 정해줘요'}
             {step === 1 && '📍 어디에 살고 있어요?'}
-            {step === 2 && '⚖️ 신체 정보 & 식단'}
+            {step === 2 && <span>⚖️ 신체 정보 & 식단 <span style={{ color: '#888', fontSize: 14, fontWeight: 400 }}>(선택)</span></span>}
             {step === 3 && '⏰ 하루 일정을 알려줘요'}
             {step === 4 && '📧 이메일 설정 (선택)'}
           </h2>
