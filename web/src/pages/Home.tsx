@@ -359,7 +359,7 @@ export default function Home() {
   // ── 렌더 ─────────────────────────────────────────────────────
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxWidth: 680, margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 42px)', maxWidth: 680, margin: '0 auto' }}>
 
       {/* 캐릭터 헤더 */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', padding: '10px 0 var(--sp-3)' }}>
