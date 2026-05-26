@@ -1,0 +1,79 @@
+:root {
+  /* ── 배경 ── */
+  --bg:            #fbf7f0;
+  --bg-sky:        #eaf4fb;
+  --surface:       #ffffff;
+  --surface-2:     #f4eee4;
+  --surface-sky:   #e3f0f9;
+
+  /* ── 포인트 (살구) ── */
+  --accent:        #f5a06a;
+  --accent-strong: #ec8a4e;
+  --accent-soft:   #fbe3d0;
+  --accent-ink:    #b5612c;
+
+  /* ── 보조 포인트 (하늘색) ── */
+  --sky:           #6cb6e8;
+  --sky-soft:      #d6ecfa;
+  --sky-ink:       #2f7cb5;
+
+  /* ── 텍스트 ── */
+  --text:          #4a3f3a;
+  --text-strong:   #2e2724;
+  --text-muted:    #9a8d84;
+  --text-faint:    #c4b9b0;
+  --text-on-accent:#ffffff;
+
+  /* ── 경계선 ── */
+  --border:        #ece3d6;
+  --border-strong: #ddcfbd;
+
+  /* ── 상태 ── */
+  --success:       #5bb98c;
+  --success-soft:  #dcf2e7;
+  --danger:        #e8736b;
+  --danger-soft:   #fbe0de;
+  --warning:       #efb152;
+  --warning-soft:  #fcefd4;
+
+  /* ── 타이포 ── */
+  --font-sans: 'Pretendard', 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, 'Apple SD Gothic Neo', 'Segoe UI', sans-serif;
+  --fs-xs:   11px;
+  --fs-sm:   13px;
+  --fs-base: 14px;
+  --fs-md:   16px;
+  --fs-lg:   18px;
+  --fs-xl:   22px;
+  --fs-2xl:  28px;
+  --fw-regular: 400;
+  --fw-medium:  500;
+  --fw-bold:    700;
+  --lh-tight: 1.3;
+  --lh-base:  1.6;
+
+  /* ── 간격 (8px 그리드) ── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+
+  /* ── 모서리 ── */
+  --radius-sm:   8px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-pill: 999px;
+
+  /* ── 그림자 ── */
+  --shadow-sm:     0 1px 3px rgba(120, 90, 60, 0.08);
+  --shadow-md:     0 4px 14px rgba(120, 90, 60, 0.10);
+  --shadow-lg:     0 12px 32px rgba(120, 90, 60, 0.14);
+  --shadow-accent: 0 4px 16px rgba(245, 160, 106, 0.35);
+
+  /* ── 전환 ── */
+  --transition: 0.18s ease;
+}
