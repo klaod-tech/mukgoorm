@@ -70,16 +70,16 @@ function WheelCol({
         position: 'absolute',
         top: ITEM_H * PAD, height: ITEM_H,
         left: 4, right: 4,
-        background: '#6c63ff22',
-        borderRadius: 8,
-        border: '1px solid #6c63ff55',
+        background: 'var(--accent-soft)',
+        borderRadius: 'var(--radius-sm)',
+        border: '1px solid var(--border-strong)',
         pointerEvents: 'none',
         zIndex: 2,
       }} />
       {/* 상하 페이드 */}
       <div style={{
         position: 'absolute', inset: 0,
-        background: 'linear-gradient(to bottom, #16213e 0%, transparent 38%, transparent 62%, #16213e 100%)',
+        background: 'linear-gradient(to bottom, var(--surface-2) 0%, transparent 38%, transparent 62%, var(--surface-2) 100%)',
         pointerEvents: 'none',
         zIndex: 3,
       }} />
@@ -108,7 +108,7 @@ function WheelCol({
               scrollSnapAlign: 'center',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 20, fontWeight: 700,
-              color: n === selected ? '#fff' : '#3a3a5a',
+              color: n === selected ? 'var(--accent-ink)' : 'var(--text-faint)',
               cursor: 'pointer',
               transition: 'color 0.1s',
             }}
@@ -135,11 +135,12 @@ export default function TimePickerDial({ value, onChange }: Props) {
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 0,
-      background: '#16213e',
-      border: '1px solid #2a2a4a',
-      borderRadius: 12,
+      background: 'var(--surface-2)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-md)',
       padding: '6px 10px',
       userSelect: 'none',
+      boxShadow: 'var(--shadow-sm)',
     }}>
       <WheelCol
         items={HOURS}
@@ -147,7 +148,7 @@ export default function TimePickerDial({ value, onChange }: Props) {
         onSelect={(newH) => onChange(`${padZ(newH)}:${padZ(m)}`)}
       />
       <div style={{
-        color: '#6c63ff', fontSize: 22, fontWeight: 800,
+        color: 'var(--accent)', fontSize: 22, fontWeight: 800,
         padding: '0 6px', lineHeight: 1, marginTop: -4,
       }}>:</div>
       <WheelCol
