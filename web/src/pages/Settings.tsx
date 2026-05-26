@@ -61,15 +61,6 @@ export default function Settings() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function toggleArray(key: 'food_preferences', value: string) {
-    setForm(f => ({
-      ...f,
-      [key]: f[key].includes(value)
-        ? f[key].filter(v => v !== value)
-        : [...f[key], value],
-    }))
-  }
-
   async function handleSave() {
     if (!profile) return
     setSaving(true)
@@ -372,17 +363,6 @@ function ToggleBtn({ label, active, onClick }: { label: string; active: boolean;
   )
 }
 
-function TagBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button onClick={onClick} style={{
-      border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-      borderRadius: 'var(--radius-pill)', padding: 'var(--sp-1) var(--sp-4)',
-      color: active ? 'var(--accent-ink)' : 'var(--text-muted)', fontSize: 'var(--fs-sm)', cursor: 'pointer',
-      background: active ? 'var(--accent-soft)' : 'var(--surface-2)',
-      transition: 'var(--transition)',
-    }}>{label}</button>
-  )
-}
 
 const inputStyle: React.CSSProperties = {
   background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
