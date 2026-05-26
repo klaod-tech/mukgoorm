@@ -86,7 +86,6 @@ function getMealType(profile: {
 
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 
-// 큐브 진화 상태
 type EvoState = 'checking' | 'no_worldcup' | 'cube' | 'evolved'
 
 export default function Home() {
@@ -114,7 +113,6 @@ export default function Home() {
     supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setTamagotchi(data) })
 
-    // 월드컵 완료 여부 + 캐릭터 생성 상태 확인
     ;(async () => {
       const { data: session } = await supabase
         .from('worldcup_sessions')
@@ -134,7 +132,6 @@ export default function Home() {
         setEvoState('evolved')
       } else {
         setEvoState('cube')
-        // 생성 시작 or 이어서 — 백그라운드에서 실행
         const { data: logits } = await supabase
           .from('user_preference_logits')
           .select('category, logit')
@@ -271,8 +268,6 @@ export default function Home() {
     }
   }
 
-  // ── 식당 붐업/붐다운 → 로짓 업데이트 ────────────────────────
-
   async function handleRestaurantFeedback(restaurant: Restaurant, feedback: 'like' | 'dislike') {
     if (!profile) return
     try {
@@ -283,10 +278,8 @@ export default function Home() {
         category: restaurant.category,
         feedback,
       })
-    } catch { /* silent — 피드백 실패는 UX 방해 안 함 */ }
+    } catch { /* silent */ }
   }
-
-  // ── 2단계: 식당 선택 → 메뉴 조회 ────────────────────────────
 
   function handleMenuRequest(restaurant: Restaurant) {
     setMenuState({
@@ -296,8 +289,6 @@ export default function Home() {
       selected: null,
     })
   }
-
-  // ── 3단계: 메뉴 선택 → 기록 저장 ────────────────────────────
 
   async function handleMenuSelect(menuName: string) {
     if (!menuState || !profile) return
@@ -329,8 +320,6 @@ export default function Home() {
     }
   }
 
-  // ── 일기 덮어쓰기 ────────────────────────────────────────────
-
   async function handleDiaryOverwrite() {
     if (!pendingDiary) return
     setShowDiaryModal(false)
@@ -356,11 +345,11 @@ export default function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxWidth: 680, margin: '0 auto' }}>
 
       {/* 캐릭터 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20, padding: '20px 0 12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', padding: 'var(--sp-5) 0 var(--sp-3)' }}>
         <img src={characterImage} alt="캐릭터" style={{ width: 100, height: 100, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0 }} />
         <div>
-          <div style={{ color: '#aaa', fontSize: 13 }}>{profile?.tamagotchi_name}의 오늘</div>
-          <div style={{ color: '#fff', fontSize: 15, marginTop: 4 }}>
+          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{profile?.tamagotchi_name}의 오늘</div>
+          <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-md)', marginTop: 4 }}>
             {loading
               ? '생각 중...'
               : evoState === 'checking'
@@ -374,29 +363,32 @@ export default function Home() {
         </div>
       </div>
 
-      <div style={{ width: '100%', height: 1, background: '#2a2a4a', marginBottom: 16 }} />
+      <div style={{ width: '100%', height: 1, background: 'var(--border)', marginBottom: 'var(--sp-4)' }} />
 
       {/* 채팅 영역 */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 8 }}>
+      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', paddingBottom: 'var(--sp-2)' }}>
         {messages.map(msg => (
           <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: msg.role === 'user' ? 'flex-end' : 'flex-start' }}>
             <div style={{
               maxWidth: '78%',
-              padding: '10px 14px',
+              padding: 'var(--sp-3) var(--sp-4)',
               borderRadius: msg.role === 'user' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-              background: msg.role === 'user' ? '#6c63ff' : '#1a1a2e',
-              color: '#fff', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+              background: msg.role === 'user' ? 'var(--accent)' : 'var(--surface)',
+              color: msg.role === 'user' ? 'var(--text-on-accent)' : 'var(--text)',
+              border: msg.role === 'user' ? 'none' : '1px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)',
+              fontSize: 'var(--fs-base)', lineHeight: 'var(--lh-base)', whiteSpace: 'pre-wrap', wordBreak: 'break-word',
             }}>
               {msg.text}
             </div>
 
             {/* 분류 태그 */}
             {msg.role === 'bot' && msg.classified && msg.classified.length > 0 && (
-              <div style={{ display: 'flex', gap: 4, marginTop: 6, flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-1)', marginTop: 6, flexWrap: 'wrap' }}>
                 {msg.classified.map(bot => (
                   <span key={bot} style={{
-                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
-                    background: '#2a2a4a', color: '#6c63ff', border: '1px solid #6c63ff33',
+                    fontSize: 'var(--fs-xs)', padding: '2px var(--sp-2)', borderRadius: 'var(--radius-pill)',
+                    background: 'var(--accent-soft)', color: 'var(--accent-ink)',
                   }}>{bot}</span>
                 ))}
               </div>
@@ -404,12 +396,12 @@ export default function Home() {
 
             {/* 실패 태그 */}
             {msg.role === 'bot' && msg.failed && msg.failed.length > 0 && (
-              <div style={{ display: 'flex', gap: 4, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: '#ff6b6b' }}>⚠️ 연결 실패:</span>
+              <div style={{ display: 'flex', gap: 'var(--sp-1)', marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--danger)' }}>⚠️ 연결 실패:</span>
                 {msg.failed.map(bot => (
                   <span key={bot} style={{
-                    fontSize: 11, padding: '2px 8px', borderRadius: 10,
-                    background: '#3a1a1a', color: '#ff6b6b', border: '1px solid #ff6b6b33',
+                    fontSize: 'var(--fs-xs)', padding: '2px var(--sp-2)', borderRadius: 'var(--radius-pill)',
+                    background: 'var(--danger-soft)', color: 'var(--danger)',
                   }}>{bot}</span>
                 ))}
               </div>
@@ -417,14 +409,14 @@ export default function Home() {
 
             {/* 날씨 카드 */}
             {msg.weather && msg.weather.length > 0 && (
-              <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {msg.weather.map((w, i) => <WeatherCard key={i} weather={w} />)}
               </div>
             )}
 
-            {/* 음식 추천 경로 설명 */}
+            {/* 음식 추천 경로 */}
             {msg.food_description && (
-              <div style={{ fontSize: 12, color: '#888', marginTop: 6, paddingLeft: 2 }}>
+              <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 6, paddingLeft: 2 }}>
                 {msg.food_path === 'A' && '🎯 '}
                 {msg.food_path === 'B' && '🔍 '}
                 {msg.food_path === 'C' && '✨ '}
@@ -432,9 +424,9 @@ export default function Home() {
               </div>
             )}
 
-            {/* 식당 카드 — v2 메뉴 흐름 연결 */}
+            {/* 식당 카드 */}
             {msg.restaurants && msg.restaurants.length > 0 && (
-              <div style={{ marginTop: 10, width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
+              <div style={{ marginTop: 10, width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 'var(--sp-3)' }}>
                 {msg.restaurants.map((r, i) => (
                   <RestaurantCard
                     key={i}
@@ -452,7 +444,7 @@ export default function Home() {
         <div ref={bottomRef} />
       </div>
 
-      {/* 메뉴 패널 (식당 선택 후 표시) */}
+      {/* 메뉴 패널 */}
       {menuState && (
         <MenuPanel
           state={menuState}
@@ -464,13 +456,17 @@ export default function Home() {
       {/* 일기 덮어쓰기 모달 */}
       {showDiaryModal && pendingDiary && (
         <ModalOverlay>
-          <div style={{ background: '#1a1a2e', borderRadius: 16, padding: 28, width: 340, display: 'flex', flexDirection: 'column', gap: 14, boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}>
-            <h3 style={{ color: '#fff', margin: 0, fontSize: 16 }}>오늘 일기가 이미 있어 📖</h3>
-            <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.6 }}>
-              기존 요약: <span style={{ color: '#ccc' }}>{pendingDiary.existingSummary}</span><br />
+          <div style={{
+            background: 'var(--surface)', borderRadius: 'var(--radius-xl)', padding: 28,
+            width: 340, display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)',
+            boxShadow: 'var(--shadow-lg)',
+          }}>
+            <h3 style={{ color: 'var(--text-strong)', margin: 0, fontSize: 'var(--fs-md)' }}>오늘 일기가 이미 있어 📖</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: 0, lineHeight: 'var(--lh-base)' }}>
+              기존 요약: <span style={{ color: 'var(--text)' }}>{pendingDiary.existingSummary}</span><br />
               새 내용으로 덮어쓸까?
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               <GhostBtn onClick={() => { setShowDiaryModal(false); setPendingDiary(null) }}>취소</GhostBtn>
               <PrimaryBtn onClick={handleDiaryOverwrite}>덮어쓰기</PrimaryBtn>
             </div>
@@ -479,7 +475,7 @@ export default function Home() {
       )}
 
       {/* 입력창 */}
-      <div style={{ display: 'flex', gap: 8, paddingTop: 12, paddingBottom: 8 }}>
+      <div style={{ display: 'flex', gap: 'var(--sp-2)', paddingTop: 'var(--sp-3)', paddingBottom: 'var(--sp-2)' }}>
         <input
           value={input}
           onChange={e => setInput(e.target.value)}
@@ -487,17 +483,21 @@ export default function Home() {
           placeholder="오늘 뭐 먹었어? 날씨는? 맛집 추천해줘!"
           disabled={loading}
           style={{
-            flex: 1, background: '#1a1a2e', border: '1px solid #2a2a4a',
-            borderRadius: 24, padding: '12px 18px', color: '#fff', fontSize: 14, outline: 'none',
+            flex: 1, background: 'var(--surface)', border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
+            color: 'var(--text)', fontSize: 'var(--fs-base)', outline: 'none',
+            boxShadow: 'var(--shadow-sm)',
           }}
         />
         <button
           onClick={handleSend}
           disabled={loading || !input.trim()}
           style={{
-            background: '#6c63ff', border: 'none', borderRadius: 24,
-            padding: '12px 20px', color: '#fff', fontSize: 14, fontWeight: 600,
+            background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)',
+            padding: 'var(--sp-3) var(--sp-5)', color: 'var(--text-on-accent)',
+            fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)',
             cursor: 'pointer', opacity: loading || !input.trim() ? 0.5 : 1,
+            boxShadow: 'var(--shadow-accent)', transition: 'var(--transition)',
           }}
         >전송</button>
       </div>
@@ -528,32 +528,34 @@ function RestaurantCard({
 
   return (
     <div style={{
-      background: isMenuOpen ? '#1e1e3a' : '#16213e',
-      border: `1px solid ${isMenuOpen ? '#6c63ff' : '#2a2a4a'}`,
-      borderRadius: 12, padding: 14,
-      display: 'flex', flexDirection: 'column', gap: 4,
-      transition: 'border-color 0.15s',
+      background: isMenuOpen ? 'var(--accent-soft)' : 'var(--surface)',
+      border: `1px solid ${isMenuOpen ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-lg)', padding: 'var(--sp-4)',
+      display: 'flex', flexDirection: 'column', gap: 'var(--sp-1)',
+      boxShadow: isMenuOpen ? 'var(--shadow-accent)' : 'var(--shadow-sm)',
+      transition: 'var(--transition)',
     }}>
-      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>{r.food_name}</div>
-      <div style={{ fontSize: 12, color: '#6c63ff' }}>{r.category}</div>
-      <div style={{ fontSize: 12, color: '#888' }}>{r.location}</div>
-      {r.description && <div style={{ fontSize: 12, color: '#bbb', lineHeight: 1.5, marginTop: 2 }}>{r.description}</div>}
-      {r.reason && <div style={{ fontSize: 11, color: '#666', fontStyle: 'italic' }}>{r.reason}</div>}
-      {r.phone && <div style={{ fontSize: 11, color: '#555' }}>📞 {r.phone}</div>}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 8 }}>
+      <div style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-base)', color: 'var(--text-strong)' }}>{r.food_name}</div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--accent-ink)' }}>{r.category}</div>
+      <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>{r.location}</div>
+      {r.description && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text)', lineHeight: 'var(--lh-base)', marginTop: 2 }}>{r.description}</div>}
+      {r.reason && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', fontStyle: 'italic' }}>{r.reason}</div>}
+      {r.phone && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)' }}>📞 {r.phone}</div>}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'var(--sp-2)' }}>
         <button
           onClick={() => onMenuRequest(r)}
           style={{
-            background: isMenuOpen ? '#6c63ff' : '#2a2a4a',
-            border: 'none', borderRadius: 8, padding: '6px 12px',
-            color: '#fff', fontSize: 12, cursor: 'pointer', fontWeight: 600,
+            background: isMenuOpen ? 'var(--accent)' : 'var(--surface-2)',
+            border: 'none', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-1) var(--sp-3)',
+            color: isMenuOpen ? 'var(--text-on-accent)' : 'var(--text)', fontSize: 'var(--fs-xs)',
+            cursor: 'pointer', fontWeight: 'var(--fw-bold)', transition: 'var(--transition)',
           }}
         >
           {isMenuOpen ? '메뉴 보는 중' : '메뉴 보기 →'}
         </button>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {r.link && (
-            <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 11, color: '#555', textDecoration: 'none' }}>
+            <a href={r.link} target="_blank" rel="noreferrer" style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', textDecoration: 'none' }}>
               지도 →
             </a>
           )}
@@ -561,28 +563,26 @@ function RestaurantCard({
             onClick={() => handleVote('like')}
             disabled={!!voted}
             style={{
-              background: voted === 'like' ? '#1a4a1a' : 'none',
-              border: `1px solid ${voted === 'like' ? '#4caf50' : '#2a2a4a'}`,
-              borderRadius: 8, padding: '4px 8px',
-              color: voted === 'like' ? '#6ddf70' : '#555',
+              background: voted === 'like' ? 'var(--success-soft)' : 'none',
+              border: `1px solid ${voted === 'like' ? 'var(--success)' : 'var(--border)'}`,
+              borderRadius: 'var(--radius-sm)', padding: '4px 8px',
+              color: voted === 'like' ? 'var(--success)' : 'var(--text-faint)',
               fontSize: voted === 'like' ? 15 : 13,
               cursor: voted ? 'default' : 'pointer',
-              boxShadow: voted === 'like' ? '0 0 8px #4caf5088' : 'none',
-              transition: 'all 0.2s',
+              transition: 'var(--transition)',
             }}
           >👍</button>
           <button
             onClick={() => handleVote('dislike')}
             disabled={!!voted}
             style={{
-              background: voted === 'dislike' ? '#4a1a1a' : 'none',
-              border: `1px solid ${voted === 'dislike' ? '#ff6b6b' : '#2a2a4a'}`,
-              borderRadius: 8, padding: '4px 8px',
-              color: voted === 'dislike' ? '#ff9090' : '#555',
+              background: voted === 'dislike' ? 'var(--danger-soft)' : 'none',
+              border: `1px solid ${voted === 'dislike' ? 'var(--danger)' : 'var(--border)'}`,
+              borderRadius: 'var(--radius-sm)', padding: '4px 8px',
+              color: voted === 'dislike' ? 'var(--danger)' : 'var(--text-faint)',
               fontSize: voted === 'dislike' ? 15 : 13,
               cursor: voted ? 'default' : 'pointer',
-              boxShadow: voted === 'dislike' ? '0 0 8px #ff6b6b88' : 'none',
-              transition: 'all 0.2s',
+              transition: 'var(--transition)',
             }}
           >👎</button>
         </div>
@@ -606,24 +606,23 @@ function MenuPanel({
     <div style={{
       position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
       width: 'min(680px, 96vw)',
-      background: '#0f0f1e', border: '1px solid #2a2a4a',
-      borderRadius: '16px 16px 0 0', boxShadow: '0 -8px 40px rgba(0,0,0,0.6)',
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0',
+      boxShadow: 'var(--shadow-lg)',
       zIndex: 50, maxHeight: '55vh', display: 'flex', flexDirection: 'column',
     }}>
-      {/* 헤더 */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 20px', borderBottom: '1px solid #2a2a4a' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 'var(--sp-4) var(--sp-5)', borderBottom: '1px solid var(--border)' }}>
         <div>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15 }}>{restaurant.food_name}</div>
-          <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{restaurant.location}</div>
+          <div style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-md)' }}>{restaurant.food_name}</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 2 }}>{restaurant.location}</div>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>✕</button>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>✕</button>
       </div>
 
-      {/* 메뉴 목록 */}
-      <div style={{ overflowY: 'auto', flex: 1, padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {loading && <div style={{ color: '#aaa', fontSize: 14, textAlign: 'center', paddingTop: 20 }}>메뉴 불러오는 중...</div>}
+      <div style={{ overflowY: 'auto', flex: 1, padding: 'var(--sp-3) var(--sp-5)', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+        {loading && <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-base)', textAlign: 'center', paddingTop: 20 }}>메뉴 불러오는 중...</div>}
         {!loading && menus.length === 0 && (
-          <div style={{ color: '#555', fontSize: 13, textAlign: 'center', paddingTop: 20 }}>등록된 메뉴 정보가 없어요</div>
+          <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)', textAlign: 'center', paddingTop: 20 }}>등록된 메뉴 정보가 없어요</div>
         )}
         {menus.map(menu => (
           <MenuItemRow
@@ -641,26 +640,27 @@ function MenuPanel({
 function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelected: boolean; onSelect: () => void }) {
   return (
     <div style={{
-      background: isSelected ? '#1e1e3a' : '#16213e',
-      border: `1px solid ${isSelected ? '#6c63ff' : '#2a2a4a'}`,
-      borderRadius: 10, padding: '12px 14px',
+      background: isSelected ? 'var(--accent-soft)' : 'var(--surface-2)',
+      border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-md)', padding: 'var(--sp-3) var(--sp-4)',
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+      transition: 'var(--transition)',
     }}>
       <div style={{ flex: 1 }}>
-        <div style={{ color: '#fff', fontSize: 14, fontWeight: 600 }}>{menu.menu_name}</div>
-        {menu.description && <div style={{ color: '#888', fontSize: 12, marginTop: 2 }}>{menu.description}</div>}
-        <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+        <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)' }}>{menu.menu_name}</div>
+        {menu.description && <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 2 }}>{menu.description}</div>}
+        <div style={{ display: 'flex', gap: 'var(--sp-1)', marginTop: 4, flexWrap: 'wrap' }}>
           {menu.tags?.map(tag => (
-            <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#2a2a4a', color: '#6c63ff' }}>{tag}</span>
+            <span key={tag} style={{ fontSize: 'var(--fs-xs)', padding: '2px var(--sp-2)', borderRadius: 'var(--radius-pill)', background: 'var(--accent-soft)', color: 'var(--accent-ink)' }}>{tag}</span>
           ))}
           {menu.keywords?.map(kw => (
-            <span key={kw} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#1a2a3a', color: '#63b3ff' }}>{kw}</span>
+            <span key={kw} style={{ fontSize: 'var(--fs-xs)', padding: '2px var(--sp-2)', borderRadius: 'var(--radius-pill)', background: 'var(--sky-soft)', color: 'var(--sky-ink)' }}>{kw}</span>
           ))}
         </div>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8, marginLeft: 12 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 'var(--sp-2)', marginLeft: 'var(--sp-3)' }}>
         {menu.price != null && (
-          <div style={{ color: '#fff', fontSize: 13, fontWeight: 600, whiteSpace: 'nowrap' }}>
+          <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-bold)', whiteSpace: 'nowrap' }}>
             {menu.price.toLocaleString()}원
           </div>
         )}
@@ -668,11 +668,11 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
           onClick={onSelect}
           disabled={isSelected}
           style={{
-            background: isSelected ? '#2a2a4a' : '#6c63ff',
-            border: 'none', borderRadius: 8, padding: '6px 14px',
-            color: isSelected ? '#6c63ff' : '#fff', fontSize: 12,
-            cursor: isSelected ? 'default' : 'pointer', fontWeight: 600,
-            whiteSpace: 'nowrap',
+            background: isSelected ? 'var(--surface-2)' : 'var(--accent)',
+            border: 'none', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-1) var(--sp-4)',
+            color: isSelected ? 'var(--accent-ink)' : 'var(--text-on-accent)', fontSize: 'var(--fs-xs)',
+            cursor: isSelected ? 'default' : 'pointer', fontWeight: 'var(--fw-bold)',
+            whiteSpace: 'nowrap', transition: 'var(--transition)',
           }}
         >
           {isSelected ? '선택됨 ✓' : '선택'}
@@ -684,29 +684,29 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
 
 function WeatherCard({ weather: w }: { weather: WeatherData }) {
   const gradeColor = (grade?: string) =>
-    grade === '좋음' ? '#4caf50' : grade === '보통' ? '#f5a623' : grade === '나쁨' ? '#ff6b6b' : '#888'
+    grade === '좋음' ? 'var(--success)' : grade === '보통' ? 'var(--warning)' : grade === '나쁨' ? 'var(--danger)' : 'var(--text-muted)'
 
   return (
-    <div style={{ background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 12, padding: 14, display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <div style={{ fontWeight: 700, fontSize: 14, color: '#fff' }}>
-        🌤️ 날씨{w.sky && <span style={{ fontWeight: 400, fontSize: 13, color: '#bbb', marginLeft: 6 }}>{w.sky}</span>}
+    <div style={{ background: 'var(--surface-sky)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: 'var(--sp-4)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <div style={{ fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-base)', color: 'var(--text-strong)' }}>
+        🌤️ 날씨{w.sky && <span style={{ fontWeight: 400, fontSize: 'var(--fs-sm)', color: 'var(--text-muted)', marginLeft: 6 }}>{w.sky}</span>}
       </div>
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-        {w.temperature != null && <span style={{ fontSize: 13, color: '#fff' }}>🌡️ {w.temperature}°C</span>}
+      <div style={{ display: 'flex', gap: 'var(--sp-4)', flexWrap: 'wrap' }}>
+        {w.temperature != null && <span style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-strong)' }}>🌡️ {w.temperature}°C</span>}
         {(w.low_temperature != null || w.high_temperature != null) && (
-          <span style={{ fontSize: 12, color: '#888' }}>최저 {w.low_temperature ?? '-'}° / 최고 {w.high_temperature ?? '-'}°</span>
+          <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>최저 {w.low_temperature ?? '-'}° / 최고 {w.high_temperature ?? '-'}°</span>
         )}
-        {w.humidity != null && <span style={{ fontSize: 12, color: '#888' }}>💧 {w.humidity}%</span>}
-        {w.windSpeed != null && <span style={{ fontSize: 12, color: '#888' }}>💨 {w.windSpeed}m/s</span>}
-        {w.rain && w.rain !== '없음' && <span style={{ fontSize: 12, color: '#6c9fff' }}>🌧️ {w.rain}</span>}
+        {w.humidity != null && <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>💧 {w.humidity}%</span>}
+        {w.windSpeed != null && <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)' }}>💨 {w.windSpeed}m/s</span>}
+        {w.rain && w.rain !== '없음' && <span style={{ fontSize: 'var(--fs-xs)', color: 'var(--sky-ink)' }}>🌧️ {w.rain}</span>}
       </div>
       {(w.pm10 != null || w.pm25 != null) && (
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {w.pm10 != null && <span style={{ fontSize: 12, color: gradeColor(w.pm10_grade) }}>미세먼지 {w.pm10}㎍/m³{w.pm10_grade && ` (${w.pm10_grade})`}</span>}
-          {w.pm25 != null && <span style={{ fontSize: 12, color: gradeColor(w.pm25_grade) }}>초미세먼지 {w.pm25}㎍/m³{w.pm25_grade && ` (${w.pm25_grade})`}</span>}
+        <div style={{ display: 'flex', gap: 'var(--sp-3)', flexWrap: 'wrap' }}>
+          {w.pm10 != null && <span style={{ fontSize: 'var(--fs-xs)', color: gradeColor(w.pm10_grade) }}>미세먼지 {w.pm10}㎍/m³{w.pm10_grade && ` (${w.pm10_grade})`}</span>}
+          {w.pm25 != null && <span style={{ fontSize: 'var(--fs-xs)', color: gradeColor(w.pm25_grade) }}>초미세먼지 {w.pm25}㎍/m³{w.pm25_grade && ` (${w.pm25_grade})`}</span>}
         </div>
       )}
-      {w.message && <div style={{ fontSize: 12, color: '#bbb', marginTop: 2 }}>{w.message}</div>}
+      {w.message && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 2 }}>{w.message}</div>}
     </div>
   )
 }
@@ -714,23 +714,23 @@ function WeatherCard({ weather: w }: { weather: WeatherData }) {
 function LoadingBubble({ elapsed }: { elapsed: number }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 6 }}>
-      <div style={{ background: '#1a1a2e', borderRadius: '16px 16px 16px 4px', padding: '12px 18px', display: 'flex', gap: 6, alignItems: 'center' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px 16px 16px 4px', padding: 'var(--sp-3) var(--sp-5)', display: 'flex', gap: 6, alignItems: 'center', boxShadow: 'var(--shadow-sm)' }}>
         {[0, 1, 2].map(i => (
           <span key={i} style={{
-            width: 7, height: 7, borderRadius: '50%', background: '#6c63ff',
+            width: 7, height: 7, borderRadius: '50%', background: 'var(--accent)',
             display: 'inline-block',
             animation: `chatBounce 1.2s ease-in-out ${i * 0.2}s infinite`,
           }} />
         ))}
       </div>
-      {elapsed >= 10 && <div style={{ fontSize: 11, color: '#555', paddingLeft: 4 }}>맛집 검색 중이면 조금 더 걸릴 수 있어 🍽️</div>}
+      {elapsed >= 10 && <div style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-faint)', paddingLeft: 4 }}>맛집 검색 중이면 조금 더 걸릴 수 있어 🍽️</div>}
     </div>
   )
 }
 
 function ModalOverlay({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(74, 63, 58, 0.45)', backdropFilter: 'blur(2px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}>
       {children}
     </div>
   )
@@ -738,7 +738,7 @@ function ModalOverlay({ children }: { children: React.ReactNode }) {
 
 function GhostBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} style={{ flex: 1, background: '#16213e', border: 'none', borderRadius: 8, padding: 12, color: '#fff', fontSize: 14, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)', color: 'var(--text)', fontSize: 'var(--fs-base)', cursor: 'pointer', transition: 'var(--transition)' }}>
       {children}
     </button>
   )
@@ -746,7 +746,7 @@ function GhostBtn({ onClick, children }: { onClick: () => void; children: React.
 
 function PrimaryBtn({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
   return (
-    <button onClick={onClick} style={{ flex: 1, background: '#6c63ff', border: 'none', borderRadius: 8, padding: 12, color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+    <button onClick={onClick} style={{ flex: 1, background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)', color: 'var(--text-on-accent)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)', cursor: 'pointer', boxShadow: 'var(--shadow-accent)', transition: 'var(--transition)' }}>
       {children}
     </button>
   )
