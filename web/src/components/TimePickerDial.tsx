@@ -21,7 +21,7 @@ function WheelCol({
   onSelect: (v: number) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
-  const debounce = useRef<ReturnType<typeof setTimeout>>()
+  const debounce = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
   const mounted = useRef(false)
 
   useEffect(() => {
@@ -47,6 +47,16 @@ function WheelCol({
       el.scrollTo({ top: clamped * ITEM_H, behavior: 'smooth' })
       onSelect(items[clamped])
     }, 120)
+  }, [items, onSelect])
+
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault()
+    const el = ref.current
+    if (!el) return
+    const current = Math.round(el.scrollTop / ITEM_H)
+    const next = Math.max(0, Math.min(items.length - 1, current + (e.deltaY > 0 ? 1 : -1)))
+    el.scrollTo({ top: next * ITEM_H, behavior: 'smooth' })
+    onSelect(items[next])
   }, [items, onSelect])
 
   return (
