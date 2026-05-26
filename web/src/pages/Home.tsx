@@ -87,7 +87,7 @@ function getMealType(profile: {
 // ── 메인 컴포넌트 ─────────────────────────────────────────────────
 
 // 큐브 진화 상태
-type EvoState = 'no_worldcup' | 'cube' | 'evolved'
+type EvoState = 'checking' | 'no_worldcup' | 'cube' | 'evolved'
 
 export default function Home() {
   const { user, profile } = useUser()
@@ -99,7 +99,7 @@ export default function Home() {
   const [showDiaryModal, setShowDiaryModal] = useState(false)
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const [menuState, setMenuState] = useState<MenuState | null>(null)
-  const [evoState, setEvoState] = useState<EvoState>('evolved')
+  const [evoState, setEvoState] = useState<EvoState>('checking')
   const [charGen, setCharGen] = useState<CharacterGen | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -163,6 +163,7 @@ export default function Home() {
   }, [loading])
 
   const characterImage = (() => {
+    if (evoState === 'checking') return '/cube.png'
     if (evoState === 'no_worldcup') return '/cube.png'
     if (evoState === 'cube') return '/cube.png'
     const generated = {
