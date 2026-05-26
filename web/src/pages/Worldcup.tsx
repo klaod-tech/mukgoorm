@@ -411,16 +411,29 @@ export default function Worldcup() {
             </div>
           )}
 
-          <div style={{
-            color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', maxWidth: 280,
-            lineHeight: 'var(--lh-base)', background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 'var(--radius-md)', padding: 'var(--sp-4) var(--sp-5)',
-            boxShadow: 'var(--shadow-sm)',
-          }}>
-            이 결과로 나만의 AI 캐릭터가 만들어지고 있어요 🌧️<br />
-            하루 뒤 큐브가 진화할 거예요!
-          </div>
+          {charGen?.status === 'done' && charGen.normal_url ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-3)' }}>
+              <img
+                src={charGen.normal_url}
+                alt="내 캐릭터"
+                style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-accent)' }}
+              />
+              <div style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)' }}>
+                나만의 AI 캐릭터가 완성됐어요! 🎉
+              </div>
+            </div>
+          ) : (
+            <div style={{
+              color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', maxWidth: 280,
+              lineHeight: 'var(--lh-base)', background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)', padding: 'var(--sp-4) var(--sp-5)',
+              boxShadow: 'var(--shadow-sm)',
+            }}>
+              이 결과로 나만의 AI 캐릭터가 만들어지고 있어요 🌧️<br />
+              하루 뒤 큐브가 진화할 거예요!
+            </div>
+          )}
 
           <button
             onClick={() => navigate('/')}
