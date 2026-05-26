@@ -114,10 +114,16 @@ export default function Home() {
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (profile) {
+    if (profile && messages.length === 0) {
       setMessages([{ id: 0, role: 'bot', text: `안녕! 나 ${profile.tamagotchi_name}이야 🌧️ 오늘 뭐 먹었어?` }])
     }
   }, [profile?.tamagotchi_name])
+
+  useEffect(() => {
+    if (messages.length > 0) {
+      sessionStorage.setItem(CHAT_KEY, JSON.stringify(messages))
+    }
+  }, [messages])
 
   useEffect(() => {
     if (!user) return
