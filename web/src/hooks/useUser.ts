@@ -41,8 +41,13 @@ function getCachedProfile(): UserProfile | null {
 
 function setCachedProfile(profile: UserProfile | null) {
   try {
-    if (profile) sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profile))
-    else sessionStorage.removeItem(PROFILE_CACHE_KEY)
+    if (profile) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email_app_pw: _, ...safe } = profile
+      sessionStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(safe))
+    } else {
+      sessionStorage.removeItem(PROFILE_CACHE_KEY)
+    }
   } catch {}
 }
 
