@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { supabase } from '../lib/supabase'
+import { getCharacterGen, type CharacterGen } from '../lib/characterGen'
 
 interface Food {
   name: string
@@ -158,6 +159,7 @@ export default function Worldcup() {
   const [champion, setChampion] = useState<Food | null>(null)
   const [topCategories, setTopCategories] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
+  const [charGen, setCharGen] = useState<CharacterGen | null>(null)
 
   useEffect(() => {
     if (!profile) return
@@ -285,6 +287,9 @@ export default function Worldcup() {
         .map(e => e.cat)
 
       setTopCategories(top)
+
+      const gen = await getCharacterGen(userId)
+      setCharGen(gen)
     } catch (e) {
       console.error('[Worldcup] 저장 오류:', e)
       alert(e instanceof Error ? e.message : '점수 저장 중 오류가 발생했어요. 다시 시도해주세요.')
