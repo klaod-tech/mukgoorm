@@ -342,7 +342,7 @@ export default function Worldcup() {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 340 }}>
-          {SIZE_OPTIONS.map(({ size, label, desc, time }) => (
+          {SIZE_OPTIONS.map(({ size, label, time }) => (
             <button
               key={size}
               onClick={() => startTournament(size)}
@@ -356,10 +356,7 @@ export default function Worldcup() {
               onMouseEnter={e => (e.currentTarget.style.borderColor = '#6c63ff')}
               onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4a')}
             >
-              <div>
-                <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{label}</div>
-                <div style={{ color: '#555', fontSize: 13, marginTop: 4 }}>{desc}</div>
-              </div>
+              <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{label}</div>
               <div style={{ color: '#6c63ff', fontSize: 13 }}>{time}</div>
             </button>
           ))}
