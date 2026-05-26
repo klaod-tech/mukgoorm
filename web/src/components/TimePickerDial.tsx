@@ -70,9 +70,9 @@ function WheelCol({
         position: 'absolute',
         top: ITEM_H * PAD, height: ITEM_H,
         left: 4, right: 4,
-        background: 'var(--accent-soft)',
+        background: 'var(--surface)',
         borderRadius: 'var(--radius-sm)',
-        border: '1px solid var(--border-strong)',
+        border: '2px solid var(--accent)',
         pointerEvents: 'none',
         zIndex: 2,
       }} />
