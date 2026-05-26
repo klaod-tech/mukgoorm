@@ -35,6 +35,23 @@ export default function Onboarding() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
+  function validateStep(): string | null {
+    if (step === 0 && !form.tamagotchi_name.trim())
+      return '캐릭터 이름을 입력해주세요.'
+    if (step === 1 && !form.city.trim())
+      return '도시를 입력해주세요.'
+    if (step === 1 && !form.village.trim())
+      return '동 주소를 입력해주세요.'
+    return null
+  }
+
+  function handleNext() {
+    const err = validateStep()
+    if (err) { setError(err); return }
+    setError('')
+    setStep(s => s + 1)
+  }
+
   async function handleFinish() {
     setLoading(true)
     setError('')
@@ -192,7 +209,7 @@ export default function Onboarding() {
             <button onClick={() => setStep(s => s - 1)} style={{ ...buttonStyle, background: '#16213e', flex: 1 }}>이전</button>
           )}
           {step < STEPS.length - 1 ? (
-            <button onClick={() => setStep(s => s + 1)} style={{ ...buttonStyle, flex: 1 }}>다음</button>
+            <button onClick={handleNext} style={{ ...buttonStyle, flex: 1 }}>다음</button>
           ) : (
             <button onClick={handleFinish} disabled={loading} style={{ ...buttonStyle, flex: 1 }}>
               {loading ? '저장 중...' : '시작하기 🎉'}
