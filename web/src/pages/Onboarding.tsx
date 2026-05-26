@@ -113,6 +113,17 @@ export default function Onboarding() {
             <input placeholder="도시 (예: 서울)" value={form.city} onChange={e => set('city', e.target.value)} style={inputStyle} />
             <input placeholder="동 단위 주소 (예: 역삼동)" value={form.village} onChange={e => set('village', e.target.value)} style={inputStyle} />
             <p style={{ color: '#888', fontSize: 12, margin: 0 }}>도시는 날씨, 동 주소는 맛집 추천에 사용돼요. 맛집 추천 시 별도 장소를 말하지 않으면 여기 기준으로 찾아줘요.</p>
+            <div style={{
+              background: '#16213e', border: '1px solid #6c63ff44',
+              borderRadius: 8, padding: '12px 14px',
+              display: 'flex', gap: 10, alignItems: 'flex-start',
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
+              <p style={{ color: '#aaa', fontSize: 12, margin: 0, lineHeight: 1.7 }}>
+                현재 맛집 DB는 <strong style={{ color: '#c9bcff' }}>아산시 탕정면</strong> 지역만 등록되어 있어요.<br />
+                다른 지역을 입력하면 날씨는 정상 동작하지만, 맛집 추천은 결과가 없을 수 있어요.
+              </p>
+            </div>
           </div>
         )}
 
