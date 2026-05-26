@@ -37,7 +37,6 @@ export default function Schedule() {
       .update({ is_done: !current, updated_at: new Date().toISOString() })
       .eq('id', id)
     if (error) {
-      // 실패 시 롤백
       setItems(prev => prev.map(i => i.id === id ? { ...i, is_done: current } : i))
     }
   }
@@ -45,44 +44,46 @@ export default function Schedule() {
   const todo = items.filter(i => !i.is_done)
   const done = items.filter(i => i.is_done)
 
-  if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
+  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 'var(--sp-6)' }}>로딩 중...</div>
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ color: '#fff', margin: '0 0 24px', fontSize: 20 }}>📅 일정</h2>
+      <h2 style={{ color: 'var(--text-strong)', margin: '0 0 var(--sp-6)', fontSize: 'var(--fs-xl)' }}>📅 일정</h2>
       {items.length === 0 ? (
-        <div style={{ color: '#555', fontSize: 14 }}>등록된 일정이 없어요.</div>
+        <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-base)' }}>등록된 일정이 없어요.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {[...todo, ...done].map(item => (
             <div key={item.id} style={{
-              background: '#1a1a2e', borderRadius: 10, padding: '14px 20px',
-              display: 'flex', gap: 14, alignItems: 'flex-start',
+              background: 'var(--surface)', border: '1px solid var(--border)',
+              borderRadius: 'var(--radius-md)', padding: 'var(--sp-4) var(--sp-5)',
+              display: 'flex', gap: 'var(--sp-4)', alignItems: 'flex-start',
               opacity: item.is_done ? 0.5 : 1,
+              boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)',
             }}>
               <button
                 onClick={() => toggleDone(item.id, item.is_done)}
                 style={{
                   marginTop: 2, width: 18, height: 18, borderRadius: 4,
-                  border: '2px solid #6c63ff',
-                  background: item.is_done ? '#6c63ff' : 'transparent',
-                  cursor: 'pointer', flexShrink: 0,
+                  border: '2px solid var(--accent)',
+                  background: item.is_done ? 'var(--accent)' : 'transparent',
+                  cursor: 'pointer', flexShrink: 0, transition: 'var(--transition)',
                 }}
               />
               <div style={{ flex: 1 }}>
                 <div style={{
-                  color: '#fff', fontSize: 14, fontWeight: 600,
+                  color: 'var(--text-strong)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-medium)',
                   textDecoration: item.is_done ? 'line-through' : 'none',
                 }}>
                   {item.title}
                 </div>
-                <div style={{ color: '#aaa', fontSize: 12, marginTop: 2 }}>
+                <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 2 }}>
                   {item.date}
                   {item.time && ` · ${item.time}`}
                   {item.location && ` · ${item.location}`}
                 </div>
                 {item.description && (
-                  <div style={{ color: '#666', fontSize: 12, marginTop: 4 }}>{item.description}</div>
+                  <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 4 }}>{item.description}</div>
                 )}
               </div>
             </div>
