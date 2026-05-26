@@ -143,3 +143,9 @@ const buttonStyle: React.CSSProperties = {
   boxShadow: 'var(--shadow-accent)',
   transition: 'var(--transition)',
 }
+
+const signUpButtonStyle: React.CSSProperties = {
+  ...buttonStyle,
+  background: 'var(--sky)',
+  boxShadow: '0 4px 16px rgba(108,182,232,0.35)',
+}
