@@ -285,8 +285,9 @@ export default function Worldcup() {
         .map(e => e.cat)
 
       setTopCategories(top)
-    } catch {
-      // 실패해도 결과 화면은 보여줌
+    } catch (e) {
+      console.error('[Worldcup] 저장 오류:', e)
+      alert(e instanceof Error ? e.message : '점수 저장 중 오류가 발생했어요. 다시 시도해주세요.')
     } finally {
       setSubmitting(false)
     }
