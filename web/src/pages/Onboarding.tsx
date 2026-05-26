@@ -146,8 +146,18 @@ export default function Onboarding() {
 
         {step === 3 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ color: '#aaa', fontSize: 13 }}>기상 시간</span>
+              <TimePickerDial value={form.wake_time} onChange={v => set('wake_time', v)} />
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ flex: 1, height: 1, background: '#2a2a4a' }} />
+              <span style={{ color: '#444', fontSize: 11 }}>식사 시간</span>
+              <div style={{ flex: 1, height: 1, background: '#2a2a4a' }} />
+            </div>
+
             {[
-              { label: '기상 시간', key: 'wake_time' },
               { label: '아침 식사', key: 'breakfast_time' },
               { label: '점심 식사', key: 'lunch_time' },
               { label: '저녁 식사', key: 'dinner_time' },
@@ -160,36 +170,6 @@ export default function Onboarding() {
                 />
               </div>
             ))}
-
-            {/* 간식 시간 (선택) */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ color: '#aaa', fontSize: 13 }}>
-                  간식 시간 <span style={{ color: '#555', fontSize: 11 }}>(선택)</span>
-                </span>
-                <button
-                  onClick={() => set('snack_time', form.snack_time ? '' : '15:00')}
-                  style={{
-                    background: form.snack_time ? '#6c63ff' : '#16213e',
-                    border: '1px solid #2a2a4a',
-                    borderRadius: 20, padding: '5px 16px',
-                    color: '#fff', fontSize: 12, cursor: 'pointer',
-                  }}
-                >
-                  {form.snack_time ? '사용 중' : '사용 안함'}
-                </button>
-              </div>
-              {form.snack_time && (
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <TimePickerDial
-                    value={form.snack_time}
-                    onChange={v => set('snack_time', v)}
-                  />
-                </div>
-              )}
-            </div>
-
-            <p style={{ color: '#555', fontSize: 12, margin: 0 }}>간식 시간은 식사 타입 분류에 사용돼요.</p>
           </div>
         )}
 
