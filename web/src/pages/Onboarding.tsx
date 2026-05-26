@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { createUserProfile } from '../lib/db'
+import TimePickerDial from '../components/TimePickerDial'
 
 const STEPS = ['캐릭터', '위치', '신체·식단', '시간설정', '이메일']
 
