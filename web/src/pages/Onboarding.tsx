@@ -35,15 +35,6 @@ export default function Onboarding() {
     setForm(f => ({ ...f, [key]: value }))
   }
 
-  function toggleArray(key: 'food_preferences', value: string) {
-    setForm(f => ({
-      ...f,
-      [key]: f[key].includes(value)
-        ? f[key].filter(v => v !== value)
-        : [...f[key], value],
-    }))
-  }
-
   async function handleFinish() {
     setLoading(true)
     setError('')
@@ -85,8 +76,6 @@ export default function Onboarding() {
       setLoading(false)
     }
   }
-
-  const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
 
   return (
     <div style={{ minHeight: '100vh', background: '#0f0f23', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
@@ -140,15 +129,6 @@ export default function Onboarding() {
             <input placeholder="키 (cm)" type="number" value={form.height} onChange={e => set('height', e.target.value)} style={inputStyle} />
             <input placeholder="현재 체중 (kg)" type="number" value={form.init_weight} onChange={e => set('init_weight', e.target.value)} style={inputStyle} />
             <input placeholder="목표 체중 (kg)" type="number" value={form.goal_weight} onChange={e => set('goal_weight', e.target.value)} style={inputStyle} />
-
-            <div>
-              <p style={{ color: '#aaa', fontSize: 13, margin: '0 0 8px' }}>음식 선호도 (복수 선택)</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {PREFERENCE_OPTIONS.map(opt => (
-                  <button key={opt} onClick={() => toggleArray('food_preferences', opt)} style={{ ...tagBtn, background: form.food_preferences.includes(opt) ? '#6c63ff' : '#16213e' }}>{opt}</button>
-                ))}
-              </div>
-            </div>
           </div>
         )}
 
