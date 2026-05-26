@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 
 export default function Login() {
@@ -114,6 +114,14 @@ export default function Login() {
           >
             {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
           </button>
+          {!isSignUp && (
+            <Link
+              to="/forgot-password"
+              style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)', textAlign: 'center', textDecoration: 'none' }}
+            >
+              비밀번호를 잊으셨나요?
+            </Link>
+          )}
         </form>
       </div>
     </div>
