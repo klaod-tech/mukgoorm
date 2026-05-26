@@ -296,8 +296,8 @@ export default function Worldcup() {
   // ── 로딩 화면 ────────────────────────────────────────────────
   if (checking) {
     return (
-      <div style={{ minHeight: '100vh', background: '#0f0f23', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: '#555', fontSize: 14 }}>확인 중...</div>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-base)' }}>확인 중...</div>
       </div>
     )
   }
@@ -305,18 +305,15 @@ export default function Worldcup() {
   // ── 이미 완료 화면 ──────────────────────────────────────────
   if (alreadyCompleted) {
     return (
-      <div style={{
-        minHeight: '100vh', background: '#0f0f23',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}>
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-6)' }}>
           <div style={{ fontSize: 48 }}>🏆</div>
           <div>
-            <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>이미 완료한 월드컵</div>
-            <div style={{ color: '#fff', fontSize: 22, fontWeight: 800 }}>
+            <div style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)', marginBottom: 8, letterSpacing: 1 }}>이미 완료한 월드컵</div>
+            <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-xl)', fontWeight: 'var(--fw-bold)' }}>
               {previousChampion ? `${previousChampion}이(가) 우승했어요!` : '월드컵을 완료했어요'}
             </div>
-            <div style={{ color: '#555', fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
+            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 10, lineHeight: 'var(--lh-base)' }}>
               월드컵은 한 번만 참여할 수 있어요.<br />
               이후 취향은 음식 추천과 피드백으로 쌓여요 🌧️
             </div>
@@ -324,9 +321,10 @@ export default function Worldcup() {
           <button
             onClick={() => navigate('/')}
             style={{
-              background: '#6c63ff', border: 'none', borderRadius: 16,
-              padding: '14px 48px', color: '#fff',
-              fontSize: 16, fontWeight: 700, cursor: 'pointer',
+              background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)',
+              padding: 'var(--sp-4) var(--sp-10)', color: 'var(--text-on-accent)',
+              fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', cursor: 'pointer',
+              boxShadow: 'var(--shadow-accent)', transition: 'var(--transition)',
             }}
           >
             먹구름 만나러 가기 →
@@ -339,36 +337,32 @@ export default function Worldcup() {
   // ── 강 선택 화면 ─────────────────────────────────────────────
   if (!tournamentSize) {
     return (
-      <div style={{
-        minHeight: '100vh', background: '#0f0f23',
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 10, letterSpacing: 1 }}>음식 이상형 월드컵</div>
-          <div style={{ color: '#fff', fontSize: 26, fontWeight: 800 }}>몇 강으로 할까요?</div>
-          <div style={{ color: '#555', fontSize: 13, marginTop: 8 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', marginBottom: 'var(--sp-10)' }}>
+          <div style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)', marginBottom: 10, letterSpacing: 1 }}>음식 이상형 월드컵</div>
+          <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-2xl)', fontWeight: 'var(--fw-bold)' }}>몇 강으로 할까요?</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 8 }}>
             한 번만 참여할 수 있어요. 신중하게 골라봐요!
           </div>
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 340 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)', width: '100%', maxWidth: 340 }}>
           {SIZE_OPTIONS.map(({ size, label, time }) => (
             <button
               key={size}
               onClick={() => startTournament(size)}
               style={{
-                background: '#1a1a2e', border: '2px solid #2a2a4a',
-                borderRadius: 16, padding: '20px 24px',
+                background: 'var(--surface)', border: '2px solid var(--border)',
+                borderRadius: 'var(--radius-lg)', padding: 'var(--sp-5) var(--sp-6)',
                 cursor: 'pointer', textAlign: 'left',
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                transition: 'border-color 0.15s',
+                boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)',
               }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#6c63ff')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4a')}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.boxShadow = 'var(--shadow-accent)' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)' }}
             >
-              <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{label}</div>
-              <div style={{ color: '#6c63ff', fontSize: 13 }}>{time}</div>
+              <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-lg)', fontWeight: 'var(--fw-bold)' }}>{label}</div>
+              <div style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)' }}>{time}</div>
             </button>
           ))}
         </div>
@@ -384,27 +378,26 @@ export default function Worldcup() {
   // ── 결과 화면 ────────────────────────────────────────────────
   if (champion) {
     return (
-      <div style={{
-        minHeight: '100vh', background: '#0f0f23',
-        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-      }}>
-        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-          <img src={champion.image} alt={champion.name} style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 24, boxShadow: '0 0 40px #6c63ff66' }} />
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-8)' }}>
+          <img src={champion.image} alt={champion.name} style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 'var(--radius-lg)', boxShadow: 'var(--shadow-accent)' }} />
           <div>
-            <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>🏆 최종 우승</div>
-            <div style={{ color: '#fff', fontSize: 34, fontWeight: 800 }}>{champion.name}</div>
-            <div style={{ color: '#888', fontSize: 13, marginTop: 6 }}>{champion.category}</div>
+            <div style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)', marginBottom: 8, letterSpacing: 1 }}>🏆 최종 우승</div>
+            <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-2xl)', fontWeight: 'var(--fw-bold)' }}>{champion.name}</div>
+            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 6 }}>{champion.category}</div>
           </div>
 
           {topCategories.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
-              <div style={{ color: '#aaa', fontSize: 13 }}>선호 카테고리 TOP 3</div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>선호 카테고리 TOP 3</div>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
                 {topCategories.map((cat, i) => (
                   <span key={cat} style={{
-                    padding: '6px 16px', borderRadius: 20, fontSize: 13,
-                    background: i === 0 ? '#6c63ff' : '#2a2a4a',
-                    color: '#fff', fontWeight: i === 0 ? 700 : 400,
+                    padding: 'var(--sp-1) var(--sp-4)', borderRadius: 'var(--radius-pill)', fontSize: 'var(--fs-sm)',
+                    background: i === 0 ? 'var(--accent)' : 'var(--surface-2)',
+                    color: i === 0 ? 'var(--text-on-accent)' : 'var(--text)',
+                    fontWeight: i === 0 ? 'var(--fw-bold)' : 'var(--fw-regular)',
+                    border: `1px solid ${i === 0 ? 'var(--accent)' : 'var(--border)'}`,
                   }}>
                     {i === 0 ? '👑 ' : ''}{cat}
                   </span>
@@ -414,9 +407,11 @@ export default function Worldcup() {
           )}
 
           <div style={{
-            color: '#666', fontSize: 13, maxWidth: 280,
-            lineHeight: 1.8, background: '#1a1a2e',
-            borderRadius: 12, padding: '14px 20px',
+            color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', maxWidth: 280,
+            lineHeight: 'var(--lh-base)', background: 'var(--surface)',
+            border: '1px solid var(--border)',
+            borderRadius: 'var(--radius-md)', padding: 'var(--sp-4) var(--sp-5)',
+            boxShadow: 'var(--shadow-sm)',
           }}>
             이 결과로 나만의 AI 캐릭터가 만들어지고 있어요 🌧️<br />
             하루 뒤 큐브가 진화할 거예요!
@@ -426,10 +421,11 @@ export default function Worldcup() {
             onClick={() => navigate('/')}
             disabled={submitting}
             style={{
-              background: '#6c63ff', border: 'none', borderRadius: 16,
-              padding: '14px 48px', color: '#fff',
-              fontSize: 16, fontWeight: 700, cursor: 'pointer',
+              background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)',
+              padding: 'var(--sp-4) var(--sp-10)', color: 'var(--text-on-accent)',
+              fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)', cursor: 'pointer',
               opacity: submitting ? 0.6 : 1,
+              boxShadow: 'var(--shadow-accent)', transition: 'var(--transition)',
             }}
           >
             {submitting ? '저장 중...' : '먹구름 만나러 가기 →'}
@@ -441,42 +437,38 @@ export default function Worldcup() {
 
   // ── 대결 화면 ────────────────────────────────────────────────
   return (
-    <div style={{
-      minHeight: '100vh', background: '#0f0f23',
-      display: 'flex', flexDirection: 'column',
-      alignItems: 'center', justifyContent: 'center', padding: 24,
-    }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       {/* 헤더 */}
-      <div style={{ width: '100%', maxWidth: 500, marginBottom: 40 }}>
+      <div style={{ width: '100%', maxWidth: 500, marginBottom: 'var(--sp-10)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
+          <div style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-md)' }}>
             음식 이상형 월드컵
-            <span style={{ color: '#6c63ff', marginLeft: 8, fontSize: 14 }}>
+            <span style={{ color: 'var(--accent-ink)', marginLeft: 8, fontSize: 'var(--fs-base)' }}>
               {roundLabel[roundNumber]}
             </span>
           </div>
-          <div style={{ color: '#555', fontSize: 13 }}>
+          <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
             {roundResults.length} / {totalMatches}
           </div>
         </div>
-        <div style={{ width: '100%', height: 5, background: '#1a1a2e', borderRadius: 3 }}>
+        <div style={{ width: '100%', height: 6, background: 'var(--border)', borderRadius: 'var(--radius-pill)' }}>
           <div style={{
             width: `${progress * 100}%`, height: '100%',
-            background: 'linear-gradient(90deg, #6c63ff, #9c92ff)',
-            borderRadius: 3, transition: 'width 0.35s ease',
+            background: 'var(--accent)',
+            borderRadius: 'var(--radius-pill)', transition: 'width 0.35s ease',
           }} />
         </div>
-        <div style={{ color: '#555', fontSize: 12, marginTop: 8, textAlign: 'center' }}>
+        <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 8, textAlign: 'center' }}>
           먹고 싶은 음식을 골라줘!
         </div>
       </div>
 
       {/* 대결 카드 */}
-      <div style={{ width: '100%', maxWidth: 500, display: 'flex', alignItems: 'center', gap: 16 }}>
+      <div style={{ width: '100%', maxWidth: 500, display: 'flex', alignItems: 'center', gap: 'var(--sp-4)' }}>
         <FoodCard food={currentPair[0]} onPick={() => handlePick(currentPair[0], currentPair[1])} />
         <div style={{
-          color: '#6c63ff', fontWeight: 800, fontSize: 22,
-          flexShrink: 0, textShadow: '0 0 20px #6c63ff88',
+          color: 'var(--accent)', fontWeight: 800, fontSize: 22,
+          flexShrink: 0,
         }}>VS</div>
         <FoodCard food={currentPair[1]} onPick={() => handlePick(currentPair[1], currentPair[0])} />
       </div>
@@ -495,21 +487,21 @@ function FoodCard({ food, onPick }: { food: Food; onPick: () => void }) {
       onMouseLeave={() => setPressed(false)}
       style={{
         flex: 1,
-        background: pressed ? '#252545' : '#1a1a2e',
-        border: `2px solid ${pressed ? '#6c63ff' : '#2a2a4a'}`,
-        borderRadius: 20, padding: '36px 12px',
+        background: pressed ? 'var(--accent-soft)' : 'var(--surface)',
+        border: `2px solid ${pressed ? 'var(--accent)' : 'var(--border)'}`,
+        borderRadius: 'var(--radius-xl)', padding: '36px 12px',
         cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--sp-4)',
         transition: 'all 0.12s',
         transform: pressed ? 'scale(0.97)' : 'scale(1)',
-        boxShadow: pressed ? '0 0 24px #6c63ff44' : 'none',
+        boxShadow: pressed ? 'var(--shadow-accent)' : 'var(--shadow-sm)',
       }}
     >
-      <img src={food.image} alt={food.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 16 }} />
-      <div style={{ color: '#fff', fontSize: 17, fontWeight: 700 }}>{food.name}</div>
+      <img src={food.image} alt={food.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 'var(--radius-md)' }} />
+      <div style={{ color: 'var(--text-strong)', fontSize: 17, fontWeight: 'var(--fw-bold)' }}>{food.name}</div>
       <div style={{
-        fontSize: 11, padding: '3px 12px', borderRadius: 10,
-        background: '#2a2a4a', color: '#6c63ff',
+        fontSize: 'var(--fs-xs)', padding: '3px var(--sp-3)', borderRadius: 'var(--radius-pill)',
+        background: 'var(--accent-soft)', color: 'var(--accent-ink)',
       }}>{food.category}</div>
     </button>
   )
