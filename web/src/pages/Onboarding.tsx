@@ -198,8 +198,8 @@ export default function Onboarding() {
                 <button key={p} onClick={() => set('email_provider', p)} style={{ ...genderBtn, flex: 1, background: form.email_provider === p ? '#6c63ff' : '#16213e' }}>{p}</button>
               ))}
             </div>
-            <input placeholder="이메일 주소" type="email" value={form.email_address} onChange={e => set('email_address', e.target.value)} style={inputStyle} />
-            <input placeholder="앱 비밀번호" type="password" value={form.email_app_pw} onChange={e => set('email_app_pw', e.target.value)} style={inputStyle} />
+            <input placeholder="이메일 주소" type="email" value={form.email_address} onChange={e => set('email_address', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleFinish()} style={inputStyle} />
+            <input placeholder="앱 비밀번호" type="password" value={form.email_app_pw} onChange={e => set('email_app_pw', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleFinish()} style={inputStyle} />
             <p style={{ color: '#555', fontSize: 11, margin: 0 }}>앱 비밀번호: 네이버 → 보안설정 → 2단계 인증 → 앱 비밀번호</p>
           </div>
         )}
