@@ -156,7 +156,7 @@ export async function dispatchToWebhooks(
           message?: string
           recommendations?: Restaurant[]
           weather?: WeatherData
-        }>(url, payload, { timeout: BOT_TIMEOUT[bot] ?? DEFAULT_TIMEOUT })
+        }>(url, payload, { timeout: DEFAULT_TIMEOUT })
         .then(r => r.data),
     ),
   )
