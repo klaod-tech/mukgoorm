@@ -11,6 +11,8 @@ import Email from './pages/Email'
 import Report from './pages/Report'
 import Settings from './pages/Settings'
 import Login from './pages/Login'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 import Onboarding from './pages/Onboarding'
 import Worldcup from './pages/Worldcup'
 
@@ -19,6 +21,8 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/onboarding" element={<Onboarding />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/worldcup" element={<Worldcup />} />
