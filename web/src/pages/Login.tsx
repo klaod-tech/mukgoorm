@@ -40,7 +40,7 @@ export default function Login() {
         background: 'var(--surface)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
-        padding: 'var(--sp-10)',
+        padding: 'var(--sp-5) var(--sp-10) var(--sp-10)',
         width: 360,
         display: 'flex',
         flexDirection: 'column',
