@@ -26,7 +26,6 @@ export default function Onboarding() {
     breakfast_time: '08:00',
     lunch_time: '12:00',
     dinner_time: '19:00',
-    snack_time: '',
     email_provider: '네이버',
     email_address: '',
     email_app_pw: '',
@@ -63,7 +62,6 @@ export default function Onboarding() {
           breakfast_time: form.breakfast_time,
           lunch_time: form.lunch_time,
           dinner_time: form.dinner_time,
-          snack_time: form.snack_time || undefined,
           email_provider: form.email_provider,
           email_address: form.email_address || undefined,
           email_app_pw: form.email_app_pw || undefined,
@@ -218,8 +216,4 @@ const buttonStyle: React.CSSProperties = {
 const genderBtn: React.CSSProperties = {
   border: '1px solid #2a2a4a', borderRadius: 8, padding: '12px',
   color: '#fff', fontSize: 14, cursor: 'pointer',
-}
-const tagBtn: React.CSSProperties = {
-  border: '1px solid #2a2a4a', borderRadius: 20, padding: '6px 14px',
-  color: '#fff', fontSize: 13, cursor: 'pointer',
 }
