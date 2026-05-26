@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { T } from '../lib/theme'
 
 export default function Login() {
   const navigate = useNavigate()
@@ -32,24 +33,26 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#0f0f23',
+      background: T.bg,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
     }}>
       <div style={{
-        background: '#1a1a2e',
+        background: T.surface,
+        border: `1px solid ${T.border}`,
         borderRadius: 16,
         padding: 40,
         width: 360,
         display: 'flex',
         flexDirection: 'column',
         gap: 20,
+        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
       }}>
         <div style={{ textAlign: 'center' }}>
           <div style={{ fontSize: 40 }}>🌧️</div>
-          <h1 style={{ color: '#fff', margin: '8px 0 4px', fontSize: 22 }}>먹구름</h1>
-          <p style={{ color: '#aaa', fontSize: 13, margin: 0 }}>
+          <h1 style={{ color: T.text, margin: '8px 0 4px', fontSize: 22 }}>먹구름</h1>
+          <p style={{ color: T.text2, fontSize: 13, margin: 0 }}>
             {isSignUp ? '계정을 만들어요' : '다시 돌아왔네요'}
           </p>
         </div>
@@ -71,7 +74,7 @@ export default function Login() {
             required
             style={inputStyle}
           />
-          {error && <p style={{ color: '#ff6b6b', fontSize: 13, margin: 0 }}>{error}</p>}
+          {error && <p style={{ color: T.danger, fontSize: 13, margin: 0 }}>{error}</p>}
           <button type="submit" disabled={loading} style={buttonStyle}>
             {loading ? '처리 중...' : isSignUp ? '회원가입' : '로그인'}
           </button>
@@ -79,7 +82,7 @@ export default function Login() {
 
         <button
           onClick={() => { setIsSignUp(v => !v); setError('') }}
-          style={{ background: 'none', border: 'none', color: '#6c63ff', cursor: 'pointer', fontSize: 13 }}
+          style={{ background: 'none', border: 'none', color: T.accent, cursor: 'pointer', fontSize: 13 }}
         >
           {isSignUp ? '이미 계정이 있어요 → 로그인' : '계정이 없어요 → 회원가입'}
         </button>
@@ -89,17 +92,17 @@ export default function Login() {
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#16213e',
-  border: '1px solid #2a2a4a',
+  background: T.surface2,
+  border: `1px solid ${T.border}`,
   borderRadius: 8,
   padding: '12px 16px',
-  color: '#fff',
+  color: T.text,
   fontSize: 14,
   outline: 'none',
 }
 
 const buttonStyle: React.CSSProperties = {
-  background: '#6c63ff',
+  background: T.accent,
   border: 'none',
   borderRadius: 8,
   padding: '12px 16px',
