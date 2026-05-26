@@ -12,6 +12,8 @@ export default function Onboarding() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
+  const villageRef = useRef<HTMLInputElement>(null)
+
   const [form, setForm] = useState({
     tamagotchi_name: '',
     city: '',
@@ -128,8 +130,22 @@ export default function Onboarding() {
 
         {step === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <input placeholder="도시 (예: 서울)" value={form.city} onChange={e => set('city', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} autoFocus />
-            <input placeholder="동 단위 주소 (예: 역삼동)" value={form.village} onChange={e => set('village', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
+            <input
+              placeholder="도시 (예: 아산시)"
+              value={form.city}
+              onChange={e => set('city', e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') villageRef.current?.focus() }}
+              style={inputStyle}
+              autoFocus
+            />
+            <input
+              ref={villageRef}
+              placeholder="동 단위 주소 (예: 탕정면)"
+              value={form.village}
+              onChange={e => set('village', e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleNext() }}
+              style={inputStyle}
+            />
             <p style={{ color: '#888', fontSize: 12, margin: 0 }}>도시는 날씨, 동 주소는 맛집 추천에 사용돼요. 맛집 추천 시 별도 장소를 말하지 않으면 여기 기준으로 찾아줘요.</p>
             <div style={{
               background: '#16213e', border: '1px solid #6c63ff44',
