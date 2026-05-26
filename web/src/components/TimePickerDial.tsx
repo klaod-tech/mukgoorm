@@ -74,7 +74,7 @@ function WheelCol({
         borderRadius: 'var(--radius-sm)',
         border: '2px solid var(--accent)',
         pointerEvents: 'none',
-        zIndex: 2,
+        zIndex: 1,
       }} />
       {/* 상하 페이드 */}
       <div style={{
@@ -87,6 +87,8 @@ function WheelCol({
         ref={ref}
         onScroll={handleScroll}
         style={{
+          position: 'relative',
+          zIndex: 2,
           height: '100%',
           overflowY: 'scroll',
           scrollSnapType: 'y mandatory',
