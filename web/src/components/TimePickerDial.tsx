@@ -49,14 +49,18 @@ function WheelCol({
     }, 120)
   }, [items, onSelect])
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
+  useEffect(() => {
     const el = ref.current
     if (!el) return
-    const current = Math.round(el.scrollTop / ITEM_H)
-    const next = Math.max(0, Math.min(items.length - 1, current + (e.deltaY > 0 ? 1 : -1)))
-    el.scrollTo({ top: next * ITEM_H, behavior: 'smooth' })
-    onSelect(items[next])
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault()
+      const current = Math.round(el.scrollTop / ITEM_H)
+      const next = Math.max(0, Math.min(items.length - 1, current + (e.deltaY > 0 ? 1 : -1)))
+      el.scrollTo({ top: next * ITEM_H, behavior: 'smooth' })
+      onSelect(items[next])
+    }
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleWheel)
   }, [items, onSelect])
 
   return (
