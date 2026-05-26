@@ -48,7 +48,7 @@ export default function Login() {
         boxShadow: 'var(--shadow-md)',
       }}>
         <div style={{ textAlign: 'center' }}>
-          <img src="/smile.png" alt="먹구름" style={{ width: 80, height: 80, objectFit: 'contain', imageRendering: 'pixelated' }} />
+          <img src="/smile.png" alt="먹구름" style={{ width: 120, height: 120, objectFit: 'contain', imageRendering: 'pixelated' }} />
           <h1 style={{ color: 'var(--text-strong)', margin: '8px 0 4px', fontSize: 'var(--fs-xl)' }}>먹구름</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: 0 }}>
             {isSignUp ? '계정을 만들어요' : '다시 돌아왔네요'}
