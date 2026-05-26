@@ -112,14 +112,12 @@ export default function Settings() {
     if (!profile) return
     setDeleteLoading(true)
     try {
-      // users 테이블 개인정보 삭제 (meal_log, diary 등 ML 데이터는 보존)
       const { error: delError } = await supabase
         .from('users')
         .delete()
         .eq('user_id', profile.user_id)
       if (delError) throw new Error(delError.message)
 
-      // Supabase Auth 유저 삭제 (service role key 필요 → Edge Function 경유)
       const { data: { session } } = await supabase.auth.getSession()
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
@@ -146,14 +144,14 @@ export default function Settings() {
   }
 
   if (loading) {
-    return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
+    return <div style={{ color: 'var(--text-muted)', padding: 'var(--sp-6)' }}>로딩 중...</div>
   }
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ color: '#fff', margin: '0 0 24px', fontSize: 20 }}>⚙️ 설정</h2>
+      <h2 style={{ color: 'var(--text-strong)', margin: '0 0 var(--sp-6)', fontSize: 'var(--fs-xl)' }}>⚙️ 설정</h2>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-5)' }}>
 
         {/* 기본 정보 */}
         <Section title="기본 정보">
@@ -161,12 +159,12 @@ export default function Settings() {
             <input value={form.tamagotchi_name} onChange={e => set('tamagotchi_name', e.target.value)} style={inputStyle} />
           </Field>
           <Field label="성별">
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               <ToggleBtn label="남성" active={form.gender === 'male'} onClick={() => set('gender', 'male')} />
               <ToggleBtn label="여성" active={form.gender === 'female'} onClick={() => set('gender', 'female')} />
             </div>
           </Field>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
             <Field label="나이">
               <input type="number" value={form.age} onChange={e => set('age', e.target.value)} style={inputStyle} />
             </Field>
@@ -184,8 +182,8 @@ export default function Settings() {
 
         {/* 위치 */}
         <Section title="📍 위치">
-          <p style={{ color: '#555', fontSize: 12, margin: 0 }}>날씨 및 맛집 추천 기준 위치. "집 근처 맛집" 같은 요청에 사용돼요.</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          <p style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)', margin: 0 }}>날씨 및 맛집 추천 기준 위치. "집 근처 맛집" 같은 요청에 사용돼요.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--sp-3)' }}>
             <Field label="도시">
               <input placeholder="예: 서울" value={form.city} onChange={e => set('city', e.target.value)} style={inputStyle} />
             </Field>
@@ -198,7 +196,7 @@ export default function Settings() {
         {/* 식단 */}
         <Section title="🥗 식단 설정">
           <Field label="음식 선호도">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
               {PREFERENCE_OPTIONS.map(opt => (
                 <TagBtn key={opt} label={opt} active={form.food_preferences.includes(opt)} onClick={() => toggleArray('food_preferences', opt)} />
               ))}
@@ -216,7 +214,7 @@ export default function Settings() {
             { label: '간식 시간', key: 'snack_time', required: false },
           ].map(({ label, key, required }) => (
             <Field key={key} label={label + (!required ? ' (선택)' : '')}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
                 <input
                   type="time"
                   value={form[key as keyof typeof form] as string}
@@ -226,7 +224,7 @@ export default function Settings() {
                 {!required && form[key as keyof typeof form] && (
                   <button
                     onClick={() => set(key, '')}
-                    style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
+                    style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
                   >✕</button>
                 )}
               </div>
@@ -237,7 +235,7 @@ export default function Settings() {
         {/* 이메일 */}
         <Section title="📧 이메일 설정 (선택)">
           <Field label="이메일 제공사">
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               {['네이버', '구글'].map(p => (
                 <ToggleBtn key={p} label={p} active={form.email_provider === p} onClick={() => set('email_provider', p)} />
               ))}
@@ -252,17 +250,19 @@ export default function Settings() {
         </Section>
 
         {/* 저장 */}
-        {error && <p style={{ color: '#ff6b6b', fontSize: 13, margin: 0 }}>{error}</p>}
-        {saved && <p style={{ color: '#4caf50', fontSize: 13, margin: 0 }}>✓ 저장되었어요!</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', margin: 0 }}>{error}</p>}
+        {saved && <p style={{ color: 'var(--success)', fontSize: 'var(--fs-sm)', margin: 0 }}>✓ 저장되었어요!</p>}
         <button
           onClick={handleSave}
           disabled={saving}
           style={{
-            background: saving ? '#2a2a4a' : '#6c63ff',
-            color: saving ? '#555' : '#fff',
-            border: 'none', borderRadius: 8,
-            padding: '14px', fontSize: 14, fontWeight: 600,
+            background: saving ? 'var(--surface-2)' : 'var(--accent)',
+            color: saving ? 'var(--text-faint)' : 'var(--text-on-accent)',
+            border: 'none', borderRadius: 'var(--radius-pill)',
+            padding: 'var(--sp-4)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)',
             cursor: saving ? 'not-allowed' : 'pointer',
+            boxShadow: saving ? 'none' : 'var(--shadow-accent)',
+            transition: 'var(--transition)',
           }}
         >
           {saving ? '저장 중...' : '저장하기'}
@@ -270,7 +270,7 @@ export default function Settings() {
 
         {/* 월드컵 재도전 */}
         <Section title="🏆 음식 이상형 월드컵">
-          <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: 0, lineHeight: 'var(--lh-base)' }}>
             월드컵을 다시 하면 음식 선호도가 초기화돼요.<br />
             추천 정확도를 높이고 싶을 때 재도전해보세요.
           </p>
@@ -278,10 +278,11 @@ export default function Settings() {
             onClick={() => navigate('/worldcup')}
             style={{
               background: 'transparent',
-              border: '1px solid #6c63ff',
-              borderRadius: 8, padding: '12px 20px',
-              color: '#6c63ff', fontSize: 14, cursor: 'pointer',
-              alignSelf: 'flex-start',
+              border: '1px solid var(--accent)',
+              borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
+              color: 'var(--accent-ink)', fontSize: 'var(--fs-base)', cursor: 'pointer',
+              fontWeight: 'var(--fw-medium)', alignSelf: 'flex-start',
+              transition: 'var(--transition)',
             }}
           >
             월드컵 재도전
@@ -290,7 +291,7 @@ export default function Settings() {
 
         {/* 계정 관리 */}
         <Section title="🗑️ 계정 관리">
-          <p style={{ color: '#555', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: 0, lineHeight: 'var(--lh-base)' }}>
             회원 탈퇴 시 이름, 위치, 신체 정보 등 개인정보는 즉시 삭제돼요.<br />
             식사 기록, 일기, 일정 등은 서비스 개선을 위해 익명으로 보존될 수 있어요.
           </p>
@@ -298,10 +299,10 @@ export default function Settings() {
             onClick={() => setShowDeleteModal(true)}
             style={{
               background: 'transparent',
-              border: '1px solid #3a1a1a',
-              borderRadius: 8, padding: '12px 20px',
-              color: '#ff6b6b', fontSize: 14, cursor: 'pointer',
-              alignSelf: 'flex-start',
+              border: '1px solid var(--danger)',
+              borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
+              color: 'var(--danger)', fontSize: 'var(--fs-base)', cursor: 'pointer',
+              alignSelf: 'flex-start', transition: 'var(--transition)',
             }}
           >
             회원 탈퇴
@@ -312,37 +313,40 @@ export default function Settings() {
       {/* 탈퇴 확인 모달 */}
       {showDeleteModal && (
         <div style={{
-          position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)',
+          position: 'fixed', inset: 0, background: 'rgba(74, 63, 58, 0.45)',
+          backdropFilter: 'blur(2px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100,
         }}>
           <div style={{
-            background: '#1a1a2e', borderRadius: 16, padding: 32,
-            width: 360, display: 'flex', flexDirection: 'column', gap: 16,
-            boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+            background: 'var(--surface)', borderRadius: 'var(--radius-xl)', padding: 32,
+            width: 360, display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)',
+            boxShadow: 'var(--shadow-lg)',
           }}>
-            <h3 style={{ color: '#fff', margin: 0, fontSize: 18 }}>정말 탈퇴할까요?</h3>
-            <p style={{ color: '#aaa', fontSize: 13, margin: 0, lineHeight: 1.7 }}>
+            <h3 style={{ color: 'var(--text-strong)', margin: 0, fontSize: 'var(--fs-lg)' }}>정말 탈퇴할까요?</h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: 0, lineHeight: 'var(--lh-base)' }}>
               개인정보(이름, 위치, 신체 정보, 이메일)는 즉시 삭제돼요.<br />
               식사 기록 등 다른 데이터는 익명으로 보존돼요.<br />
-              <strong style={{ color: '#ff6b6b' }}>이 작업은 되돌릴 수 없어요.</strong>
+              <strong style={{ color: 'var(--danger)' }}>이 작업은 되돌릴 수 없어요.</strong>
             </p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               <button
                 onClick={() => setShowDeleteModal(false)}
                 style={{
-                  flex: 1, background: '#16213e', border: 'none',
-                  borderRadius: 8, padding: 12,
-                  color: '#fff', fontSize: 14, cursor: 'pointer',
+                  flex: 1, background: 'var(--surface-2)', border: '1px solid var(--border)',
+                  borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)',
+                  color: 'var(--text)', fontSize: 'var(--fs-base)', cursor: 'pointer',
+                  transition: 'var(--transition)',
                 }}
               >취소</button>
               <button
                 onClick={handleDeleteAccount}
                 disabled={deleteLoading}
                 style={{
-                  flex: 1, background: '#c62828', border: 'none',
-                  borderRadius: 8, padding: 12,
-                  color: '#fff', fontSize: 14, fontWeight: 600,
+                  flex: 1, background: 'var(--danger)', border: 'none',
+                  borderRadius: 'var(--radius-sm)', padding: 'var(--sp-3)',
+                  color: 'var(--text-on-accent)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)',
                   cursor: deleteLoading ? 'not-allowed' : 'pointer',
+                  transition: 'var(--transition)',
                 }}
               >
                 {deleteLoading ? '처리 중...' : '탈퇴하기'}
@@ -358,10 +362,12 @@ export default function Settings() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{
-      background: '#1a1a2e', borderRadius: 12, padding: 24,
-      display: 'flex', flexDirection: 'column', gap: 16,
+      background: 'var(--surface)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-md)', padding: 'var(--sp-6)',
+      display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)',
+      boxShadow: 'var(--shadow-sm)',
     }}>
-      <h3 style={{ color: '#fff', margin: 0, fontSize: 15, fontWeight: 600 }}>{title}</h3>
+      <h3 style={{ color: 'var(--text-strong)', margin: 0, fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-bold)' }}>{title}</h3>
       {children}
     </div>
   )
@@ -370,7 +376,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label style={{ color: '#aaa', fontSize: 13 }}>{label}</label>
+      <label style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{label}</label>
       {children}
     </div>
   )
@@ -379,9 +385,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 function ToggleBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{
-      border: '1px solid #2a2a4a', borderRadius: 8, padding: '9px 16px',
-      color: '#fff', fontSize: 13, cursor: 'pointer',
-      background: active ? '#6c63ff' : '#16213e',
+      border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-sm)', padding: 'var(--sp-2) var(--sp-4)',
+      color: active ? 'var(--text-on-accent)' : 'var(--text)', fontSize: 'var(--fs-sm)', cursor: 'pointer',
+      background: active ? 'var(--accent)' : 'var(--surface-2)',
+      transition: 'var(--transition)',
     }}>{label}</button>
   )
 }
@@ -389,15 +397,17 @@ function ToggleBtn({ label, active, onClick }: { label: string; active: boolean;
 function TagBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button onClick={onClick} style={{
-      border: '1px solid #2a2a4a', borderRadius: 20, padding: '6px 14px',
-      color: '#fff', fontSize: 13, cursor: 'pointer',
-      background: active ? '#6c63ff' : '#16213e',
+      border: `1px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
+      borderRadius: 'var(--radius-pill)', padding: 'var(--sp-1) var(--sp-4)',
+      color: active ? 'var(--accent-ink)' : 'var(--text-muted)', fontSize: 'var(--fs-sm)', cursor: 'pointer',
+      background: active ? 'var(--accent-soft)' : 'var(--surface-2)',
+      transition: 'var(--transition)',
     }}>{label}</button>
   )
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#16213e', border: '1px solid #2a2a4a', borderRadius: 8,
-  padding: '10px 14px', color: '#fff', fontSize: 14, outline: 'none',
+  background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)',
+  padding: 'var(--sp-2) var(--sp-4)', color: 'var(--text)', fontSize: 'var(--fs-base)', outline: 'none',
   width: '100%', boxSizing: 'border-box',
 }

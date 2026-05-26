@@ -48,33 +48,37 @@ export default function Meal() {
     return acc
   }, {})
 
-  if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
+  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 'var(--sp-6)' }}>로딩 중...</div>
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ color: '#fff', margin: '0 0 24px', fontSize: 20 }}>🍽️ 식사 기록</h2>
+      <h2 style={{ color: 'var(--text-strong)', margin: '0 0 var(--sp-6)', fontSize: 'var(--fs-xl)' }}>🍽️ 식사 기록</h2>
       {Object.keys(grouped).length === 0 ? (
-        <div style={{ color: '#555', fontSize: 14 }}>기록된 식사가 없어요.</div>
+        <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-base)' }}>기록된 식사가 없어요.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
           {Object.entries(grouped).map(([date, items]) => {
             const total = items.reduce((s, i) => s + (i.calories ?? 0), 0)
             return (
-              <div key={date} style={{ background: '#1a1a2e', borderRadius: 12, padding: 20 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-                  <span style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>{date}</span>
-                  <span style={{ color: '#6c63ff', fontSize: 13 }}>총 {total} kcal</span>
+              <div key={date} style={{
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)', padding: 'var(--sp-5)',
+                boxShadow: 'var(--shadow-sm)',
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--sp-3)' }}>
+                  <span style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-md)' }}>{date}</span>
+                  <span style={{ color: 'var(--accent-ink)', fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)' }}>총 {total} kcal</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                   {items.map(item => (
                     <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <div>
-                        <span style={{ color: '#aaa', fontSize: 12, marginRight: 8 }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginRight: 'var(--sp-2)' }}>
                           {MEAL_LABEL[item.meal_type] ?? item.meal_type}
                         </span>
-                        <span style={{ color: '#fff', fontSize: 14 }}>{item.food_name}</span>
+                        <span style={{ color: 'var(--text)', fontSize: 'var(--fs-base)' }}>{item.food_name}</span>
                       </div>
-                      <span style={{ color: '#888', fontSize: 13 }}>{item.calories} kcal</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{item.calories} kcal</span>
                     </div>
                   ))}
                 </div>
