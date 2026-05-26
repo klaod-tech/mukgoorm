@@ -15,6 +15,7 @@ export interface Restaurant {
   phone: string
   reason: string
   link: string
+  menus?: MenuItem[]
 }
 
 export interface WeatherData {
@@ -50,7 +51,6 @@ export interface CombinedResponse {
   restaurants: Restaurant[]
   weather: WeatherData[]
   failed: string[]
-  intent_log_id?: string
   food_path?: IntentPath
   food_description?: string
 }
@@ -172,8 +172,6 @@ export async function dispatchToWebhooks(
 
       if (data.weather) combined.weather.push(data.weather as WeatherData)
 
-      // v2 음식 추천 전용 필드
-      if (data.intent_log_id) combined.intent_log_id = data.intent_log_id as string
       if (data.path) combined.food_path = data.path as IntentPath
       if (data.description) combined.food_description = data.description as string
     } else {
@@ -251,7 +249,8 @@ export async function sendFeedback(params: {
   category: string
   feedback: 'like' | 'dislike'
 }) {
-  await axios.post(FEEDBACK_WEBHOOK, params, { timeout: 5000 })
+  const { feedback, ...rest } = params
+  await axios.post(FEEDBACK_WEBHOOK, { ...rest, reaction: feedback }, { timeout: 5000 })
 }
 
 // ── 음식 추천 v2: 3단계 분리 API ──────────────────────────────
@@ -264,7 +263,6 @@ export interface FoodRecommendResponse {
   message: string
   restaurants: Restaurant[]
   keyword: string
-  intent_log_id?: string
 }
 
 export interface MenuItem {
@@ -273,7 +271,7 @@ export interface MenuItem {
   price: number | null
   description: string | null
   tags: string[] | null
-  allergens: string[] | null
+  keywords: string[] | null
 }
 
 export interface MenuResponse {
@@ -296,56 +294,15 @@ export async function recommendFood(params: {
   return res.data
 }
 
-/** 2단계: 식당 메뉴 조회 */
-export async function fetchRestaurantMenu(params: {
-  restaurant_id: string
-}): Promise<MenuResponse> {
-  const res = await axios.post<MenuResponse>(
-    '/webhook/food/menu',
-    params,
-    { timeout: 5000 },
-  )
-  return res.data
-}
-
-/** 3단계: 메뉴 선택 기록 */
+/** 2단계: 메뉴 선택 기록 */
 export async function selectFood(params: {
   user_id: string
   restaurant_id: string
   menu_name: string
-  category: string   // 로짓 업데이트 (θ += 0.1)에 사용
+  keywords: string[] // 로짓 업데이트 — n8n에서 keywords→category 매핑 처리
   location?: string
-  tags?: string
-  message?: string
+  date?: string
 }): Promise<void> {
   await axios.post('/webhook/food/select', params, { timeout: 5000 })
 }
 
-/** ML 피드백: 의도 분류 결과가 맞았는지 */
-export async function submitIntentFeedback(params: {
-  intent_log_id: string
-  is_correct: boolean
-  true_path?: IntentPath
-}): Promise<void> {
-  await axios.post('/webhook/food/feedback', params, { timeout: 5000 })
-}
-
-/** 월드컵 완료 → 선호도 초기화 */
-export async function sendWorldcupResult(params: {
-  user_id: string
-  champion: string
-  rounds: Array<{
-    round: number
-    winner: string
-    loser: string
-    winner_category: string
-    loser_category: string
-  }>
-}): Promise<{ message: string; top_categories: string[] }> {
-  const res = await axios.post<{ message: string; top_categories: string[] }>(
-    '/webhook/worldcup',
-    params,
-    { timeout: 10000 },
-  )
-  return res.data
-}

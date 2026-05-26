@@ -36,14 +36,15 @@ CREATE TABLE email_log (
 -- ⚠️ reaction 컬럼명 주의 — schemaV1에서 feedback으로 rename 시도했으나 실제 DB는 reaction 유지 중
 -- n8n 음식 피드백 노드 필드명: reaction (feedback 아님)
 CREATE TABLE food_feedback (
-  id         uuid NOT NULL DEFAULT gen_random_uuid(),
-  user_id    text,
-  food_name  text,
-  reaction   text,   -- "like" or "dislike"
-  location   text,
-  category   text,
-  date       date DEFAULT CURRENT_DATE,
-  created_at timestamp with time zone DEFAULT now()
+  id            uuid NOT NULL DEFAULT gen_random_uuid(),
+  user_id       text,
+  restaurant_id uuid REFERENCES restaurants(id),
+  food_name     text,
+  reaction      text,   -- "like" or "dislike"
+  location      text,
+  category      text,
+  date          date DEFAULT CURRENT_DATE,
+  created_at    timestamp with time zone DEFAULT now()
 );
 
 CREATE TABLE meal_log (
@@ -65,6 +66,7 @@ CREATE TABLE menu_items (
   calories      integer,
   allergens     text[],
   tags          text[],
+  keywords      text[],
   is_available  boolean DEFAULT true,
   created_at    timestamp with time zone DEFAULT now()
 );

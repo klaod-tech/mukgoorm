@@ -1,16 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUser } from '../hooks/useUser'
 import { selectCharacterImage } from '../lib/image'
+import { getCharacterGen, resumeOrStartGeneration, type CharacterGen } from '../lib/characterGen'
 import {
   classifyMessage,
   dispatchToWebhooks,
   synthesizeResponse,
   callBotWebhook,
   recommendFood,
-  fetchRestaurantMenu,
   selectFood,
   sendFeedback,
-  submitIntentFeedback,
   type Restaurant,
   type WeatherData,
   type MenuItem,
@@ -31,7 +30,6 @@ interface Message {
   weather?: WeatherData[]
   classified?: string[]
   failed?: string[]
-  intent_log_id?: string
   food_path?: IntentPath
   food_description?: string
 }
@@ -42,8 +40,7 @@ interface MenuState {
   restaurant: Restaurant
   menus: MenuItem[]
   loading: boolean
-  selected: string | null       // 선택한 menu_name
-  feedbackDone: boolean
+  selected: string | null
 }
 
 interface PendingDiaryUpdate {
@@ -102,8 +99,8 @@ export default function Home() {
   const [showDiaryModal, setShowDiaryModal] = useState(false)
   const [pendingDiary, setPendingDiary] = useState<PendingDiaryUpdate | null>(null)
   const [menuState, setMenuState] = useState<MenuState | null>(null)
-  const [activeIntentLogId, setActiveIntentLogId] = useState<string | null>(null)
   const [evoState, setEvoState] = useState<EvoState>('evolved')
+  const [charGen, setCharGen] = useState<CharacterGen | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -117,20 +114,42 @@ export default function Home() {
     supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => { if (data) setTamagotchi(data) })
 
-    // 월드컵 완료 여부 → 큐브 진화 상태 결정
-    supabase
-      .from('worldcup_sessions')
-      .select('created_at')
-      .eq('user_id', user.id)
-      .eq('completed', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (!data) { setEvoState('no_worldcup'); return }
-        const hoursSince = (Date.now() - new Date(data.created_at).getTime()) / 3600000
-        setEvoState(hoursSince < 24 ? 'cube' : 'evolved')
-      })
+    // 월드컵 완료 여부 + 캐릭터 생성 상태 확인
+    ;(async () => {
+      const { data: session } = await supabase
+        .from('worldcup_sessions')
+        .select('created_at')
+        .eq('user_id', user.id)
+        .eq('completed', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (!session) { setEvoState('no_worldcup'); return }
+
+      const gen = await getCharacterGen(user.id)
+      setCharGen(gen)
+
+      if (gen?.status === 'done') {
+        setEvoState('evolved')
+      } else {
+        setEvoState('cube')
+        // 생성 시작 or 이어서 — 백그라운드에서 실행
+        const { data: logits } = await supabase
+          .from('user_preference_logits')
+          .select('category, logit')
+          .eq('user_id', user.id)
+          .order('logit', { ascending: false })
+          .limit(1)
+        const topCategory = logits?.[0]?.category ?? '한식'
+
+        resumeOrStartGeneration(user.id, topCategory).then(async () => {
+          const updated = await getCharacterGen(user.id)
+          setCharGen(updated)
+          if (updated?.status === 'done') setEvoState('evolved')
+        })
+      }
+    })()
   }, [user])
 
   useEffect(() => {
@@ -146,9 +165,15 @@ export default function Home() {
   const characterImage = (() => {
     if (evoState === 'no_worldcup') return '/cube.png'
     if (evoState === 'cube') return '/cube.png'
+    const generated = {
+      normal: charGen?.normal_url,
+      happy:  charGen?.happy_url,
+      tired:  charGen?.tired_url,
+      eating: charGen?.eating_url,
+    }
     return tamagotchi
-      ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp)
-      : '/normal.png'
+      ? selectCharacterImage('none', tamagotchi.hunger, tamagotchi.mood, tamagotchi.hp, generated)
+      : (charGen?.normal_url ?? '/normal.png')
   })()
 
   // ── 메시지 전송 ──────────────────────────────────────────────
@@ -198,7 +223,6 @@ export default function Home() {
           const food = foodResult.value
           combined.messages.push(food.message)
           combined.restaurants.push(...food.restaurants)
-          combined.intent_log_id = food.intent_log_id
           combined.food_path = food.path
           combined.food_description = food.description
         } else {
@@ -219,16 +243,10 @@ export default function Home() {
         weather: combined.weather.length > 0 ? combined.weather : undefined,
         classified: classified.bots,
         failed: combined.failed.length > 0 ? combined.failed : undefined,
-        intent_log_id: combined.intent_log_id,
         food_path: combined.food_path,
         food_description: combined.food_description,
       }
       setMessages(prev => [...prev, botMsg])
-
-      // 음식 추천이 있으면 intent_log_id 활성화
-      if (combined.intent_log_id) {
-        setActiveIntentLogId(combined.intent_log_id)
-      }
 
       if (diaryConflict) {
         setPendingDiary({
@@ -269,14 +287,13 @@ export default function Home() {
 
   // ── 2단계: 식당 선택 → 메뉴 조회 ────────────────────────────
 
-  async function handleMenuRequest(restaurant: Restaurant) {
-    setMenuState({ restaurant, menus: [], loading: true, selected: null, feedbackDone: false })
-    try {
-      const result = await fetchRestaurantMenu({ restaurant_id: restaurant.restaurant_id })
-      setMenuState(prev => prev ? { ...prev, menus: result.menus, loading: false } : null)
-    } catch {
-      setMenuState(prev => prev ? { ...prev, loading: false } : null)
-    }
+  function handleMenuRequest(restaurant: Restaurant) {
+    setMenuState({
+      restaurant,
+      menus: restaurant.menus ?? [],
+      loading: false,
+      selected: null,
+    })
   }
 
   // ── 3단계: 메뉴 선택 → 기록 저장 ────────────────────────────
@@ -284,6 +301,7 @@ export default function Home() {
   async function handleMenuSelect(menuName: string) {
     if (!menuState || !profile) return
     const { restaurant } = menuState
+    const selectedMenu = menuState.menus.find(m => m.menu_name === menuName)
     setMenuState(prev => prev ? { ...prev, selected: menuName } : null)
 
     try {
@@ -291,9 +309,9 @@ export default function Home() {
         user_id: profile.user_id,
         restaurant_id: restaurant.restaurant_id,
         menu_name: menuName,
-        category: restaurant.category,
+        keywords: selectedMenu?.keywords ?? [],
         location: profile.village ?? '',
-        message: menuName,
+        date: new Date().toISOString().slice(0, 10),
       })
       setMenuState(null)
       setMessages(prev => [...prev, {
@@ -308,17 +326,6 @@ export default function Home() {
         text: '기록 저장에 실패했어 😥',
       }])
     }
-  }
-
-  // ── ML 피드백 ────────────────────────────────────────────────
-
-  async function handleIntentFeedback(isCorrect: boolean, truePath?: IntentPath) {
-    if (!activeIntentLogId) return
-    setActiveIntentLogId(null)
-    setMenuState(prev => prev ? { ...prev, feedbackDone: true } : null)
-    try {
-      await submitIntentFeedback({ intent_log_id: activeIntentLogId, is_correct: isCorrect, true_path: truePath })
-    } catch { /* silent */ }
   }
 
   // ── 일기 덮어쓰기 ────────────────────────────────────────────
@@ -446,10 +453,8 @@ export default function Home() {
       {menuState && (
         <MenuPanel
           state={menuState}
-          intentLogId={activeIntentLogId}
           onMenuSelect={handleMenuSelect}
           onClose={() => setMenuState(null)}
-          onIntentFeedback={handleIntentFeedback}
         />
       )}
 
@@ -553,22 +558,28 @@ function RestaurantCard({
             onClick={() => handleVote('like')}
             disabled={!!voted}
             style={{
-              background: voted === 'like' ? '#1a3a1a' : 'none',
+              background: voted === 'like' ? '#1a4a1a' : 'none',
               border: `1px solid ${voted === 'like' ? '#4caf50' : '#2a2a4a'}`,
               borderRadius: 8, padding: '4px 8px',
-              color: voted === 'like' ? '#4caf50' : '#555',
-              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+              color: voted === 'like' ? '#6ddf70' : '#555',
+              fontSize: voted === 'like' ? 15 : 13,
+              cursor: voted ? 'default' : 'pointer',
+              boxShadow: voted === 'like' ? '0 0 8px #4caf5088' : 'none',
+              transition: 'all 0.2s',
             }}
           >👍</button>
           <button
             onClick={() => handleVote('dislike')}
             disabled={!!voted}
             style={{
-              background: voted === 'dislike' ? '#3a1a1a' : 'none',
+              background: voted === 'dislike' ? '#4a1a1a' : 'none',
               border: `1px solid ${voted === 'dislike' ? '#ff6b6b' : '#2a2a4a'}`,
               borderRadius: 8, padding: '4px 8px',
-              color: voted === 'dislike' ? '#ff6b6b' : '#555',
-              fontSize: 13, cursor: voted ? 'default' : 'pointer',
+              color: voted === 'dislike' ? '#ff9090' : '#555',
+              fontSize: voted === 'dislike' ? 15 : 13,
+              cursor: voted ? 'default' : 'pointer',
+              boxShadow: voted === 'dislike' ? '0 0 8px #ff6b6b88' : 'none',
+              transition: 'all 0.2s',
             }}
           >👎</button>
         </div>
@@ -579,18 +590,14 @@ function RestaurantCard({
 
 function MenuPanel({
   state,
-  intentLogId,
   onMenuSelect,
   onClose,
-  onIntentFeedback,
 }: {
   state: MenuState
-  intentLogId: string | null
   onMenuSelect: (menuName: string) => void
   onClose: () => void
-  onIntentFeedback: (isCorrect: boolean, truePath?: IntentPath) => void
 }) {
-  const { restaurant, menus, loading, selected, feedbackDone } = state
+  const { restaurant, menus, loading, selected } = state
 
   return (
     <div style={{
@@ -624,11 +631,6 @@ function MenuPanel({
           />
         ))}
       </div>
-
-      {/* ML 피드백 바 — 선택 완료 후 + 피드백 미완료 시 */}
-      {selected && intentLogId && !feedbackDone && (
-        <IntentFeedbackBar onFeedback={onIntentFeedback} />
-      )}
     </div>
   )
 }
@@ -648,8 +650,8 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
           {menu.tags?.map(tag => (
             <span key={tag} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#2a2a4a', color: '#6c63ff' }}>{tag}</span>
           ))}
-          {menu.allergens?.map(a => (
-            <span key={a} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#3a2a1a', color: '#f5a623' }}>⚠️ {a}</span>
+          {menu.keywords?.map(kw => (
+            <span key={kw} style={{ fontSize: 10, padding: '2px 6px', borderRadius: 6, background: '#1a2a3a', color: '#63b3ff' }}>{kw}</span>
           ))}
         </div>
       </div>
@@ -675,47 +677,6 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
       </div>
     </div>
   )
-}
-
-function IntentFeedbackBar({ onFeedback }: { onFeedback: (isCorrect: boolean, truePath?: IntentPath) => void }) {
-  const [showCorrect, setShowCorrect] = useState(false)
-
-  return (
-    <div style={{
-      borderTop: '1px solid #2a2a4a', padding: '12px 20px',
-      display: 'flex', flexDirection: 'column', gap: 8,
-    }}>
-      {!showCorrect ? (
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 12, color: '#888' }}>추천이 원하던 것과 맞았어?</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              onClick={() => onFeedback(true)}
-              style={{ background: '#1a3a1a', border: '1px solid #4caf50', borderRadius: 8, padding: '5px 12px', color: '#4caf50', fontSize: 12, cursor: 'pointer' }}
-            >맞아 👍</button>
-            <button
-              onClick={() => setShowCorrect(true)}
-              style={{ background: '#3a1a1a', border: '1px solid #ff6b6b', borderRadius: 8, padding: '5px 12px', color: '#ff6b6b', fontSize: 12, cursor: 'pointer' }}
-            >아니야 👎</button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 12, color: '#aaa' }}>어떤 방식으로 찾길 원했어?</span>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={() => onFeedback(false, 'A')} style={feedbackBtnStyle}>식당 이름으로</button>
-            <button onClick={() => onFeedback(false, 'B')} style={feedbackBtnStyle}>메뉴 이름으로</button>
-            <button onClick={() => onFeedback(false, 'C')} style={feedbackBtnStyle}>그냥 추천으로</button>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-const feedbackBtnStyle: React.CSSProperties = {
-  background: '#1a1a2e', border: '1px solid #2a2a4a', borderRadius: 8,
-  padding: '5px 10px', color: '#aaa', fontSize: 11, cursor: 'pointer',
 }
 
 function WeatherCard({ weather: w }: { weather: WeatherData }) {

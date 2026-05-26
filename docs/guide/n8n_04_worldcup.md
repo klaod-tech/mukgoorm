@@ -1,20 +1,58 @@
-# Step 4 — 월드컵 워크플로우 신규 생성
+# Step 4 — 월드컵 워크플로우
 
 > ⬅️ [목차](n8n_ml_nodes.md) | ⬅️ [Step 3 완료 후](n8n_03_메뉴선택_로짓.md)  
-> ⏱️ 예상 소요 시간: 20분  
-> **작업 종류:** 신규 워크플로우 생성 (기존 수정 아님)
+> **대상 워크플로우:** `먹구름_봇v4`
 
 ---
 
-## 목표
+## 현황 요약
 
-음식 이상형 월드컵 완료 시 유저의 초기 선호도(로짓)를 Supabase에 저장합니다.
+월드컵 워크플로우는 `먹구름_봇v4.json`에 **이미 구조가 완성**되어 있습니다.  
+**단, 아래 2개 버그를 수정해야 React와 정상 연동됩니다.**
 
-- **승리 카테고리:** +0.5 (가장 강한 신호)
-- **탈락 카테고리:** -0.3
+| 항목 | 상태 |
+|------|------|
+| 흐름 구조 (7노드) | ✅ v4에 존재 |
+| `Code in JavaScript` 노드 참조 | ❌ 버그 1 — 존재하지 않는 노드 참조 |
+| 최종 응답 형식 | ❌ 버그 2 — 메뉴선택 형식으로 잘못 연결됨 |
 
-### 받을 데이터 형태 (React → n8n)
+> React `Worldcup.tsx`는 완성 상태. 백엔드 버그 수정 후 바로 연동 가능.
+
+---
+
+## 실제 v4 흐름도
+
+```
+월드컵 입력 (Webhook POST /worldcup)
+    ↓
+월드컵 현재 로직 (Supabase Get Many — user_preference_logits)
+    ↓
+월드컵 로직 계산 (Code — 델타 계산 + Softmax + exists 플래그)
+    ↓
+월드컵 기록 (Supabase Create — worldcup_sessions)
+    ↓
+월드컵 응답 (Code — categories_to_upsert를 7개 항목으로 분리)
+    ↓
+정보 수정 여부 (IF — $json.exists is true)
+ ├─ [true]  → 로직 업데이트2 (Supabase Update, user_preference_logits)
+ └─ [false] → 로직 생성2    (Supabase Create, user_preference_logits)
+    ↓
+Code in JavaScript  ← ❌ 버그 1: $('월드컵 계산') → $('월드컵 로직 계산')으로 수정
+    ↓
+피드백 확인1 (Respond to Webhook)  ← ❌ 버그 2: 응답 Body 수정 필요
+```
+
+---
+
+## React ↔ n8n 인터페이스
+
+### React → n8n (요청)
+
+`web/src/pages/Worldcup.tsx`의 `handleComplete()`가 전송합니다.
+
 ```json
+POST /webhook/worldcup
+
 {
   "user_id": "유저UUID",
   "champion": "돈까스",
@@ -23,108 +61,97 @@
       "round": 1,
       "winner": "돈까스",
       "loser": "피자",
-      "winner_category": "분식",
+      "winner_category": "양식",
       "loser_category": "양식"
-    },
-    {
-      "round": 2,
-      "winner": "삼겹살",
-      "loser": "짜장면",
-      "winner_category": "한식",
-      "loser_category": "중식"
     }
   ]
 }
 ```
 
-### 목표 흐름
+**React FOOD_POOL 카테고리 (현재 5종):**
+
+| 음식 | 카테고리 |
+|------|---------|
+| 삼겹살, 김치찌개, 비빔밥, 순대국밥, 족발 | 한식 |
+| 짜장면, 짬뽕, 탕수육, 마라탕 | 중식 |
+| 피자, 스테이크, 파스타, 햄버거 | 양식 |
+| 치킨, 떡볶이 | 분식 |
+| 아이스크림 | 디저트 |
+
+> n8n은 7개 카테고리(한식/중식/양식/분식/일식/디저트/기타)를 관리하지만,  
+> React FOOD_POOL에 일식·기타 메뉴가 없어서 실제 rounds에는 5종만 등장합니다.  
+> 나머지 2종(일식·기타) logit은 초기값 그대로 저장됩니다.
+
+### n8n → React (응답)
+
+`web/src/lib/n8n.ts`의 `sendWorldcupResult()`가 기대하는 형식:
+
+```json
+{
+  "message": "선호도 분석 완료! 👑 돈까스이(가) 우승했어요",
+  "top_categories": ["한식", "양식", "중식"]
+}
 ```
-월드컵 입력(Webhook)
-    → 현재 로짓 조회(Supabase)
-    → 월드컵 계산(Code - 델타 누적 + 새 로짓 + Softmax)
-    → 세션 저장(HTTP Request - worldcup_sessions)
-    → 로짓 저장(HTTP Request - user_preference_logits Upsert)
-    → 최종 응답(Code - top_categories 계산)
-    → 응답(Respond to Webhook)
-```
+
+`top_categories`는 결과 화면에서 **선호 카테고리 TOP 3 칩**으로 표시됩니다.  
+이 필드가 빠지면 칩이 렌더링되지 않고, 에러는 발생하지 않습니다(`?? []`로 처리).
 
 ---
 
-## 4-1. 새 워크플로우 생성
+## 수정 필요 사항
 
-1. n8n 좌측 → **Workflows** → **+ New Workflow** 클릭
-2. 워크플로우 이름: **`worldcup`** (또는 `월드컵 선호도`)
-3. 빈 캔버스 준비
+### 버그 1 — `Code in JavaScript` 노드 참조 오류
 
----
+n8n 캔버스에서 `Code in JavaScript` 노드를 열어 코드를 아래로 교체합니다.
 
-## 4-2. 월드컵 입력 — Webhook 노드
-
-1. 캔버스 **+** → `Webhook` 검색 → 추가
-2. 설정:
-
-| 항목 | 값 |
-|------|-----|
-| **HTTP Method** | POST |
-| **Path** | `worldcup` |
-| **Authentication** | None |
-| **Response Mode** | Using 'Respond to Webhook' Node |
-
-노드 이름: **`월드컵 입력`**
-
----
-
-## 4-3. 현재 로짓 조회 — Supabase 노드
-
-기존 로짓이 있는 유저가 월드컵을 다시 하는 경우를 위해 현재 값을 먼저 읽습니다.
-
-`월드컵 입력` **+** → `Supabase` 추가
-
-| 항목 | 값 |
-|------|-----|
-| **Operation** | Get Many |
-| **Table** | `user_preference_logits` |
-| **Return All** | ✅ 체크 |
-
-**Filter:**
-```
-Key Name  : user_id
-Condition : equal
-Key Value : {{ ($input.first().json.body || $input.first().json).user_id }}
+**현재 (잘못됨):**
+```javascript
+const data = $('월드컵 계산').first().json  // 이 노드는 존재하지 않음
 ```
 
-노드 이름: **`현재 로짓`**
+**수정 후:**
+```javascript
+const data = $('월드컵 로직 계산').first().json
+
+return [{
+  json: {
+    message: `선호도 분석 완료! 👑 ${data.champion}이(가) 우승했어요`,
+    top_categories: data.top_categories
+  }
+}]
+```
+
+### 버그 2 — `피드백 확인1` 응답 형식 오류
+
+`피드백 확인1` 노드는 메뉴 선택 흐름의 응답 노드와 연결이 잘못되어 있습니다.  
+n8n 캔버스에서 `피드백 확인1` → **Response Body** 값을 아래로 수정합니다.
+
+**현재 (잘못됨):**
+```
+={{ JSON.stringify({ ok: true, category: $json.category }) }}
+```
+
+**수정 후:**
+```
+={{ JSON.stringify($json) }}
+```
+
+`$json`에는 `Code in JavaScript`가 출력한 `{ message, top_categories }`가 그대로 담깁니다.
 
 ---
 
-## 4-4. 월드컵 계산 — Code 노드
+## 월드컵 로직 계산 — Code 노드 전체 코드 (참고)
 
-`현재 로짓` **+** → `Code` 추가
+v4에 적용된 코드입니다. 수정 불필요.
 
 ```javascript
-// ────────────────────────────────────────────────
-// 월드컵 계산 노드
-// ────────────────────────────────────────────────
-// 목적:
-//   1. 전체 라운드 결과 → 카테고리별 델타(점수 변화) 누적
-//   2. 기존 로짓 + 델타 = 새 로짓
-//   3. Softmax로 top_categories 계산 (응답용)
-//   4. 7개 카테고리 upsert 데이터 준비
-//
-// 출력: 단 1개 item
-//   - categories_to_upsert: [{user_id, category, logit, ...}, ...]
-//   - top_categories: ['분식', '한식', '양식'] (상위 3개)
-//   - softmax: { 분식: 0.52, 한식: 0.28, ... }
-// ────────────────────────────────────────────────
-
 const raw  = $('월드컵 입력').first().json
 const body = raw.body || raw
-
 const { user_id, champion = '', rounds = [] } = body
 
 const CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']
 
-// ① 기존 로짓 맵 만들기 (없으면 0 처리)
+// 기존 로짓 맵 (없으면 0 처리)
 const currentMap = {}
 $input.all().forEach(item => {
   if (item.json.category) {
@@ -135,306 +162,102 @@ $input.all().forEach(item => {
   }
 })
 
-// ② 라운드별 델타 계산
-//    승리: +0.5 (강한 선호 신호)
-//    탈락: -0.3 (거부감 — 승리보다 약하게)
+// 승리 +0.5 / 탈락 -0.3
 const deltaMap = {}
 CATS.forEach(c => { deltaMap[c] = 0 })
-
-;(rounds || []).forEach(r => {
-  if (r.winner_category && deltaMap[r.winner_category] !== undefined) {
+rounds.forEach(r => {
+  if (r.winner_category && deltaMap[r.winner_category] !== undefined)
     deltaMap[r.winner_category] += 0.5
-  }
-  if (r.loser_category && deltaMap[r.loser_category] !== undefined) {
+  if (r.loser_category && deltaMap[r.loser_category] !== undefined)
     deltaMap[r.loser_category] -= 0.3
-  }
 })
 
-// ③ 새 로짓 = 기존 로짓 + 델타
 const now = new Date().toISOString()
 
 const categories_to_upsert = CATS.map(cat => ({
   user_id,
   category:     cat,
   logit:        Math.round(((currentMap[cat]?.logit ?? 0) + (deltaMap[cat] || 0)) * 1000) / 1000,
-  sample_count: (currentMap[cat]?.sample_count ?? 0) + (rounds.length > 0 ? 1 : 0),
-  updated_at:   now
+  sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
+  updated_at:   now,
+  exists:       !!currentMap[cat]  // IF 분기용
 }))
 
-// ④ 응답용 Softmax 계산
-//    T=1.5, EPS=0.1, K=7
+// Softmax (T=1.5, EPS=0.1, K=7) → top 3 추출
 const T = 1.5, EPS = 0.1, K = 7
-
-const newLogitMap = {}
-categories_to_upsert.forEach(c => { newLogitMap[c.category] = c.logit })
-
 let expSum = 0
 const expMap = {}
-CATS.forEach(cat => {
-  expMap[cat] = Math.exp(newLogitMap[cat] / T)
-  expSum += expMap[cat]
+categories_to_upsert.forEach(c => {
+  expMap[c.category] = Math.exp(c.logit / T)
+  expSum += expMap[c.category]
 })
 
-const softmax = {}
-CATS.forEach(cat => {
-  softmax[cat] = Number(((1 - EPS) * expMap[cat] / expSum + EPS / K).toFixed(4))
-})
-
-// 높은 확률 순으로 top 3 카테고리
-const top_categories = Object.entries(softmax)
-  .sort((a, b) => b[1] - a[1])
+const top_categories = Object.entries(expMap)
+  .map(([cat, exp]) => ({ cat, p: (1 - EPS) * exp / expSum + EPS / K }))
+  .sort((a, b) => b.p - a.p)
   .slice(0, 3)
-  .map(([cat]) => cat)
+  .map(e => e.cat)
 
 return [{
-  json: {
-    user_id,
-    champion,
-    rounds,
-    top_categories,
-    softmax,
-    categories_to_upsert,
-    created_at: now
-  }
+  json: { user_id, champion, rounds, top_categories, categories_to_upsert, created_at: now }
 }]
 ```
 
-노드 이름: **`월드컵 계산`**
-
 ---
 
-## 4-5. 세션 저장 — HTTP Request 노드
+## 테스트
 
-`월드컵 계산` **+** → `HTTP Request` 추가
-
-| 항목 | 값 |
-|------|-----|
-| **Method** | POST |
-| **URL** | `https://[프로젝트ID].supabase.co/rest/v1/worldcup_sessions` |
-| **Authentication** | Predefined Credential Type |
-| **Credential Type** | Supabase API |
-| **Credential** | Supabase account 선택 |
-
-**Headers:**
-
-| Name | Value |
-|------|-------|
-| `Prefer` | `return=minimal` |
-| `Content-Type` | `application/json` |
-
-**Body:**
-- **Body Content Type**: Raw
-- **Content Type**: `application/json`
-- **Body**:
+버그 수정 후 아래 요청으로 검증합니다.
 
 ```
-={{ JSON.stringify({
-  user_id:   $json.user_id,
-  champion:  $json.champion,
-  rounds:    $json.rounds,
-  completed: true,
-  created_at: $json.created_at
-}) }}
-```
-
-노드 이름: **`세션 저장`**
-
----
-
-## 4-6. 로짓 저장 — HTTP Request 노드
-
-`세션 저장` **+** → `HTTP Request` 추가
-
-7개 카테고리를 한 번의 API 호출로 Upsert합니다.
-
-| 항목 | 값 |
-|------|-----|
-| **Method** | POST |
-| **URL** | `https://[프로젝트ID].supabase.co/rest/v1/user_preference_logits` |
-| **Authentication** | Predefined Credential Type |
-| **Credential Type** | Supabase API |
-| **Credential** | Supabase account 선택 |
-
-**Headers:**
-
-| Name | Value |
-|------|-------|
-| `Prefer` | `resolution=merge-duplicates` |
-| `Content-Type` | `application/json` |
-
-**Body:**
-- **Body Content Type**: Raw
-- **Content Type**: `application/json`
-- **Body**:
-
-```
-={{ JSON.stringify($('월드컵 계산').first().json.categories_to_upsert) }}
-```
-
-> 💡 **왜 `$('월드컵 계산').first().json`을 참조하는가?**  
-> 이전 노드(`세션 저장`)의 응답 데이터 대신  
-> `월드컵 계산` 노드에서 준비한 원본 데이터를 직접 가져옵니다.  
-> `return=minimal`로 세션 저장이 빈 응답을 돌려주기 때문입니다.
-
-노드 이름: **`로짓 저장`**
-
----
-
-## 4-7. 최종 응답 — Code 노드
-
-`로짓 저장` **+** → `Code` 추가
-
-```javascript
-// ────────────────────────────────────────────────
-// 최종 응답 코드
-// ────────────────────────────────────────────────
-// 목적:
-//   React가 받을 응답 JSON 구성
-//   - top_categories: 상위 3개 선호 카테고리
-//   - softmax: 전체 카테고리 확률 분포
-//   - champion: 월드컵 최종 우승 음식
-// ────────────────────────────────────────────────
-
-const data = $('월드컵 계산').first().json
-
-return [{
-  json: {
-    message:        `선호도 분석 완료! 👑 ${data.champion}이(가) 우승했어요`,
-    top_categories: data.top_categories,
-    softmax:        data.softmax,
-    champion:       data.champion
-  }
-}]
-```
-
-노드 이름: **`최종 응답`**
-
----
-
-## 4-8. Respond to Webhook 추가
-
-`최종 응답` **+** → `Respond to Webhook` 추가
-
-| 항목 | 값 |
-|------|-----|
-| **Respond With** | JSON |
-| **Response Body** | `={{ JSON.stringify($json) }}` |
-
-노드 이름: **`응답`**
-
----
-
-## 4-9. 전체 흐름 확인
-
-```
-월드컵 입력(Webhook - POST /worldcup)
-    ↓
-현재 로짓(Supabase - Get Many, user_preference_logits)
-    ↓
-월드컵 계산(Code - 델타 계산 + Softmax)
-    ↓
-세션 저장(HTTP Request - POST worldcup_sessions)
-    ↓
-로짓 저장(HTTP Request - POST user_preference_logits, merge-duplicates)
-    ↓
-최종 응답(Code - 응답 JSON 구성)
-    ↓
-응답(Respond to Webhook)
-```
-
-**Save → Active 확인**
-
----
-
-## 🧪 테스트
-
-```bash
-POST http://n8n-host:5678/webhook/worldcup
+POST http://localhost:5678/webhook/worldcup
 Content-Type: application/json
 
 {
   "user_id": "test_user_999",
-  "champion": "돈까스",
+  "champion": "삼겹살",
   "rounds": [
-    {
-      "round": 1,
-      "winner": "돈까스",
-      "loser": "피자",
-      "winner_category": "분식",
-      "loser_category": "양식"
-    },
-    {
-      "round": 1,
-      "winner": "삼겹살",
-      "loser": "짜장면",
-      "winner_category": "한식",
-      "loser_category": "중식"
-    },
-    {
-      "round": 2,
-      "winner": "돈까스",
-      "loser": "삼겹살",
-      "winner_category": "분식",
-      "loser_category": "한식"
-    }
+    { "round": 1, "winner": "삼겹살", "loser": "피자",   "winner_category": "한식", "loser_category": "양식" },
+    { "round": 1, "winner": "짜장면", "loser": "치킨",   "winner_category": "중식", "loser_category": "분식" },
+    { "round": 2, "winner": "삼겹살", "loser": "짜장면", "winner_category": "한식", "loser_category": "중식" }
   ]
 }
 ```
 
-### 성공 기준
-
-**응답 확인:**
+**기대 응답:**
 ```json
 {
-  "message": "선호도 분석 완료! 👑 돈까스이(가) 우승했어요",
-  "top_categories": ["분식", "한식", "..."],
-  "softmax": { "분식": 0.42, "한식": 0.28, ... },
-  "champion": "돈까스"
+  "message": "선호도 분석 완료! 👑 삼겹살이(가) 우승했어요",
+  "top_categories": ["한식", "중식", "양식"]
 }
 ```
 
 **Supabase 확인:**
-1. `user_preference_logits` 테이블 → `user_id = test_user_999` 행 7개 생성
-   - `분식`: logit이 가장 높음 (+0.5 × 2 = +1.0)
-   - `양식`: 음수 (-0.3)
-2. `worldcup_sessions` 테이블 → 세션 1개 생성
-
-**재실행 확인 (월드컵 다시 하기):**
-- 같은 `user_id`로 다시 요청 → 기존 값에 누적되는지 확인
-- `user_preference_logits`의 logit이 덮어써지지 않고 합산되어야 함
+- `user_preference_logits` → `user_id = test_user_999` 행 7개 존재
+- `worldcup_sessions` → 세션 1개 생성, `completed = true`
+- 같은 user_id로 재실행 → logit이 누적되어야 함 (덮어쓰기 아님)
 
 ---
 
 ## ✅ Step 4 체크리스트
 
 ```
-[ ] 새 워크플로우 생성 (이름: worldcup)
-[ ] 월드컵 입력 Webhook 노드 (path: worldcup)
-[ ] 현재 로짓 조회 Supabase 노드
-[ ] 월드컵 계산 Code 노드 (코드 적용)
-[ ] 세션 저장 HTTP Request 노드 (worldcup_sessions)
-[ ] 로짓 저장 HTTP Request 노드 (user_preference_logits, merge-duplicates)
-[ ] 최종 응답 Code 노드
-[ ] 응답 Respond to Webhook 노드
-[ ] 전체 흐름 연결 확인
+[x] 월드컵 입력 Webhook (path: worldcup) — v4에 존재
+[x] 월드컵 현재 로직 Supabase (Get Many, user_preference_logits)
+[x] 월드컵 로직 계산 Code (델타 + Softmax + exists 플래그)
+[x] 월드컵 기록 Supabase (Create, worldcup_sessions)
+[x] 월드컵 응답 Code (categories_to_upsert 7개 분리)
+[x] 정보 수정 여부 IF ($json.exists 분기)
+[x] 로직 업데이트2 / 로직 생성2 Supabase
+[ ] Code in JavaScript — 노드 참조 수정 (버그 1)
+[ ] 피드백 확인1 — Response Body 수정 (버그 2)
 [ ] Save → Active 확인
-[ ] 테스트: 응답에 top_categories 포함 확인
-[ ] 테스트: DB에 7개 행 생성 확인
-[ ] 테스트: worldcup_sessions에 세션 저장 확인
+[ ] 테스트: top_categories 3개 응답 확인
+[ ] 테스트: worldcup_sessions 저장 확인
+[ ] 테스트: user_preference_logits 7행 업데이트 확인
+[ ] React 결과 화면 — TOP 3 칩 표시 확인
 ```
 
 ---
 
-## 🎉 전체 완료!
-
-모든 Step이 완료됐으면 아래 전체 체크리스트를 다시 확인하세요.
-
-```
-[ ] Step 0: Supabase 테이블 3개 생성 확인
-[ ] Step 1: 먹구름봇 음식 추천 Softmax 정렬 적용
-[ ] Step 2: 먹구름봇 피드백 로짓 ±0.2 업데이트
-[ ] Step 3: 음식상세 메뉴 선택 로짓 +0.1 업데이트
-[ ] Step 4: 월드컵 워크플로우 신규 생성
-```
-
-모두 완료 → [목차로 돌아가기](n8n_ml_nodes.md)
+완료 → [목차로 돌아가기](n8n_ml_nodes.md)

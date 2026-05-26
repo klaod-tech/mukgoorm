@@ -1,12 +1,12 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
-import { sendWorldcupResult } from '../lib/n8n'
+import { supabase } from '../lib/supabase'
 
 interface Food {
   name: string
   category: string
-  emoji: string
+  image: string
 }
 
 interface RoundResult {
@@ -17,27 +17,107 @@ interface RoundResult {
   loser_category: string
 }
 
+type TournamentSize = 16 | 32 | 64
+
 const FOOD_POOL: Food[] = [
-  { name: '삼겹살',    category: '한식',   emoji: '🥩' },
-  { name: '김치찌개',  category: '한식',   emoji: '🍲' },
-  { name: '비빔밥',    category: '한식',   emoji: '🍚' },
-  { name: '순대국밥',  category: '한식',   emoji: '🍜' },
-  { name: '짜장면',    category: '중식',   emoji: '🍝' },
-  { name: '짬뽕',     category: '중식',   emoji: '🌊' },
-  { name: '탕수육',    category: '중식',   emoji: '🍱' },
-  { name: '마라탕',    category: '중식',   emoji: '🌶️' },
-  { name: '피자',     category: '양식',   emoji: '🍕' },
-  { name: '스테이크',  category: '양식',   emoji: '🥩' },
-  { name: '파스타',    category: '양식',   emoji: '🍝' },
-  { name: '햄버거',    category: '양식',   emoji: '🍔' },
-  { name: '치킨',     category: '분식',   emoji: '🍗' },
-  { name: '족발',     category: '한식',   emoji: '🍖' },
-  { name: '떡볶이',    category: '분식',   emoji: '🌶️' },
-  { name: '아이스크림', category: '디저트', emoji: '🍦' },
+  // ── 한식 16개
+  { name: '삼겹살',     category: '한식',   image: '/foods/samgyeopsal.png' },
+  { name: '김치찌개',   category: '한식',   image: '/foods/kimchijjigae.png' },
+  { name: '비빔밥',     category: '한식',   image: '/foods/bibimbap.png' },
+  { name: '순대국밥',   category: '한식',   image: '/foods/sundaegukbap.png' },
+  { name: '족발',      category: '한식',   image: '/foods/jokbal.png' },
+  { name: '갈비찜',     category: '한식',   image: '/foods/galbijjim.png' },
+  { name: '된장찌개',   category: '한식',   image: '/foods/doenjangjjigae.png' },
+  { name: '불고기',     category: '한식',   image: '/foods/bulgogi.png' },
+  { name: '닭갈비',     category: '한식',   image: '/foods/dakgalbi.png' },
+  { name: '삼계탕',     category: '한식',   image: '/foods/samgyetang.png' },
+  { name: '해장국',     category: '한식',   image: '/foods/haejanguk.png' },
+  { name: '냉면',      category: '한식',   image: '/foods/naengmyeon.png' },
+  { name: '칼국수',     category: '한식',   image: '/foods/kalguksu.png' },
+  { name: '보쌈',      category: '한식',   image: '/foods/bossam.png' },
+  { name: '잡채',      category: '한식',   image: '/foods/japchae.png' },
+  { name: '갈비탕',     category: '한식',   image: '/foods/galbitang.png' },
+  // ── 중식 8개
+  { name: '짜장면',     category: '중식',   image: '/foods/jajangmyeon.png' },
+  { name: '짬뽕',      category: '중식',   image: '/foods/jjambbong.png' },
+  { name: '탕수육',     category: '중식',   image: '/foods/tangsuyuk.png' },
+  { name: '마라탕',     category: '중식',   image: '/foods/maratang.png' },
+  { name: '마파두부',   category: '중식',   image: '/foods/mapadubu.png' },
+  { name: '딤섬',      category: '중식',   image: '/foods/dimsum.png' },
+  { name: '깐풍기',     category: '중식',   image: '/foods/kkampunggi.png' },
+  { name: '양장피',     category: '중식',   image: '/foods/yangjangpi.png' },
+  // ── 양식 8개
+  { name: '피자',      category: '양식',   image: '/foods/pizza.png' },
+  { name: '스테이크',   category: '양식',   image: '/foods/steak.png' },
+  { name: '파스타',     category: '양식',   image: '/foods/pasta.png' },
+  { name: '햄버거',     category: '양식',   image: '/foods/hamburger.png' },
+  { name: '리조또',     category: '양식',   image: '/foods/risotto.png' },
+  { name: '바비큐립',   category: '양식',   image: '/foods/bbqrib.png' },
+  { name: '샐러드',     category: '양식',   image: '/foods/salad.png' },
+  { name: '클럽샌드위치', category: '양식',  image: '/foods/clubsandwich.png' },
+  // ── 분식 8개
+  { name: '치킨',      category: '분식',   image: '/foods/chicken.png' },
+  { name: '떡볶이',     category: '분식',   image: '/foods/tteokbokki.png' },
+  { name: '순대',      category: '분식',   image: '/foods/sundae.png' },
+  { name: '어묵',      category: '분식',   image: '/foods/eomuk.png' },
+  { name: '라면',      category: '분식',   image: '/foods/ramyeon.png' },
+  { name: '김밥',      category: '분식',   image: '/foods/gimbap.png' },
+  { name: '핫도그',     category: '분식',   image: '/foods/hotdog.png' },
+  { name: '붕어빵',     category: '분식',   image: '/foods/bungeoppang.png' },
+  // ── 일식 8개
+  { name: '초밥',      category: '일식',   image: '/foods/chobap.png' },
+  { name: '라멘',      category: '일식',   image: '/foods/ramen.png' },
+  { name: '우동',      category: '일식',   image: '/foods/udong.png' },
+  { name: '돈까스',     category: '일식',   image: '/foods/donkkaseu.png' },
+  { name: '타코야키',   category: '일식',   image: '/foods/takoyaki.png' },
+  { name: '텐동',      category: '일식',   image: '/foods/tendon.png' },
+  { name: '야키토리',   category: '일식',   image: '/foods/yakitori.png' },
+  { name: '오마카세',   category: '일식',   image: '/foods/omakase.png' },
+  // ── 디저트 8개
+  { name: '아이스크림',  category: '디저트', image: '/foods/icecream.png' },
+  { name: '케이크',     category: '디저트', image: '/foods/cake.png' },
+  { name: '마카롱',     category: '디저트', image: '/foods/macaron.png' },
+  { name: '와플',      category: '디저트', image: '/foods/waffle.png' },
+  { name: '빙수',      category: '디저트', image: '/foods/bingsu.png' },
+  { name: '타르트',     category: '디저트', image: '/foods/tart.png' },
+  { name: '크레이프',   category: '디저트', image: '/foods/crepe.png' },
+  { name: '도넛',      category: '디저트', image: '/foods/donut.png' },
+  // ── 기타 8개
+  { name: '쌀국수',     category: '기타',   image: '/foods/pho.png' },
+  { name: '팟타이',     category: '기타',   image: '/foods/padthai.png' },
+  { name: '인도카레',   category: '기타',   image: '/foods/indiancurry.png' },
+  { name: '타코',      category: '기타',   image: '/foods/taco.png' },
+  { name: '케밥',      category: '기타',   image: '/foods/kebab.png' },
+  { name: '훠궈',      category: '기타',   image: '/foods/huoguo.png' },
+  { name: '곱창',      category: '기타',   image: '/foods/gobchang.png' },
+  { name: '감바스',     category: '기타',   image: '/foods/gambas.png' },
 ]
 
-const ROUND_LABEL: Record<number, string> = {
-  1: '16강', 2: '8강', 3: '4강', 4: '결승',
+const ROUND_LABELS: Record<TournamentSize, Record<number, string>> = {
+  64: { 1: '64강', 2: '32강', 3: '16강', 4: '8강', 5: '4강', 6: '결승' },
+  32: { 1: '32강', 2: '16강', 3: '8강', 4: '4강', 5: '결승' },
+  16: { 1: '16강', 2: '8강', 3: '4강', 4: '결승' },
+}
+
+const TOTAL_MATCHES: Record<TournamentSize, number> = { 64: 63, 32: 31, 16: 15 }
+
+// 카테고리별 비율 유지하며 N개 선택 (한식 25%, 나머지 각 12.5%)
+function buildFoodPool(size: TournamentSize): Food[] {
+  if (size === 64) return shuffle(FOOD_POOL)
+
+  const groups: Record<string, Food[]> = {}
+  FOOD_POOL.forEach(f => {
+    if (!groups[f.category]) groups[f.category] = []
+    groups[f.category].push(f)
+  })
+
+  const ratio = size / FOOD_POOL.length
+  const result: Food[] = []
+  Object.values(groups).forEach(foods => {
+    const count = Math.round(foods.length * ratio)
+    result.push(...shuffle(foods).slice(0, count))
+  })
+  return shuffle(result)
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -50,11 +130,22 @@ function makePairs(foods: Food[]): Food[][] {
   return pairs
 }
 
+const SIZE_OPTIONS: { size: TournamentSize; label: string; desc: string; time: string }[] = [
+  { size: 16, label: '16강', desc: '15번 선택', time: '약 3분' },
+  { size: 32, label: '32강', desc: '31번 선택', time: '약 7분' },
+  { size: 64, label: '64강', desc: '63번 선택', time: '약 15분' },
+]
+
 export default function Worldcup() {
   const navigate = useNavigate()
   const { profile } = useUser()
 
-  const [pairs, setPairs] = useState<Food[][]>(() => makePairs(shuffle(FOOD_POOL)))
+  const [checking, setChecking] = useState(true)
+  const [alreadyCompleted, setAlreadyCompleted] = useState(false)
+  const [previousChampion, setPreviousChampion] = useState<string | null>(null)
+
+  const [tournamentSize, setTournamentSize] = useState<TournamentSize | null>(null)
+  const [pairs, setPairs] = useState<Food[][]>([])
   const [pairIndex, setPairIndex] = useState(0)
   const [roundNumber, setRoundNumber] = useState(1)
   const [roundResults, setRoundResults] = useState<RoundResult[]>([])
@@ -63,9 +154,33 @@ export default function Worldcup() {
   const [topCategories, setTopCategories] = useState<string[]>([])
   const [submitting, setSubmitting] = useState(false)
 
-  const totalMatches = 15
-  const progress = roundResults.length / totalMatches
-  const currentPair = pairs[pairIndex]
+  useEffect(() => {
+    if (!profile) return
+    async function checkCompleted() {
+      const { data } = await supabase
+        .from('worldcup_sessions')
+        .select('champion')
+        .eq('user_id', profile!.user_id)
+        .eq('completed', true)
+        .limit(1)
+      if (data && data.length > 0) {
+        setAlreadyCompleted(true)
+        setPreviousChampion(data[0].champion)
+      }
+      setChecking(false)
+    }
+    checkCompleted()
+  }, [profile])
+
+  function startTournament(size: TournamentSize) {
+    const pool = buildFoodPool(size)
+    setTournamentSize(size)
+    setPairs(makePairs(pool))
+    setPairIndex(0)
+    setRoundNumber(1)
+    setRoundResults([])
+    setPendingWinners([])
+  }
 
   async function handlePick(winner: Food, loser: Food) {
     const result: RoundResult = {
@@ -102,18 +217,156 @@ export default function Worldcup() {
     if (!profile) { navigate('/'); return }
     setSubmitting(true)
     try {
-      const res = await sendWorldcupResult({
-        user_id: profile.user_id,
-        champion: champ.name,
-        rounds: results,
+      const userId = profile.user_id
+      const CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']
+
+      const { data: currentLogits } = await supabase
+        .from('user_preference_logits')
+        .select('category, logit, sample_count')
+        .eq('user_id', userId)
+
+      const currentMap: Record<string, { logit: number; sample_count: number }> = {}
+      currentLogits?.forEach(r => {
+        currentMap[r.category] = { logit: r.logit ?? 0, sample_count: r.sample_count ?? 0 }
       })
-      setTopCategories(res.top_categories ?? [])
+
+      // 초기 데이터 수집용이므로 낮은 점수 적용: 승리 +0.3, 탈락 -0.1
+      const deltaMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
+      results.forEach(r => {
+        if (r.winner_category in deltaMap) deltaMap[r.winner_category] += 0.3
+        if (r.loser_category in deltaMap) deltaMap[r.loser_category] -= 0.1
+      })
+
+      const now = new Date().toISOString()
+      const rows = CATS.map(cat => {
+        const raw = (currentMap[cat]?.logit ?? 0) + deltaMap[cat]
+        return {
+          user_id: userId,
+          category: cat,
+          logit: Math.max(-10, Math.min(10, Math.round(raw * 1000) / 1000)),
+          sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
+          updated_at: now,
+        }
+      })
+
+      await Promise.all([
+        supabase.from('user_preference_logits').upsert(rows, { onConflict: 'user_id,category' }),
+        supabase.from('worldcup_sessions').insert({
+          user_id: userId,
+          champion: champ.name,
+          rounds: results,
+          completed: true,
+        }),
+      ])
+
+      const T = 1.5, EPS = 0.1, K = 7
+      let expSum = 0
+      const expMap: Record<string, number> = {}
+      rows.forEach(r => { expMap[r.category] = Math.exp(r.logit / T); expSum += expMap[r.category] })
+      const top = Object.entries(expMap)
+        .map(([cat, exp]) => ({ cat, p: (1 - EPS) * exp / expSum + EPS / K }))
+        .sort((a, b) => b.p - a.p)
+        .slice(0, 3)
+        .map(e => e.cat)
+
+      setTopCategories(top)
     } catch {
       // 실패해도 결과 화면은 보여줌
     } finally {
       setSubmitting(false)
     }
   }
+
+  // ── 로딩 화면 ────────────────────────────────────────────────
+  if (checking) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0f0f23', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: '#555', fontSize: 14 }}>확인 중...</div>
+      </div>
+    )
+  }
+
+  // ── 이미 완료 화면 ──────────────────────────────────────────
+  if (alreadyCompleted) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0f0f23',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+      }}>
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 24 }}>
+          <div style={{ fontSize: 48 }}>🏆</div>
+          <div>
+            <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>이미 완료한 월드컵</div>
+            <div style={{ color: '#fff', fontSize: 22, fontWeight: 800 }}>
+              {previousChampion ? `${previousChampion}이(가) 우승했어요!` : '월드컵을 완료했어요'}
+            </div>
+            <div style={{ color: '#555', fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
+              월드컵은 한 번만 참여할 수 있어요.<br />
+              이후 취향은 음식 추천과 피드백으로 쌓여요 🌧️
+            </div>
+          </div>
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: '#6c63ff', border: 'none', borderRadius: 16,
+              padding: '14px 48px', color: '#fff',
+              fontSize: 16, fontWeight: 700, cursor: 'pointer',
+            }}
+          >
+            먹구름 만나러 가기 →
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── 강 선택 화면 ─────────────────────────────────────────────
+  if (!tournamentSize) {
+    return (
+      <div style={{
+        minHeight: '100vh', background: '#0f0f23',
+        display: 'flex', flexDirection: 'column',
+        alignItems: 'center', justifyContent: 'center', padding: 24,
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 40 }}>
+          <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 10, letterSpacing: 1 }}>음식 이상형 월드컵</div>
+          <div style={{ color: '#fff', fontSize: 26, fontWeight: 800 }}>몇 강으로 할까요?</div>
+          <div style={{ color: '#555', fontSize: 13, marginTop: 8 }}>
+            한 번만 참여할 수 있어요. 신중하게 골라봐요!
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%', maxWidth: 340 }}>
+          {SIZE_OPTIONS.map(({ size, label, desc, time }) => (
+            <button
+              key={size}
+              onClick={() => startTournament(size)}
+              style={{
+                background: '#1a1a2e', border: '2px solid #2a2a4a',
+                borderRadius: 16, padding: '20px 24px',
+                cursor: 'pointer', textAlign: 'left',
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                transition: 'border-color 0.15s',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.borderColor = '#6c63ff')}
+              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a4a')}
+            >
+              <div>
+                <div style={{ color: '#fff', fontSize: 18, fontWeight: 700 }}>{label}</div>
+                <div style={{ color: '#555', fontSize: 13, marginTop: 4 }}>{desc}</div>
+              </div>
+              <div style={{ color: '#6c63ff', fontSize: 13 }}>{time}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const totalMatches = TOTAL_MATCHES[tournamentSize]
+  const roundLabel = ROUND_LABELS[tournamentSize]
+  const progress = roundResults.length / totalMatches
+  const currentPair = pairs[pairIndex]
 
   // ── 결과 화면 ────────────────────────────────────────────────
   if (champion) {
@@ -123,7 +376,7 @@ export default function Worldcup() {
         display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
       }}>
         <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
-          <div style={{ fontSize: 88, lineHeight: 1 }}>{champion.emoji}</div>
+          <img src={champion.image} alt={champion.name} style={{ width: 160, height: 160, objectFit: 'cover', borderRadius: 24, boxShadow: '0 0 40px #6c63ff66' }} />
           <div>
             <div style={{ color: '#6c63ff', fontSize: 13, marginBottom: 8, letterSpacing: 1 }}>🏆 최종 우승</div>
             <div style={{ color: '#fff', fontSize: 34, fontWeight: 800 }}>{champion.name}</div>
@@ -186,7 +439,7 @@ export default function Worldcup() {
           <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
             음식 이상형 월드컵
             <span style={{ color: '#6c63ff', marginLeft: 8, fontSize: 14 }}>
-              {ROUND_LABEL[roundNumber]}
+              {roundLabel[roundNumber]}
             </span>
           </div>
           <div style={{ color: '#555', fontSize: 13 }}>
@@ -239,7 +492,7 @@ function FoodCard({ food, onPick }: { food: Food; onPick: () => void }) {
         boxShadow: pressed ? '0 0 24px #6c63ff44' : 'none',
       }}
     >
-      <div style={{ fontSize: 64, lineHeight: 1 }}>{food.emoji}</div>
+      <img src={food.image} alt={food.name} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 16 }} />
       <div style={{ color: '#fff', fontSize: 17, fontWeight: 700 }}>{food.name}</div>
       <div style={{
         fontSize: 11, padding: '3px 12px', borderRadius: 10,

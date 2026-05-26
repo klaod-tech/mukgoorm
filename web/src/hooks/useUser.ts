@@ -19,7 +19,6 @@ export interface UserProfile {
   lunch_time?: string
   dinner_time?: string
   snack_time?: string
-  allergies?: string[]
   food_preferences?: string[]
   email_provider?: string
   email_address?: string
