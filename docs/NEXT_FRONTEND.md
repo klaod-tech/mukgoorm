@@ -2,18 +2,12 @@
 
 ## 🔴 버그 수정
 
-### 1. 회원탈퇴 시 Auth 유저 미삭제
+### ✅ 1. 회원탈퇴 시 Auth 유저 미삭제 — 구현 완료, 테스트 필요
 **현상**: 회원탈퇴 후 동일 계정으로 재로그인 가능. `users` 테이블 row는 삭제되지만 Supabase Auth 유저가 남아 있어 같은 이메일/비밀번호로 재가입 없이 로그인됨.
 
-**원인**: 클라이언트에서 `auth.admin.deleteUser()`를 호출하려면 service role key가 필요한데, 프론트엔드에 노출 불가.
-
-**해결 방법**: Supabase Edge Function 생성
-```
-supabase/functions/delete-user/index.ts
-  → auth.admin.deleteUser(user_id) 호출
-  → service role key는 Edge Function 환경변수로 관리
-```
-`handleDeleteAccount` (Settings.tsx)에서 Edge Function을 호출하도록 수정.
+**해결**: `supabase/functions/delete-user/index.ts` Edge Function 생성 완료.  
+`handleDeleteAccount` (Settings.tsx)에서 Edge Function 호출 + `users` 테이블 삭제 + `signOut` 순서로 처리.  
+> ⚠️ 실제 탈퇴 후 재로그인 테스트는 아직 미확인.
 
 ---
 
@@ -44,6 +38,21 @@ supabase/functions/delete-user/index.ts
 
 ---
 
+---
+
+## ✅ 이번 세션 완료 (2026-05-26)
+
+| 항목 | 파일 |
+|---|---|
+| 이메일 카드 5개 표시 — 신규/기존 배지, 펼치기 요약 | `Home.tsx` |
+| `EmailItem` 인터페이스 + `CombinedResponse.emails` 필드 | `n8n.ts` |
+| 이메일 봇 타임아웃 60초 (`BOT_TIMEOUT`) | `n8n.ts` |
+| 음식추천 타임아웃 10초 → 180초 (`recommendFood`) | `n8n.ts` |
+| `CLASSIFY_PROMPT` 날씨 규칙 강화 — 직접 질문 시에만 날씨 봇 호출 | `n8n.ts` |
+| 로그아웃 버튼 추가 — 계정 관리 섹션 회원탈퇴 옆 | `Settings.tsx` |
+
+---
+
 ## 🟡 나중에 구현
 
 ### 1. 로그인 세션 유지 (자동 로그인)
@@ -53,7 +62,8 @@ supabase/functions/delete-user/index.ts
 
 ---
 
-### ✅ 2. BOT_TIMEOUT 데드코드 정리 — 수정 완료
+### ✅ 2. BOT_TIMEOUT — 이메일 타임아웃 적용
 **파일**: [web/src/lib/n8n.ts](../web/src/lib/n8n.ts)
 
-**수정**: `BOT_TIMEOUT` 빈 객체 제거, 호출부에서 `DEFAULT_TIMEOUT` 직접 사용.
+**수정**: `BOT_TIMEOUT = { 이메일: 60000 }` — 이메일 봇은 60초, 나머지는 `DEFAULT_TIMEOUT` (15초) 사용.  
+(이전에 빈 객체로 정리했으나, 이메일 처리 시간이 길어 다시 도입)

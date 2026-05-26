@@ -1,6 +1,6 @@
 # 다음 작업 목록
 
-> 최종 업데이트: 2026-05-22  
+> 최종 업데이트: 2026-05-26  
 > 브랜치: `feat/web-migration`
 
 ---
@@ -31,6 +31,12 @@
 | `Onboarding.tsx` — 알레르기 UI 전체 제거 | ✅ |
 | `Settings.tsx` — 알레르기 UI 전체 제거 | ✅ |
 | `Worldcup.tsx` — 완성 (FOOD_POOL 16개, top_categories 렌더링) | ✅ |
+| 이메일 카드 표시 — 5개 전체, 신규/기존 배지, 펼치기 요약 (`Home.tsx`) | ✅ |
+| `EmailItem` 인터페이스 + `CombinedResponse.emails` 추가 (`n8n.ts`) | ✅ |
+| `BOT_TIMEOUT` — 이메일 60초 타임아웃 (`n8n.ts`) | ✅ |
+| 음식추천 타임아웃 180초로 증가 — `recommendFood()` (`n8n.ts`) | ✅ |
+| `CLASSIFY_PROMPT` 날씨 규칙 강화 — 직접 질문 시에만 날씨 봇 호출 (`n8n.ts`) | ✅ |
+| 로그아웃 버튼 추가 — 계정 관리 섹션, 회원탈퇴 옆 (`Settings.tsx`) | ✅ |
 
 ### Supabase
 | 항목 | 상태 |
@@ -102,9 +108,9 @@ n8n 캔버스에서 직접 수정 후 Save → Active 확인.
 ```
 [ ] n8n Railway 배포 (팀 공유 인스턴스)
 [ ] Supabase RLS 정책 설계 (유저별 데이터 격리)
-[ ] 이메일 webhook 연동
+[✅] 이메일 webhook 연동 — n8n EmailBOT + React 카드 표시 + Supabase 저장 완료
 [ ] PWA vs Electron 패키징 방향 결정
-[ ] 회원탈퇴 후 재로그인 버그 수정
+[ ] 회원탈퇴 후 재로그인 버그 수정 (구현은 완료, 실제 테스트 필요)
 [ ] food_preferences 옵션 확장 — 현재 6개뿐, 분식/해산물/매운맛/담백한맛 등 세분화 필요
 [ ] React Worldcup FOOD_POOL — 일식 메뉴 추가 검토 (현재 일식 카테고리 round 없음)
 ```

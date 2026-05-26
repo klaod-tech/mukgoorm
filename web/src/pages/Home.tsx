@@ -13,6 +13,7 @@ import {
   type Restaurant,
   type WeatherData,
   type MenuItem,
+  type EmailItem,
   type ClassifyResult,
   type IntentPath,
   type CombinedResponse,
@@ -28,6 +29,7 @@ interface Message {
   text: string
   restaurants?: Restaurant[]
   weather?: WeatherData[]
+  emails?: EmailItem[]
   classified?: string[]
   failed?: string[]
   food_path?: IntentPath
@@ -218,7 +220,7 @@ export default function Home() {
               village: profile.village ?? '',
               meal_type: getMealType(profile),
             })
-          : Promise.resolve<CombinedResponse>({ messages: [], restaurants: [], weather: [], failed: [] }),
+          : Promise.resolve<CombinedResponse>({ messages: [], restaurants: [], weather: [], emails: [], failed: [] }),
         hasFood
           ? recommendFood({
               user_id: profile.user_id,
@@ -231,7 +233,7 @@ export default function Home() {
 
       const combined: CombinedResponse = dispatchResult.status === 'fulfilled'
         ? dispatchResult.value
-        : { messages: [], restaurants: [], weather: [], failed: [...nonFoodClassified.bots] }
+        : { messages: [], restaurants: [], weather: [], emails: [], failed: [...nonFoodClassified.bots] }
 
       if (hasFood) {
         if (foodResult.status === 'fulfilled' && foodResult.value) {
@@ -256,6 +258,7 @@ export default function Home() {
         text: reply,
         restaurants: combined.restaurants.length > 0 ? combined.restaurants : undefined,
         weather: combined.weather.length > 0 ? combined.weather : undefined,
+        emails: combined.emails.length > 0 ? combined.emails : undefined,
         classified: classified.bots,
         failed: combined.failed.length > 0 ? combined.failed : undefined,
         food_path: combined.food_path,
@@ -428,6 +431,13 @@ export default function Home() {
             {msg.weather && msg.weather.length > 0 && (
               <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
                 {msg.weather.map((w, i) => <WeatherCard key={i} weather={w} />)}
+              </div>
+            )}
+
+            {/* 이메일 카드 */}
+            {msg.emails && msg.emails.length > 0 && (
+              <div style={{ marginTop: 10, width: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
+                {msg.emails.map((e, i) => <EmailCard key={i} email={e} />)}
               </div>
             )}
 
@@ -695,6 +705,58 @@ function MenuItemRow({ menu, isSelected, onSelect }: { menu: MenuItem; isSelecte
           {isSelected ? '선택됨 ✓' : '선택'}
         </button>
       </div>
+    </div>
+  )
+}
+
+function EmailCard({ email: e }: { email: EmailItem }) {
+  const [expanded, setExpanded] = useState(false)
+
+  return (
+    <div
+      onClick={() => setExpanded(v => !v)}
+      style={{
+        background: 'var(--surface)', border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-md)', padding: 'var(--sp-3) var(--sp-4)',
+        cursor: 'pointer', transition: 'var(--transition)',
+        boxShadow: 'var(--shadow-sm)',
+      }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-2)' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 2 }}>
+            <span style={{
+              fontSize: 10, padding: '1px 6px', borderRadius: 'var(--radius-pill)', fontWeight: 'var(--fw-bold)',
+              background: e.is_new ? 'var(--accent)' : 'var(--surface-2)',
+              color: e.is_new ? 'var(--text-on-accent)' : 'var(--text-muted)',
+              flexShrink: 0,
+            }}>
+              {e.is_new ? '신규' : '기존'}
+            </span>
+            <div style={{
+              color: 'var(--text-strong)', fontSize: 'var(--fs-sm)', fontWeight: 'var(--fw-medium)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: expanded ? 'normal' : 'nowrap',
+            }}>
+              {e.subject || '(제목 없음)'}
+            </div>
+          </div>
+          {e.sender && (
+            <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)' }}>
+              {e.sender}
+            </div>
+          )}
+        </div>
+        <span style={{ color: 'var(--text-faint)', fontSize: 12, flexShrink: 0 }}>{expanded ? '▲' : '▼'}</span>
+      </div>
+      {expanded && e.summary && (
+        <div style={{
+          color: 'var(--text)', fontSize: 'var(--fs-xs)', lineHeight: 'var(--lh-base)',
+          marginTop: 'var(--sp-2)', paddingTop: 'var(--sp-2)',
+          borderTop: '1px solid var(--border)',
+        }}>
+          {e.summary}
+        </div>
+      )}
     </div>
   )
 }

@@ -264,18 +264,36 @@ export default function Settings() {
             회원 탈퇴 시 이름, 위치, 신체 정보 등 개인정보는 즉시 삭제돼요.<br />
             식사 기록, 일기, 일정 등은 서비스 개선을 위해 익명으로 보존될 수 있어요.
           </p>
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            style={{
-              background: 'transparent',
-              border: '1px solid var(--danger)',
-              borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
-              color: 'var(--danger)', fontSize: 'var(--fs-base)', cursor: 'pointer',
-              alignSelf: 'flex-start', transition: 'var(--transition)',
-            }}
-          >
-            회원 탈퇴
-          </button>
+          <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+            <button
+              onClick={async () => {
+                sessionStorage.removeItem('mukgoorm_profile')
+                await supabase.auth.signOut()
+                navigate('/login')
+              }}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--border-strong)',
+                borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
+                color: 'var(--text-muted)', fontSize: 'var(--fs-base)', cursor: 'pointer',
+                transition: 'var(--transition)',
+              }}
+            >
+              로그아웃
+            </button>
+            <button
+              onClick={() => setShowDeleteModal(true)}
+              style={{
+                background: 'transparent',
+                border: '1px solid var(--danger)',
+                borderRadius: 'var(--radius-pill)', padding: 'var(--sp-3) var(--sp-5)',
+                color: 'var(--danger)', fontSize: 'var(--fs-base)', cursor: 'pointer',
+                transition: 'var(--transition)',
+              }}
+            >
+              회원 탈퇴
+            </button>
+          </div>
         </Section>
       </div>
 

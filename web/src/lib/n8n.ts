@@ -46,10 +46,18 @@ export interface ClassifyResult {
   message: string
 }
 
+export interface EmailItem {
+  sender: string
+  subject: string
+  summary: string
+  is_new?: boolean
+}
+
 export interface CombinedResponse {
   messages: string[]
   restaurants: Restaurant[]
   weather: WeatherData[]
+  emails: EmailItem[]
   failed: string[]
   food_path?: IntentPath
   food_description?: string
@@ -66,6 +74,9 @@ const BOT_WEBHOOK: Record<string, string> = {
 }
 
 const DEFAULT_TIMEOUT = 15000
+const BOT_TIMEOUT: Record<string, number> = {
+  이메일: 60000,
+}
 
 const FEEDBACK_WEBHOOK = '/webhook/feedback'
 
@@ -76,7 +87,7 @@ const CLASSIFY_PROMPT = `당신은 사용자 채팅을 분석하는 AI입니다.
 해당되는 봇이 여러 개면 반드시 모두 bots 배열에 포함하세요.
 
 [봇 선택 규칙]
-- 날씨: 날씨, 기온, 미세먼지, 습도, 비, 눈 관련
+- 날씨: 날씨/기온/미세먼지/습도/비/눈을 직접 묻는 경우만 (과거 경험 언급·일기 맥락에서 날씨 언급은 제외)
 - 식사: 음식 섭취, 식사, 음료를 먹었다는 과거 기록
 - 일기: 오늘/과거에 실제로 경험한 일, 감정, 장소 방문
 - 일정: 미래의 약속, 계획, 구체적 행동 예정
@@ -146,7 +157,7 @@ export async function dispatchToWebhooks(
     .map(bot => ({ bot, url: BOT_WEBHOOK[bot] }))
     .filter(e => e.url)
 
-  const combined: CombinedResponse = { messages: [], restaurants: [], weather: [], failed: [] }
+  const combined: CombinedResponse = { messages: [], restaurants: [], weather: [], emails: [], failed: [] }
   if (botEntries.length === 0) return combined
 
   const results = await Promise.allSettled(
@@ -156,7 +167,7 @@ export async function dispatchToWebhooks(
           message?: string
           recommendations?: Restaurant[]
           weather?: WeatherData
-        }>(url, payload, { timeout: DEFAULT_TIMEOUT })
+        }>(url, payload, { timeout: BOT_TIMEOUT[bot] ?? DEFAULT_TIMEOUT })
         .then(r => r.data),
     ),
   )
@@ -170,6 +181,8 @@ export async function dispatchToWebhooks(
       if (recs.length) combined.restaurants.push(...recs)
 
       if (data.weather) combined.weather.push(data.weather as WeatherData)
+
+      if (Array.isArray(data.emails)) combined.emails.push(...(data.emails as EmailItem[]))
 
       if (data.path) combined.food_path = data.path as IntentPath
       if (data.description) combined.food_description = data.description as string
@@ -288,7 +301,7 @@ export async function recommendFood(params: {
   const res = await axios.post<FoodRecommendResponse>(
     '/webhook/food',
     params,
-    { timeout: 10000 },
+    { timeout: 180000 },
   )
   return res.data
 }
