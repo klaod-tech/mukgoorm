@@ -118,6 +118,24 @@ export default function Settings() {
         .delete()
         .eq('user_id', profile.user_id)
       if (delError) throw new Error(delError.message)
+
+      // Supabase Auth 유저 삭제 (service role key 필요 → Edge Function 경유)
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session?.access_token ?? ''}`,
+          },
+        },
+      )
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}))
+        throw new Error(body.error ?? 'Auth 유저 삭제에 실패했어요.')
+      }
+
       sessionStorage.removeItem('mukgoorm_profile')
       await supabase.auth.signOut()
       navigate('/login')
