@@ -4,6 +4,8 @@ import { supabase } from '../lib/supabase'
 import { updateUserProfile } from '../lib/db'
 import { useUser } from '../hooks/useUser'
 
+const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
+
 export default function Settings() {
   const { profile, loading } = useUser()
   const navigate = useNavigate()
@@ -23,6 +25,12 @@ export default function Settings() {
     height: '',
     init_weight: '',
     goal_weight: '',
+    food_preferences: [] as string[],
+    wake_time: '',
+    breakfast_time: '',
+    lunch_time: '',
+    dinner_time: '',
+    snack_time: '',
     email_provider: '네이버',
     email_address: '',
     email_app_pw: '',
