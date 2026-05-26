@@ -88,10 +88,21 @@ function getMealType(profile: {
 
 type EvoState = 'checking' | 'no_worldcup' | 'cube' | 'evolved'
 
+const CHAT_KEY = 'mukgoorm_chat'
+
+function loadCachedMessages(): Message[] {
+  try {
+    const raw = sessionStorage.getItem(CHAT_KEY)
+    return raw ? JSON.parse(raw) : []
+  } catch {
+    return []
+  }
+}
+
 export default function Home() {
   const { user, profile } = useUser()
   const [tamagotchi, setTamagotchi] = useState<Tamagotchi | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
+  const [messages, setMessages] = useState<Message[]>(loadCachedMessages)
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [elapsed, setElapsed] = useState(0)
