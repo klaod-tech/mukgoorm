@@ -108,6 +108,24 @@ n8n 캔버스에서 직접 수정 후 Save → Active 확인.
 ```
 [ ] n8n Railway 배포 (팀 공유 인스턴스)
 [ ] Supabase RLS 정책 설계 (유저별 데이터 격리)
+```
+
+### n8n Railway 배포 상세
+
+현재 n8n은 로컬(localhost:5678)에서만 실행 중 — 팀원 각자 로컬에서 켜야 webhook이 동작함.
+
+**목표**: Railway에 n8n을 배포해 팀 공유 인스턴스로 운영.
+
+**배포 시 체크리스트**:
+- Railway 프로젝트 생성 → n8n Docker 이미지 배포
+- 환경변수 설정: `N8N_BASIC_AUTH_USER`, `N8N_BASIC_AUTH_PASSWORD`, `N8N_HOST`, `WEBHOOK_URL`
+- Supabase URL/Key, OpenAI API Key, IMAP 계정 정보 등 시크릿 이전
+- React `vite.config.ts` proxy 설정 → Railway URL로 변경 (또는 VITE_N8N_BASE_URL 환경변수화)
+- 기존 워크플로우(n8nV8.json) import 후 Active 확인
+- IMAP 노드 — Railway 서버 IP가 이메일 제공사 방화벽에 차단되지 않는지 확인
+
+```
+[ ] Supabase RLS 정책 설계 (유저별 데이터 격리)
 [✅] 이메일 webhook 연동 — n8n EmailBOT + React 카드 표시 + Supabase 저장 완료
 [ ] PWA vs Electron 패키징 방향 결정
 [ ] 회원탈퇴 후 재로그인 버그 수정 (구현은 완료, 실제 테스트 필요)
