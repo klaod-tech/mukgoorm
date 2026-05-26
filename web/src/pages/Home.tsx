@@ -362,8 +362,8 @@ export default function Home() {
     <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxWidth: 680, margin: '0 auto' }}>
 
       {/* 캐릭터 헤더 */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', padding: 'var(--sp-5) 0 var(--sp-3)' }}>
-        <img src={characterImage} alt="캐릭터" style={{ width: 100, height: 100, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0 }} />
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-5)', padding: '10px 0 var(--sp-3)' }}>
+        <img src={characterImage} alt="캐릭터" style={{ width: 128, height: 128, objectFit: 'contain', imageRendering: 'pixelated', flexShrink: 0 }} />
         <div>
           <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{profile?.tamagotchi_name}의 오늘</div>
           <div style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-md)', marginTop: 4 }}>

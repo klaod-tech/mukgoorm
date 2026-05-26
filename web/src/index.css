@@ -23,3 +23,14 @@ body {
   0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
   40%           { transform: scale(1); opacity: 1; }
 }
+
+/* 스크롤바 스타일 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-faint); }
+::-webkit-scrollbar-button { display: none; }
