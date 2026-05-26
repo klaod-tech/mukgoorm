@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { createUserProfile } from '../lib/db'
 import TimePickerDial from '../components/TimePickerDial'
-import { T } from '../lib/theme'
 
 const STEPS = ['캐릭터', '위치', '신체·식단', '시간설정', '이메일']
 
@@ -97,35 +96,39 @@ export default function Onboarding() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: T.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--sp-4)' }}>
       <div style={{
-        background: T.surface,
-        border: `1px solid ${T.border}`,
-        borderRadius: 16,
-        padding: 40,
+        background: 'var(--surface)',
+        border: '1px solid var(--border)',
+        borderRadius: 'var(--radius-lg)',
+        padding: 'var(--sp-10)',
         width: 440,
         display: 'flex',
         flexDirection: 'column',
-        gap: 24,
-        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+        gap: 'var(--sp-6)',
+        boxShadow: 'var(--shadow-md)',
       }}>
 
         {/* 진행 바 */}
         <div style={{ display: 'flex', gap: 6 }}>
           {STEPS.map((_, i) => (
-            <div key={i} style={{ flex: 1, height: 4, borderRadius: 2, background: i <= step ? T.accent : T.border }} />
+            <div key={i} style={{
+              flex: 1, height: 4, borderRadius: 2,
+              background: i <= step ? 'var(--accent)' : 'var(--border)',
+              transition: 'var(--transition)',
+            }} />
           ))}
         </div>
 
         <div>
-          <h2 style={{ color: T.text, margin: '0 0 4px', fontSize: 20 }}>
+          <h2 style={{ color: 'var(--text-strong)', margin: '0 0 4px', fontSize: 'var(--fs-lg)' }}>
             {step === 0 && '🐾 캐릭터 이름을 정해줘요'}
             {step === 1 && '📍 어디에 살고 있어요?'}
-            {step === 2 && <span>⚖️ 신체 정보 & 식단 <span style={{ color: T.text3, fontSize: 14, fontWeight: 400 }}>(선택)</span></span>}
+            {step === 2 && <span>⚖️ 신체 정보 & 식단 <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)', fontWeight: 400 }}>(선택)</span></span>}
             {step === 3 && '⏰ 하루 일정을 알려줘요'}
             {step === 4 && '📧 이메일 설정 (선택)'}
           </h2>
-          <p style={{ color: T.text2, margin: 0, fontSize: 13 }}>{STEPS[step]} 단계 ({step + 1}/{STEPS.length})</p>
+          <p style={{ color: 'var(--text-muted)', margin: 0, fontSize: 'var(--fs-sm)' }}>{STEPS[step]} 단계 ({step + 1}/{STEPS.length})</p>
         </div>
 
         {step === 0 && (
@@ -140,7 +143,7 @@ export default function Onboarding() {
         )}
 
         {step === 1 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
             <input
               placeholder="도시 (예: 아산시)"
               value={form.city}
@@ -157,19 +160,19 @@ export default function Onboarding() {
               onKeyDown={e => { if (e.key === 'Enter') handleNext() }}
               style={inputStyle}
             />
-            <p style={{ color: T.text3, fontSize: 12, margin: 0 }}>도시는 날씨, 동 주소는 맛집 추천에 사용돼요. 맛집 추천 시 별도 장소를 말하지 않으면 여기 기준으로 찾아줘요.</p>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', margin: 0 }}>도시는 날씨, 동 주소는 맛집 추천에 사용돼요. 맛집 추천 시 별도 장소를 말하지 않으면 여기 기준으로 찾아줘요.</p>
             <div style={{
-              background: T.accentBg,
-              border: `1px solid ${T.accent}44`,
-              borderRadius: 8,
-              padding: '12px 14px',
+              background: 'var(--accent-soft)',
+              border: '1px solid var(--border-strong)',
+              borderRadius: 'var(--radius-sm)',
+              padding: 'var(--sp-3) var(--sp-4)',
               display: 'flex',
-              gap: 10,
+              gap: 'var(--sp-3)',
               alignItems: 'flex-start',
             }}>
               <span style={{ fontSize: 16, flexShrink: 0 }}>⚠️</span>
-              <p style={{ color: T.text2, fontSize: 12, margin: 0, lineHeight: 1.7 }}>
-                현재 맛집 DB는 <strong style={{ color: T.accent }}>아산시 탕정면</strong> 지역만 등록되어 있어요.<br />
+              <p style={{ color: 'var(--text)', fontSize: 'var(--fs-xs)', margin: 0, lineHeight: 'var(--lh-base)' }}>
+                현재 맛집 DB는 <strong style={{ color: 'var(--accent-ink)' }}>아산시 탕정면</strong> 지역만 등록되어 있어요.<br />
                 다른 지역을 입력하면 날씨는 정상 동작하지만, 맛집 추천은 결과가 없을 수 있어요.
               </p>
             </div>
@@ -177,12 +180,12 @@ export default function Onboarding() {
         )}
 
         {step === 2 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             <div>
-              <p style={{ color: T.text2, fontSize: 13, margin: '0 0 8px' }}>성별</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => set('gender', 'male')} style={{ ...genderBtn, flex: 1, background: form.gender === 'male' ? T.accent : T.surface2, color: form.gender === 'male' ? '#fff' : T.text }}>남성</button>
-                <button onClick={() => set('gender', 'female')} style={{ ...genderBtn, flex: 1, background: form.gender === 'female' ? T.accent : T.surface2, color: form.gender === 'female' ? '#fff' : T.text }}>여성</button>
+              <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', margin: '0 0 8px' }}>성별</p>
+              <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
+                <button onClick={() => set('gender', 'male')} style={{ ...toggleBtn, flex: 1, background: form.gender === 'male' ? 'var(--accent)' : 'var(--surface-2)', color: form.gender === 'male' ? 'var(--text-on-accent)' : 'var(--text)' }}>남성</button>
+                <button onClick={() => set('gender', 'female')} style={{ ...toggleBtn, flex: 1, background: form.gender === 'female' ? 'var(--accent)' : 'var(--surface-2)', color: form.gender === 'female' ? 'var(--text-on-accent)' : 'var(--text)' }}>여성</button>
               </div>
             </div>
             <input placeholder="나이" type="number" value={form.age} onChange={e => set('age', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleNext()} style={inputStyle} />
@@ -193,16 +196,16 @@ export default function Onboarding() {
         )}
 
         {step === 3 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-4)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ color: T.text2, fontSize: 13 }}>기상 시간</span>
+              <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>기상 시간</span>
               <TimePickerDial value={form.wake_time} onChange={v => set('wake_time', v)} />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div style={{ flex: 1, height: 1, background: T.border }} />
-              <span style={{ color: T.text3, fontSize: 11 }}>식사 시간</span>
-              <div style={{ flex: 1, height: 1, background: T.border }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)' }}>식사 시간</span>
+              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
             </div>
 
             {[
@@ -211,7 +214,7 @@ export default function Onboarding() {
               { label: '저녁 식사', key: 'dinner_time' },
             ].map(({ label, key }) => (
               <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ color: T.text2, fontSize: 13 }}>{label}</span>
+                <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{label}</span>
                 <TimePickerDial
                   value={form[key as keyof typeof form] as string}
                   onChange={v => set(key, v)}
@@ -222,29 +225,29 @@ export default function Onboarding() {
         )}
 
         {step === 4 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <p style={{ color: T.text3, fontSize: 12, margin: 0 }}>이메일 알림을 받으려면 입력해요. 나중에 설정에서도 변경 가능해요.</p>
-            <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', margin: 0 }}>이메일 알림을 받으려면 입력해요. 나중에 설정에서도 변경 가능해요.</p>
+            <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
               {['네이버', '구글'].map(p => (
-                <button key={p} onClick={() => set('email_provider', p)} style={{ ...genderBtn, flex: 1, background: form.email_provider === p ? T.accent : T.surface2, color: form.email_provider === p ? '#fff' : T.text }}>{p}</button>
+                <button key={p} onClick={() => set('email_provider', p)} style={{ ...toggleBtn, flex: 1, background: form.email_provider === p ? 'var(--accent)' : 'var(--surface-2)', color: form.email_provider === p ? 'var(--text-on-accent)' : 'var(--text)' }}>{p}</button>
               ))}
             </div>
             <input placeholder="이메일 주소" type="email" value={form.email_address} onChange={e => set('email_address', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleFinish()} style={inputStyle} />
             <input placeholder="앱 비밀번호" type="password" value={form.email_app_pw} onChange={e => set('email_app_pw', e.target.value)} onKeyDown={e => e.key === 'Enter' && handleFinish()} style={inputStyle} />
-            <p style={{ color: T.text3, fontSize: 11, margin: 0 }}>앱 비밀번호: 네이버 → 보안설정 → 2단계 인증 → 앱 비밀번호</p>
+            <p style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)', margin: 0 }}>앱 비밀번호: 네이버 → 보안설정 → 2단계 인증 → 앱 비밀번호</p>
           </div>
         )}
 
-        {error && <p style={{ color: T.danger, fontSize: 13, margin: 0 }}>{error}</p>}
+        {error && <p style={{ color: 'var(--danger)', fontSize: 'var(--fs-sm)', margin: 0 }}>{error}</p>}
 
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 'var(--sp-2)' }}>
           {step > 0 && (
-            <button onClick={() => setStep(s => s - 1)} style={{ ...buttonStyle, background: T.surface2, color: T.text, flex: 1 }}>이전</button>
+            <button onClick={() => setStep(s => s - 1)} style={{ ...secondaryBtn, flex: 1 }}>이전</button>
           )}
           {step < STEPS.length - 1 ? (
-            <button onClick={handleNext} style={{ ...buttonStyle, flex: 1 }}>다음</button>
+            <button onClick={handleNext} style={{ ...primaryBtn, flex: 1 }}>다음</button>
           ) : (
-            <button onClick={handleFinish} disabled={loading} style={{ ...buttonStyle, flex: 1 }}>
+            <button onClick={handleFinish} disabled={loading} style={{ ...primaryBtn, flex: 1, opacity: loading ? 0.7 : 1 }}>
               {loading ? '저장 중...' : '시작하기 🎉'}
             </button>
           )}
@@ -255,32 +258,47 @@ export default function Onboarding() {
 }
 
 const inputStyle: React.CSSProperties = {
-  background: T.surface2,
-  border: `1px solid ${T.border}`,
-  borderRadius: 8,
-  padding: '12px 16px',
-  color: T.text,
-  fontSize: 14,
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: 'var(--sp-3) var(--sp-4)',
+  color: 'var(--text)',
+  fontSize: 'var(--fs-base)',
   outline: 'none',
   width: '100%',
   boxSizing: 'border-box',
 }
 
-const buttonStyle: React.CSSProperties = {
-  background: T.accent,
+const primaryBtn: React.CSSProperties = {
+  background: 'var(--accent)',
   border: 'none',
-  borderRadius: 8,
-  padding: '12px 16px',
-  color: '#fff',
-  fontSize: 14,
-  fontWeight: 600,
+  borderRadius: 'var(--radius-pill)',
+  padding: 'var(--sp-3) var(--sp-5)',
+  color: 'var(--text-on-accent)',
+  fontSize: 'var(--fs-base)',
+  fontWeight: 'var(--fw-bold)',
   cursor: 'pointer',
+  boxShadow: 'var(--shadow-accent)',
+  transition: 'var(--transition)',
 }
 
-const genderBtn: React.CSSProperties = {
-  border: `1px solid ${T.border}`,
-  borderRadius: 8,
-  padding: '12px',
-  fontSize: 14,
+const secondaryBtn: React.CSSProperties = {
+  background: 'var(--surface-2)',
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-pill)',
+  padding: 'var(--sp-3) var(--sp-5)',
+  color: 'var(--text)',
+  fontSize: 'var(--fs-base)',
+  fontWeight: 'var(--fw-medium)',
   cursor: 'pointer',
+  transition: 'var(--transition)',
+}
+
+const toggleBtn: React.CSSProperties = {
+  border: '1px solid var(--border)',
+  borderRadius: 'var(--radius-sm)',
+  padding: 'var(--sp-3)',
+  fontSize: 'var(--fs-base)',
+  cursor: 'pointer',
+  transition: 'var(--transition)',
 }
