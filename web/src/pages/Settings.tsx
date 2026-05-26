@@ -4,8 +4,6 @@ import { supabase } from '../lib/supabase'
 import { updateUserProfile } from '../lib/db'
 import { useUser } from '../hooks/useUser'
 
-const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
-
 export default function Settings() {
   const { profile, loading } = useUser()
   const navigate = useNavigate()
