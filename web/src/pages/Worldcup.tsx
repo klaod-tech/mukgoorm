@@ -237,9 +237,16 @@ export default function Worldcup() {
 
       // 초기 데이터 수집용이므로 낮은 점수 적용: 승리 +0.3, 탈락 -0.1
       const deltaMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
+      const matchCountMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
       results.forEach(r => {
-        if (r.winner_category in deltaMap) deltaMap[r.winner_category] += 0.3
-        if (r.loser_category in deltaMap) deltaMap[r.loser_category] -= 0.1
+        if (r.winner_category in deltaMap) {
+          deltaMap[r.winner_category] += 0.3
+          matchCountMap[r.winner_category] += 1
+        }
+        if (r.loser_category in deltaMap) {
+          deltaMap[r.loser_category] -= 0.1
+          matchCountMap[r.loser_category] += 1
+        }
       })
 
       const now = new Date().toISOString()
@@ -249,12 +256,12 @@ export default function Worldcup() {
           user_id: userId,
           category: cat,
           logit: Math.max(-10, Math.min(10, Math.round(raw * 1000) / 1000)),
-          sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,
+          sample_count: (currentMap[cat]?.sample_count ?? 0) + matchCountMap[cat],
           updated_at: now,
         }
       })
 
-      await Promise.all([
+      const [logitResult, sessionResult] = await Promise.all([
         supabase.from('user_preference_logits').upsert(rows, { onConflict: 'user_id,category' }),
         supabase.from('worldcup_sessions').insert({
           user_id: userId,
@@ -263,6 +270,9 @@ export default function Worldcup() {
           completed: true,
         }),
       ])
+
+      if (logitResult.error) throw new Error(`점수 저장 실패: ${logitResult.error.message}`)
+      if (sessionResult.error) throw new Error(`결과 저장 실패: ${sessionResult.error.message}`)
 
       const T = 1.5, EPS = 0.1, K = 7
       let expSum = 0
