@@ -4,8 +4,6 @@ import { supabase } from '../lib/supabase'
 import { updateUserProfile } from '../lib/db'
 import { useUser } from '../hooks/useUser'
 
-const PREFERENCE_OPTIONS = ['한식', '일식', '중식', '양식', '채식', '고단백']
-
 export default function Settings() {
   const { profile, loading } = useUser()
   const navigate = useNavigate()
@@ -193,41 +191,21 @@ export default function Settings() {
           </div>
         </Section>
 
-        {/* 식단 */}
-        <Section title="🥗 식단 설정">
-          <Field label="음식 선호도">
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--sp-2)' }}>
-              {PREFERENCE_OPTIONS.map(opt => (
-                <TagBtn key={opt} label={opt} active={form.food_preferences.includes(opt)} onClick={() => toggleArray('food_preferences', opt)} />
-              ))}
-            </div>
-          </Field>
-        </Section>
-
         {/* 시간 설정 */}
         <Section title="⏰ 시간 설정">
           {[
-            { label: '기상 시간', key: 'wake_time', required: true },
-            { label: '아침 식사', key: 'breakfast_time', required: true },
-            { label: '점심 식사', key: 'lunch_time', required: true },
-            { label: '저녁 식사', key: 'dinner_time', required: true },
-            { label: '간식 시간', key: 'snack_time', required: false },
-          ].map(({ label, key, required }) => (
-            <Field key={key} label={label + (!required ? ' (선택)' : '')}>
-              <div style={{ display: 'flex', gap: 'var(--sp-2)', alignItems: 'center' }}>
-                <input
-                  type="time"
-                  value={form[key as keyof typeof form] as string}
-                  onChange={e => set(key, e.target.value)}
-                  style={{ ...inputStyle, flex: 1 }}
-                />
-                {!required && form[key as keyof typeof form] && (
-                  <button
-                    onClick={() => set(key, '')}
-                    style={{ background: 'none', border: 'none', color: 'var(--text-faint)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}
-                  >✕</button>
-                )}
-              </div>
+            { label: '기상 시간', key: 'wake_time' },
+            { label: '아침 식사', key: 'breakfast_time' },
+            { label: '점심 식사', key: 'lunch_time' },
+            { label: '저녁 식사', key: 'dinner_time' },
+          ].map(({ label, key }) => (
+            <Field key={key} label={label}>
+              <input
+                type="time"
+                value={form[key as keyof typeof form] as string}
+                onChange={e => set(key, e.target.value)}
+                style={inputStyle}
+              />
             </Field>
           ))}
         </Section>
