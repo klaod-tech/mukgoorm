@@ -66,7 +66,7 @@ FOODS = [
     {'name': '타코야키',  'id': 'takoyaki'},
     {'name': '텐동',     'id': 'tendon'},
     {'name': '야키토리',  'id': 'yakitori'},
-    {'name': '오마카세',  'id': 'omakase'},
+    {'name': '가츠동',    'id': 'katsudon'},
     # ── 디저트 8개
     {'name': '아이스크림', 'id': 'icecream'},
     {'name': '케이크',    'id': 'cake'},
