@@ -33,32 +33,37 @@ export default function Diary() {
     load()
   }, [user])
 
-  if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
+  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 'var(--sp-6)' }}>로딩 중...</div>
 
   return (
     <div style={{ maxWidth: 600, margin: '0 auto' }}>
-      <h2 style={{ color: '#fff', margin: '0 0 24px', fontSize: 20 }}>📔 일기</h2>
+      <h2 style={{ color: 'var(--text-strong)', margin: '0 0 var(--sp-6)', fontSize: 'var(--fs-xl)' }}>📔 일기</h2>
       {entries.length === 0 ? (
-        <div style={{ color: '#555', fontSize: 14 }}>작성된 일기가 없어요.</div>
+        <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-base)' }}>작성된 일기가 없어요.</div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)' }}>
           {entries.map(entry => (
             <div
               key={entry.id}
               onClick={() => setExpanded(expanded === entry.id ? null : entry.id)}
-              style={{ background: '#1a1a2e', borderRadius: 12, padding: 20, cursor: 'pointer' }}
+              style={{
+                background: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 'var(--radius-md)', padding: 'var(--sp-5)',
+                cursor: 'pointer', boxShadow: 'var(--shadow-sm)', transition: 'var(--transition)',
+              }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ color: '#fff', fontWeight: 600, fontSize: 15 }}>{entry.date}</span>
-                <span style={{ color: '#555', fontSize: 12 }}>{expanded === entry.id ? '▲' : '▼'}</span>
+                <span style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-md)' }}>{entry.date}</span>
+                <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)' }}>{expanded === entry.id ? '▲' : '▼'}</span>
               </div>
               {entry.summary && (
-                <div style={{ color: '#aaa', fontSize: 13, marginTop: 6 }}>{entry.summary}</div>
+                <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 6 }}>{entry.summary}</div>
               )}
               {expanded === entry.id && (
                 <div style={{
-                  color: '#ccc', fontSize: 14, marginTop: 12, lineHeight: 1.7,
-                  whiteSpace: 'pre-wrap', borderTop: '1px solid #2a2a4a', paddingTop: 12,
+                  color: 'var(--text)', fontSize: 'var(--fs-base)', marginTop: 'var(--sp-3)',
+                  lineHeight: 'var(--lh-base)', whiteSpace: 'pre-wrap',
+                  borderTop: '1px solid var(--border)', paddingTop: 'var(--sp-3)',
                 }}>
                   {entry.content}
                 </div>

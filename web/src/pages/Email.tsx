@@ -36,54 +36,56 @@ export default function Email() {
     load()
   }, [user])
 
-  if (loading) return <div style={{ color: '#aaa', padding: 24 }}>로딩 중...</div>
+  if (loading) return <div style={{ color: 'var(--text-muted)', padding: 'var(--sp-6)' }}>로딩 중...</div>
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto' }}>
-      <h2 style={{ color: '#fff', margin: '0 0 4px', fontSize: 20 }}>📧 이메일 모니터링</h2>
-      <div style={{ color: '#555', fontSize: 13, marginBottom: 28 }}>
+      <h2 style={{ color: 'var(--text-strong)', margin: '0 0 4px', fontSize: 'var(--fs-xl)' }}>📧 이메일 모니터링</h2>
+      <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)', marginBottom: 'var(--sp-8)' }}>
         채팅에서 "이메일 확인해줘"라고 말하면 여기에 요약이 저장돼요
       </div>
 
       {logs.length === 0 ? (
         <div style={{
-          background: '#1a1a2e', border: '1px dashed #2a2a4a',
-          borderRadius: 14, padding: '40px 24px', textAlign: 'center',
+          background: 'var(--surface)', border: '1px dashed var(--border-strong)',
+          borderRadius: 'var(--radius-lg)', padding: '40px var(--sp-6)', textAlign: 'center',
+          boxShadow: 'var(--shadow-sm)',
         }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>📭</div>
-          <div style={{ color: '#aaa', fontSize: 14, marginBottom: 6 }}>아직 이메일 기록이 없어요</div>
-          <div style={{ color: '#555', fontSize: 13 }}>
+          <div style={{ fontSize: 40, marginBottom: 'var(--sp-3)' }}>📭</div>
+          <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-base)', marginBottom: 6 }}>아직 이메일 기록이 없어요</div>
+          <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)' }}>
             홈 채팅에서 "이메일 확인해줘"라고 말해보세요
           </div>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-2)' }}>
           {logs.map(log => (
             <div
               key={log.id}
               onClick={() => setExpanded(expanded === log.id ? null : log.id)}
               style={{
-                background: '#1a1a2e',
-                border: `1px solid ${expanded === log.id ? '#6c63ff' : '#2a2a4a'}`,
-                borderRadius: 12, padding: '14px 18px',
-                cursor: 'pointer', transition: 'border-color 0.15s',
+                background: 'var(--surface)',
+                border: `1px solid ${expanded === log.id ? 'var(--accent)' : 'var(--border)'}`,
+                borderRadius: 'var(--radius-md)', padding: 'var(--sp-4) var(--sp-5)',
+                cursor: 'pointer', transition: 'var(--transition)',
+                boxShadow: expanded === log.id ? 'var(--shadow-accent)' : 'var(--shadow-sm)',
               }}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 'var(--sp-3)' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{
-                    color: '#fff', fontSize: 14, fontWeight: 600,
+                    color: 'var(--text-strong)', fontSize: 'var(--fs-base)', fontWeight: 'var(--fw-medium)',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
                     {log.subject ?? '(제목 없음)'}
                   </div>
                   {log.sender && (
-                    <div style={{ color: '#888', fontSize: 12, marginTop: 3 }}>
+                    <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 3 }}>
                       보낸 사람: {log.sender}
                     </div>
                   )}
                 </div>
-                <div style={{ color: '#555', fontSize: 11, flexShrink: 0 }}>
+                <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)', flexShrink: 0 }}>
                   {log.received_at
                     ? new Date(log.received_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
                     : new Date(log.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
@@ -92,15 +94,15 @@ export default function Email() {
 
               {expanded === log.id && log.summary && (
                 <div style={{
-                  color: '#bbb', fontSize: 13, lineHeight: 1.7,
-                  marginTop: 12, paddingTop: 12,
-                  borderTop: '1px solid #2a2a4a',
+                  color: 'var(--text)', fontSize: 'var(--fs-sm)', lineHeight: 'var(--lh-base)',
+                  marginTop: 'var(--sp-3)', paddingTop: 'var(--sp-3)',
+                  borderTop: '1px solid var(--border)',
                 }}>
                   {log.summary}
                 </div>
               )}
               {expanded === log.id && !log.summary && (
-                <div style={{ color: '#555', fontSize: 13, marginTop: 10 }}>
+                <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-sm)', marginTop: 'var(--sp-3)' }}>
                   요약 정보가 없어요
                 </div>
               )}
