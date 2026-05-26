@@ -72,7 +72,7 @@ const FOOD_POOL: Food[] = [
   { name: '타코야키',   category: '일식',   image: '/foods/takoyaki.png' },
   { name: '텐동',      category: '일식',   image: '/foods/tendon.png' },
   { name: '야키토리',   category: '일식',   image: '/foods/yakitori.png' },
-  { name: '오마카세',   category: '일식',   image: '/foods/omakase.png' },
+  { name: '가츠동',     category: '일식',   image: '/foods/katsudon.png' },
   // ── 디저트 8개
   { name: '아이스크림',  category: '디저트', image: '/foods/icecream.png' },
   { name: '케이크',     category: '디저트', image: '/foods/cake.png' },
