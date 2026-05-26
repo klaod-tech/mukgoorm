@@ -363,11 +363,13 @@ export default function Home() {
           <div style={{ color: '#fff', fontSize: 15, marginTop: 4 }}>
             {loading
               ? '생각 중...'
-              : evoState === 'no_worldcup'
-                ? '월드컵을 완료해야 캐릭터가 태어나요 🥚'
-                : evoState === 'cube'
-                  ? 'AI가 나만의 캐릭터를 만드는 중... 🌀'
-                  : '날씨, 식사, 일정, 맛집 뭐든지 물어봐 🌧️'}
+              : evoState === 'checking'
+                ? '불러오는 중...'
+                : evoState === 'no_worldcup'
+                  ? '월드컵을 완료해야 캐릭터가 태어나요 🥚'
+                  : evoState === 'cube'
+                    ? 'AI가 나만의 캐릭터를 만드는 중... 🌀'
+                    : '날씨, 식사, 일정, 맛집 뭐든지 물어봐 🌧️'}
           </div>
         </div>
       </div>
