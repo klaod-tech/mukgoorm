@@ -54,12 +54,11 @@ function buildPrompt(topCategory: string, expression: string): string {
 }
 
 async function uploadToStorage(userId: string, state: string, imageUrl: string): Promise<string> {
-  const blob = await fetch(imageUrl).then(r => r.blob())
+  const response = await fetch(imageUrl)
+  const blob = await response.blob()
   const path = `${userId}/${state}.png`
-  await supabase.storage.from('character-images').upload(path, blob, {
-    contentType: 'image/png',
-    upsert: true,
-  })
+  const { error } = await supabase.storage.from('character-images').upload(path, blob, { upsert: true })
+  if (error) throw new Error(error.message)
   return supabase.storage.from('character-images').getPublicUrl(path).data.publicUrl
 }
 
