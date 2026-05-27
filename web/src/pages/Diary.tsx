@@ -15,6 +15,11 @@ export default function Diary() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
+  async function deleteEntry(id: string) {
+    setEntries(prev => prev.filter(e => e.id !== id))
+    await supabase.from('diary').delete().eq('id', id)
+  }
+
   useEffect(() => {
     if (!user) return
     const load = async () => {
@@ -54,7 +59,13 @@ export default function Diary() {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ color: 'var(--text-strong)', fontWeight: 'var(--fw-bold)', fontSize: 'var(--fs-md)' }}>{entry.date}</span>
-                <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)' }}>{expanded === entry.id ? '▲' : '▼'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                  <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)' }}>{expanded === entry.id ? '▲' : '▼'}</span>
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteEntry(entry.id) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 16, padding: '2px 4px' }}
+                  >🗑️</button>
+                </div>
               </div>
               {entry.summary && (
                 <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 6 }}>{entry.summary}</div>

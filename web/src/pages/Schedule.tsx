@@ -41,6 +41,11 @@ export default function Schedule() {
     }
   }
 
+  async function deleteItem(id: string) {
+    setItems(prev => prev.filter(i => i.id !== id))
+    await supabase.from('schedule').delete().eq('id', id)
+  }
+
   const todo = items.filter(i => !i.is_done)
   const done = items.filter(i => i.is_done)
 
@@ -86,6 +91,14 @@ export default function Schedule() {
                   <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-xs)', marginTop: 4 }}>{item.description}</div>
                 )}
               </div>
+              <button
+                onClick={() => deleteItem(item.id)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--text-faint)', fontSize: 16, padding: '2px 4px',
+                  flexShrink: 0, transition: 'var(--transition)',
+                }}
+              >🗑️</button>
             </div>
           ))}
         </div>

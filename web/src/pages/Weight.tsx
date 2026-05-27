@@ -15,6 +15,11 @@ export default function Weight() {
   const [logs, setLogs] = useState<WeightLog[]>([])
   const [loading, setLoading] = useState(true)
 
+  async function deleteLog(id: string) {
+    setLogs(prev => prev.filter(l => l.id !== id))
+    await supabase.from('weight_log').delete().eq('id', id)
+  }
+
   useEffect(() => {
     if (!user) return
     const load = async () => {
@@ -90,6 +95,10 @@ export default function Weight() {
               <div style={{ display: 'flex', gap: 'var(--sp-4)', alignItems: 'center' }}>
                 {log.bmi && <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>BMI {log.bmi}</span>}
                 <span style={{ color: 'var(--text-strong)', fontSize: 'var(--fs-md)', fontWeight: 'var(--fw-bold)' }}>{log.weight} kg</span>
+                <button
+                  onClick={() => deleteLog(log.id)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 16, padding: '2px 4px' }}
+                >🗑️</button>
               </div>
             </div>
           ))}

@@ -17,6 +17,11 @@ export default function Email() {
   const [loading, setLoading] = useState(true)
   const [expanded, setExpanded] = useState<string | null>(null)
 
+  async function deleteLog(id: string) {
+    setLogs(prev => prev.filter(l => l.id !== id))
+    await supabase.from('email_log').delete().eq('id', id)
+  }
+
   useEffect(() => {
     if (!user) return
     const load = async () => {
@@ -85,10 +90,16 @@ export default function Email() {
                     </div>
                   )}
                 </div>
-                <div style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)', flexShrink: 0 }}>
-                  {log.received_at
-                    ? new Date(log.received_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
-                    : new Date(log.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', flexShrink: 0 }}>
+                  <span style={{ color: 'var(--text-faint)', fontSize: 'var(--fs-xs)' }}>
+                    {log.received_at
+                      ? new Date(log.received_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })
+                      : new Date(log.created_at).toLocaleDateString('ko-KR', { month: 'short', day: 'numeric' })}
+                  </span>
+                  <button
+                    onClick={e => { e.stopPropagation(); deleteLog(log.id) }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 16, padding: '2px 4px' }}
+                  >🗑️</button>
                 </div>
               </div>
 

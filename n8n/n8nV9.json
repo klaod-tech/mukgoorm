@@ -1,0 +1,4106 @@
+{
+  "name": "n8n V7",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('날씨 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -2832
+      ],
+      "id": "7477f86b-86d1-4a34-b255-2e4cb257e20e",
+      "name": "날씨",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('식사 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -2080
+      ],
+      "id": "08fd8ea7-f8e2-47ad-a026-d94140b75885",
+      "name": "식사",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('이메일 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -2416
+      ],
+      "id": "8971e9f3-47a3-4be6-abe8-dddadc5cdf1f",
+      "name": "이메일",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "diary",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('일기 입력').item.json.body.user_id }}"
+            },
+            {
+              "keyName": "date",
+              "condition": "eq",
+              "keyValue": "={{ $('일기 입력').item.json.body.date }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -1744
+      ],
+      "id": "b77aaf32-49d7-4125-85d4-4c8d47f118b1",
+      "name": "일기",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "schedule",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('일정 입력').item.json.body.user_id }}"
+            },
+            {
+              "keyName": "date",
+              "condition": "gte",
+              "keyValue": "={{ $('일정 입력').item.json.body.date }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -1392
+      ],
+      "id": "76f525eb-62bc-40e4-aaeb-f4f131e19e08",
+      "name": "일정",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1696,
+        -2656
+      ],
+      "id": "fbb67b95-3eb8-42c9-a2ac-e063f0346bb4",
+      "name": "OpenAI Chat Model4",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2464,
+        -2256
+      ],
+      "id": "07648975-0041-4f98-8306-d6a3b2aa4e52",
+      "name": "OpenAI Chat Model5",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('체중 관리 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -1024
+      ],
+      "id": "4269d51b-cf58-4d28-9e36-30b3c9415251",
+      "name": "체중 관리",
+      "alwaysOutputData": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2848,
+        -1920
+      ],
+      "id": "841035a3-bf4b-43fd-ba36-3368e15dc5bb",
+      "name": "OpenAI Chat Model7",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2848,
+        -1232
+      ],
+      "id": "f734ed90-e78b-4f5f-836a-ddceee91da7b",
+      "name": "OpenAI Chat Model6",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -2864,
+        -848
+      ],
+      "id": "39e7ff5f-4b39-43fa-9354-2953dd2529f3",
+      "name": "OpenAI Chat Model8",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "61c3e6ef-2aca-4688-a6e6-4fcb3604f142",
+              "leftValue": "={{ $('일기 입력').item.json.body.is_update }}",
+              "rightValue": "=$('일기 입력').item.json.body.date",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2480,
+        -1744
+      ],
+      "id": "95052bf4-65df-4eb5-b724-9c8d223792a6",
+      "name": "정보 수정 여부3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c11a2117-d600-4964-a0d1-bd9a0dbf1517",
+              "leftValue": "={{ $('일정 입력').item.json.body.is_update }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2480,
+        -1392
+      ],
+      "id": "5b93f982-c538-4262-88e3-4d8dfd8539ed",
+      "name": "정보 수정 여부4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f4fba71-b64e-4077-86ef-31f2ce0829bb",
+              "name": "=city",
+              "value": "={{ $json.city }}",
+              "type": "string"
+            },
+            {
+              "id": "6533784d-6462-4671-a047-833f44e9b434",
+              "name": "village",
+              "value": "={{ $json.village }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3136,
+        -2832
+      ],
+      "id": "a4581740-b465-4e05-adcc-8fa1886b6c07",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2e37d405-12db-4c75-99e4-f7b388b0c6ff",
+              "name": "email_provider",
+              "value": "={{ $json.email_provider }}",
+              "type": "string"
+            },
+            {
+              "id": "08329724-6812-417e-ab71-b4a77ea607fb",
+              "name": "email_address",
+              "value": "={{ $json.email_address }}",
+              "type": "string"
+            },
+            {
+              "id": "cac79e59-c304-4c46-bf91-e99abf41538f",
+              "name": "email_app_pw",
+              "value": "={{ $json.email_app_pw }}",
+              "type": "string"
+            },
+            {
+              "id": "940e35e7-be7d-4af1-9fdc-32b3c89ccc21",
+              "name": "email_last_uid",
+              "value": "={{ $json.email_last_uid }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3136,
+        -2416
+      ],
+      "id": "afd4cbc9-8134-4213-87c7-396165d9a3a4",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4a72e9f3-ec0b-4cbe-8f3c-e145a785f162",
+              "name": "breakfast_time",
+              "value": "={{ $json.breakfast_time }}",
+              "type": "string"
+            },
+            {
+              "id": "0eaa2050-51ba-41b4-b014-9f9be4da0ba9",
+              "name": "lunch_time",
+              "value": "={{ $json.lunch_time }}",
+              "type": "string"
+            },
+            {
+              "id": "0d39361f-dc91-4e94-acf3-1f6987d471a1",
+              "name": "dinner_time",
+              "value": "={{ $json.dinner_time }}",
+              "type": "string"
+            },
+            {
+              "id": "d2bd5f3e-ab04-4950-b7f7-a1cb1131b3e2",
+              "name": "snack_time",
+              "value": "={{ $json.snack_time }}",
+              "type": "string"
+            },
+            {
+              "id": "ada7a69c-d901-4cf4-9c2d-445fb4b85f5a",
+              "name": "daily_cal_target",
+              "value": "={{ $json.daily_cal_target }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3136,
+        -2080
+      ],
+      "id": "6a160f6f-d5d5-4845-9c0d-bfc2fb94287e",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4fcb9101-619d-4e9c-b42a-d9009832a5bb",
+              "name": "init_weight",
+              "value": "={{ $json.init_weight }}",
+              "type": "string"
+            },
+            {
+              "id": "d58ee86a-9c49-43ef-add3-1818b6816f47",
+              "name": "goal_weight",
+              "value": "={{ $json.goal_weight }}",
+              "type": "string"
+            },
+            {
+              "id": "2f17df6b-f04c-4133-ba6f-741bc03d49ab",
+              "name": "daily_cal_target",
+              "value": "={{ $json.daily_cal_target }}",
+              "type": "string"
+            },
+            {
+              "id": "12d8a1f0-bd49-4f99-8d44-2dc3e193655a",
+              "name": "height",
+              "value": "={{ $json.height }}",
+              "type": "string"
+            },
+            {
+              "id": "0380067a-abd1-4aad-9033-863ad952ca32",
+              "name": "gender",
+              "value": "={{ $json.gender }}",
+              "type": "string"
+            },
+            {
+              "id": "9f98027c-fa88-411a-b378-811371a08808",
+              "name": "age",
+              "value": "={{ $json.age }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -3136,
+        -1024
+      ],
+      "id": "3ed07ffa-dd1e-4608-b912-75be29b94ea0",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=당신은 날씨 정보를 처리하는 AI입니다.\n오늘 날짜는 {{$now.toFormat('yyyy-MM-dd')}}입니다.\n\n[사용자 메시지]\n{{$('날씨 입력').item.json.body.message_past}}\n\n[사용자 위치]\ncity: {{ $('Edit Fields').item.json.city }}\nvillage: {{ $('Edit Fields').item.json.village }}\n\n위 정보를 바탕으로 날씨 정보를 조회하고\n반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[출력 형식]\n{\n  \"date\": \"yyyy-MM-dd\",\n  \"city\": \"도시명\",\n  \"temperature\": 기온(숫자),\n  \"condition\": \"맑음/흐림/비/눈 중 하나\",\n  \"humidity\": 습도(숫자),\n  \"dust_level\": \"좋음/보통/나쁨/매우나쁨 중 하나\",\n  \"summary\": \"날씨 한 줄 요약\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1696,
+        -2832
+      ],
+      "id": "936b5b00-1d30-4223-b89c-4d8f54b83e90",
+      "name": "WeatherBOT"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=당신은 사용자의 이메일을 처리하는 AI입니다.\n오늘 날짜는 {{$now.toFormat('yyyy-MM-dd')}}입니다.\n\n[사용자 메시지]\n{{$('IMAP 읽기').item.json.body.message }}\n\n[실제 읽은 이메일]\n{{ $('IMAP 읽기').item.json.mails.length > 0\n  ? $('IMAP 읽기').item.json.mails.map((m, i) =>\n      `[${i+1}] 발신: ${m.from} | 제목: ${m.subject}\\n내용: ${m.text}`\n    ).join('\\n\\n')\n  : '읽지 않은 이메일이 없습니다.'\n}}\n\n[사용자 이메일 정보]\nemail_provider: {{ $('Edit Fields1').item.json.email_provider }}\nemail_address: {{ $('Edit Fields1').item.json.email_address }}\nemail_app_pw: {{ $('Edit Fields1').item.json.email_app_pw }}\nemail_last_uid: {{ $('Edit Fields1').item.json.email_last_uid }}\n\n위 이메일 목록 전체를 아래 JSON 형식으로 출력하세요.\n다른 텍스트는 절대 포함하지 마세요. 마크다운 코드블록 금지.\n\n[규칙]\n- emails 배열에 읽은 이메일 전부 포함 (순서 유지)\n- summary는 각 이메일 핵심 내용을 50자 이내로 요약\n- 읽지 않은 이메일이 없으면 emails는 빈 배열\n- message는 한국어로 간단히 상황 설명 (예: \"읽지 않은 이메일 3개를 가져왔어!\")\n\n[출력 형식]\n{\n  \"emails\": [\n    {\n      \"sender\": \"발신자 이메일\",\n      \"subject\": \"이메일 제목\",\n      \"summary\": \"핵심 내용 요약\"\n    }\n  ]\n}\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2464,
+        -2416
+      ],
+      "id": "5211c695-7dbd-47bd-b871-deea75bed637",
+      "name": "EmailBOT"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=당신은 사용자의 식사 정보를 처리하는 AI입니다.\n오늘 날짜는 {{$now.toFormat('yyyy-MM-dd')}}입니다.\n\n[사용자 메시지]\n{{$('식사 입력').item.json.body.message_past}}\n\n[사용자 기본 정보]\nbreakfast_time: {{ $('Edit Fields2').item.json.breakfast_time }}\nlunch_time: {{ $('Edit Fields2').item.json.lunch_time }}\ndinner_time: {{ $('Edit Fields2').item.json.dinner_time }}\ndaily_cal_target: {{ $('Edit Fields2').item.json.daily_cal_target }}\n\n위 정보를 바탕으로 식사 내용을 파악하고 칼로리를 계산해서\n반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[meal_type 규칙]\n- 아침(06:00~10:00): \"breakfast\"\n- 점심(10:00~15:00): \"lunch\"\n- 저녁(15:00~21:00): \"dinner\"\n- 그 외 또는 간식: \"snack\"\n- 사용자가 직접 언급하면 해당 값 사용\n\n[출력 형식]\n{\n  \"date\": \"yyyy-MM-dd\",\n  \"meal_type\": \"breakfast/lunch/dinner/snack 중 하나\",\n  \"food_name\": \"음식 이름\",\n  \"calories\": 칼로리(숫자),\n  \"summary\": \"식사 한 줄 요약\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2848,
+        -2080
+      ],
+      "id": "b7d08249-0258-4cc3-bd51-e8b8c39fdeb8",
+      "name": "MealBOT"
+    },
+    {
+      "parameters": {
+        "promptType": "=define",
+        "text": "=당신은 사용자의 일정을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('일정 입력').item.json.body.message_future }}\n\n반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[규칙]\n- 시간이 언급되지 않으면 time은 빈 문자열\n- 장소가 언급되지 않으면 location은 빈 문자열\n- is_done은 항상 false\n\n[출력 형식]\n{\n  \"title\": \"일정 제목\",\n  \"description\": \"일정 상세 내용\",\n  \"location\": \"장소 또는 빈 문자열\",\n  \"date\": \"yyyy-MM-dd\",\n  \"time\": \"HH:mm 또는 빈 문자열\",\n  \"is_done\": false\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2848,
+        -1392
+      ],
+      "id": "01e9c275-6fde-4d2b-9fea-d27a5fb2ea5a",
+      "name": "ScheduleBOT"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=당신은 사용자의 체중과 건강을 관리하는 AI입니다.\n오늘 날짜는 {{ $now.toFormat('yyyy-MM-dd') }}입니다.\n\n[사용자 메시지]\n{{ $('체중 관리 입력').item.json.body.message_past }}\n\n[사용자 기본 정보]\nheight: {{ $('Edit Fields5').item.json.height }}\ngender: {{ $('Edit Fields5').item.json.gender }}\nage: {{ $('Edit Fields5').item.json.age }}\ninit_weight: {{ $('Edit Fields5').item.json.init_weight }}\ngoal_weight: {{ $('Edit Fields5').item.json.goal_weight }}\ndaily_cal_target: {{ $('Edit Fields5').item.json.daily_cal_target }}\n\n위 정보를 바탕으로 반드시 아래 JSON 형식으로만 출력하세요.\n다른 텍스트는 절대 포함하지 마세요.\n\n[BMI 계산 공식]\nBMI = 체중(kg) ÷ (키(m) × 키(m))\n소수점 첫째 자리까지 반올림\n\n[규칙]\n- 체중 언급이 없으면 weight와 bmi 둘 다 null로 출력\n- 체중 언급이 있을 때만 BMI 계산 후 출력\n- note는 사용자가 언급한 내용 기반으로 건강 관련 한 줄 메모. 언급이 없으면 빈 문자열\n\n[출력 형식]\n{\n  \"date\": \"yyyy-MM-dd\",\n  \"weight\": 체중(숫자) 또는 null,\n  \"bmi\": BMI(숫자) 또는 null,\n  \"note\": \"건강 관련 한 줄 메모\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -2864,
+        -1024
+      ],
+      "id": "8b8eb53c-00cc-49d2-8aec-35bcac6ef97c",
+      "name": "WeightManageBOT"
+    },
+    {
+      "parameters": {
+        "tableId": "weather_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{$('날씨 입력').item.json.body.user_id}}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{$('날씨 입력').item.json.body.date}}"
+            },
+            {
+              "fieldId": "city",
+              "fieldValue": "={{$('Edit Fields').item.json.city }}"
+            },
+            {
+              "fieldId": "temperature",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.temperature }}"
+            },
+            {
+              "fieldId": "condition",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.sky }}"
+            },
+            {
+              "fieldId": "humidity",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.humidity }}"
+            },
+            {
+              "fieldId": "dust_level",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm10_grade }}"
+            },
+            {
+              "fieldId": "low_temperature",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.low_temperature }}"
+            },
+            {
+              "fieldId": "high_temperature",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.high_temperature }}"
+            },
+            {
+              "fieldId": "sky",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.sky }}"
+            },
+            {
+              "fieldId": "rain",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.rain }}"
+            },
+            {
+              "fieldId": "wind_speed",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.windSpeed }}"
+            },
+            {
+              "fieldId": "pm10",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm10 }}"
+            },
+            {
+              "fieldId": "pm25",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm25 }}"
+            },
+            {
+              "fieldId": "pm10_grade",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm10_grade }}"
+            },
+            {
+              "fieldId": "pm25_grade",
+              "fieldValue": "={{ $('Code in JavaScript4').item.json.pm25_grade }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $('날씨 입력').item.json.body.date }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1376,
+        -2832
+      ],
+      "id": "b471b5cf-7fb6-4886-baf8-4bcc053814c9",
+      "name": "새 날씨 등록",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "email_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $json.date }}"
+            },
+            {
+              "fieldId": "sender",
+              "fieldValue": "={{ $json.sender }}"
+            },
+            {
+              "fieldId": "subject",
+              "fieldValue": "={{ $json.subject }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $json.summary }}"
+            },
+            {
+              "fieldId": "is_read",
+              "fieldValue": "={{ $json.is_read }}"
+            },
+            {
+              "fieldId": "uid",
+              "fieldValue": "={{ $json.uid }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1824,
+        -2416
+      ],
+      "id": "51bbb693-0932-43c4-9767-a56067cba004",
+      "name": "새 이메일 등록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "meal_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('식사 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('식사 입력').item.json.body.date }}"
+            },
+            {
+              "fieldId": "meal_type",
+              "fieldValue": "={{ JSON.parse($('MealBOT').item.json.output).meal_type }}"
+            },
+            {
+              "fieldId": "food_name",
+              "fieldValue": "={{ JSON.parse($('MealBOT').item.json.output).food_name }}"
+            },
+            {
+              "fieldId": "calories",
+              "fieldValue": "={{ JSON.parse($('MealBOT').item.json.output).calories }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2480,
+        -2080
+      ],
+      "id": "5e204aa0-41a3-4095-99c2-8e3f3c6e8adf",
+      "name": "새 식사 등록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "diary",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('일기 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('일기 입력').item.json.body.date }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $('일기 입력').item.json.body.message_past }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $('일기 입력').item.json.body.message }}"
+            },
+            {
+              "fieldId": "id",
+              "fieldValue": "={{ $('일기').item.json.id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -1824
+      ],
+      "id": "8c68357d-ec6c-426e-a0b6-5d8ae11d143e",
+      "name": "기존 일기 수정",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "schedule",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('일정 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).title }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).description }}"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).location }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).time }}"
+            },
+            {
+              "fieldId": "is_done",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).is_done }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -1456
+      ],
+      "id": "7d75bc72-fcbf-40c1-a984-466715dfad91",
+      "name": "기존 일정 수정",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "diary",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('일기 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('일기 입력').item.json.body.date }}"
+            },
+            {
+              "fieldId": "content",
+              "fieldValue": "={{ $('일기 입력').item.json.body.message_past }}"
+            },
+            {
+              "fieldId": "summary",
+              "fieldValue": "={{ $('일기 입력').item.json.body.message }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -1648
+      ],
+      "id": "bfcbfc9f-99dc-4b6f-9dad-123164e6a2a7",
+      "name": "새 일기 등록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "schedule",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('일정 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).title }}"
+            },
+            {
+              "fieldId": "description",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).description }}"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).location }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).date }}"
+            },
+            {
+              "fieldId": "time",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).time }}"
+            },
+            {
+              "fieldId": "is_done",
+              "fieldValue": "={{ JSON.parse($('ScheduleBOT').item.json.output).is_done }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2240,
+        -1280
+      ],
+      "id": "962daedd-7578-4688-9203-2282a738e381",
+      "name": "새 일정 등록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://apis.data.go.kr/B552584/ArpltnInforInqireSvc/getCtprvnRltmMesureDnsty",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "serviceKey",
+              "value": "a385c25e408f49b8cf08e1de3c3284689da61dcde44fc15244c533b4bd65ca76"
+            },
+            {
+              "name": "returnType",
+              "value": "json"
+            },
+            {
+              "name": "numOfRows",
+              "value": "1"
+            },
+            {
+              "name": "pageNo",
+              "value": "1"
+            },
+            {
+              "name": "sidoName",
+              "value": "={{ $('좌표 추출').item.json.sido }}"
+            },
+            {
+              "name": "ver",
+              "value": "1.0"
+            },
+            {
+              "name": "stationName",
+              "value": "={{ $('측정소').first().json.response.body.items[0].stationName }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2288,
+        -2688
+      ],
+      "id": "57a7ab94-2e6f-46f7-a1af-d0d3913529d1",
+      "name": "미세먼지"
+    },
+    {
+      "parameters": {
+        "url": "https://dapi.kakao.com/v2/local/search/address.json",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "query",
+              "value": "={{ $('Edit Fields').item.json.city + ' ' + $('Edit Fields').item.json.village }}"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "KakaoAK 7cc3ee0adc72765078ed6cfbd3c09541"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2928,
+        -2832
+      ],
+      "id": "e82a64ef-23ab-4399-b1cb-40aa09f81204",
+      "name": "카카오 좌표"
+    },
+    {
+      "parameters": {
+        "url": "https://apis.data.go.kr/B552584/MsrstnInfoInqireSvc/getNearbyMsrstnList",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "serviceKey",
+              "value": "a385c25e408f49b8cf08e1de3c3284689da61dcde44fc15244c533b4bd65ca76"
+            },
+            {
+              "name": "returnType",
+              "value": "JSON"
+            },
+            {
+              "name": "tmX",
+              "value": "={{ $('좌표 추출').item.json.tmX }}"
+            },
+            {
+              "name": "tmY",
+              "value": "={{ $('좌표 추출').item.json.tmY }}"
+            },
+            {
+              "name": "count",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2512,
+        -2688
+      ],
+      "id": "11f8bad8-ebec-48ef-9907-a9a0b7fd2b3c",
+      "name": "측정소"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        -2096,
+        -2848
+      ],
+      "id": "af7593a5-7527-42ef-85c7-1e285eeb2469",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "url": "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "serviceKey",
+              "value": "a385c25e408f49b8cf08e1de3c3284689da61dcde44fc15244c533b4bd65ca76"
+            },
+            {
+              "name": "pageNo",
+              "value": "1"
+            },
+            {
+              "name": "numOfRows",
+              "value": "10"
+            },
+            {
+              "name": "dataType",
+              "value": "JSON"
+            },
+            {
+              "name": "base_date",
+              "value": "={{ $('좌표 추출').item.json.baseDate }}"
+            },
+            {
+              "name": "base_time",
+              "value": "={{ $now.plus({hours: 13}).startOf('hour').toFormat('HHmm') }}"
+            },
+            {
+              "name": "nx",
+              "value": "={{ $('좌표 추출').item.json.nx }}"
+            },
+            {
+              "name": "ny",
+              "value": "={{ $('좌표 추출').item.json.ny }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2400,
+        -2832
+      ],
+      "id": "38bf6c77-f570-4c57-b148-36c86b0b1bb4",
+      "name": "초단기실황"
+    },
+    {
+      "parameters": {
+        "url": "https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getVilageFcst",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "serviceKey",
+              "value": "=a385c25e408f49b8cf08e1de3c3284689da61dcde44fc15244c533b4bd65ca76"
+            },
+            {
+              "name": "pageNo",
+              "value": "1"
+            },
+            {
+              "name": "numOfRows",
+              "value": "200"
+            },
+            {
+              "name": "dataType",
+              "value": "JSON"
+            },
+            {
+              "name": "base_date",
+              "value": "={{ $('좌표 추출').item.json.yesterday }}"
+            },
+            {
+              "name": "base_time",
+              "value": "2300"
+            },
+            {
+              "name": "nx",
+              "value": "={{ $('좌표 추출').item.json.nx }}"
+            },
+            {
+              "name": "ny",
+              "value": "={{ $('좌표 추출').item.json.ny }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -2512,
+        -2992
+      ],
+      "id": "b8b0e6ff-77d8-407c-aecb-5dfa27a31e8f",
+      "name": "최저최고기온"
+    },
+    {
+      "parameters": {
+        "jsCode": "const all = $input.all();\n\n// ── 최저/최고 기온 + 하늘상태 ─────────────────────────────────────────\nconst low_temperature  = all[0].json.low_temperature;\nconst high_temperature = all[0].json.high_temperature;\nconst sky              = all[0].json.sky;\n\n// ── 초단기실황 ──────────────────────────────────────────────────────\nconst realtimeRaw = all[1].json.response?.body?.items?.item;\nconst realtimeItems = Array.isArray(realtimeRaw) ? realtimeRaw : (realtimeRaw ? [realtimeRaw] : []);\n\nconst realtime = {};\nrealtimeItems.forEach(item => { realtime[item.category] = item.obsrValue; });\n\n// ── 미세먼지 ────────────────────────────────────────────────────────\nconst dust = all[2].json.response?.body?.items?.[0];\n\n// ── 코드 매핑 ────────────────────────────────────────────────────────\nconst ptyCode  = { '0': '없음', '1': '비', '2': '비/눈', '3': '눈', '4': '소나기' };\nconst gradeMap = { '1': '좋음', '2': '보통', '3': '나쁨', '4': '매우나쁨' };\n\nreturn [{\n  temperature:     realtime['T1H']  ?? null,   // 변경\n  low_temperature,\n  high_temperature,\n  sky,\n  rain:            ptyCode[realtime['PTY']] ?? '없음',\n  humidity:        realtime['REH']  ?? null,   // 변경\n  windSpeed:       realtime['WSD']  ?? null,   // 변경\n  pm25:            dust?.pm25Value  ?? null,   // 변경\n  pm10:            dust?.pm10Value  ?? null,   // 변경\n  pm25_grade:      gradeMap[dust?.pm25Grade]  ?? '알 수 없음',\n  pm10_grade:      gradeMap[dust?.pm10Grade]  ?? '알 수 없음',\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1888,
+        -2832
+      ],
+      "id": "1f52fe74-fdc5-4185-88df-0c7c2b7713b1",
+      "name": "Code in JavaScript4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.response?.body?.items?.item;\nconst forecastItems = Array.isArray(items) ? items : (items ? [items] : []);\n\nconst today = forecastItems[0]?.fcstDate;\n\nlet low_temperature  = '알 수 없음';\nlet high_temperature = '알 수 없음';\nlet sky = '알 수 없음';\n\nconst skyCode = { '1': '맑음', '3': '구름많음', '4': '흐림' };\n\nforecastItems.forEach(item => {\n  if (item.fcstDate !== today) return;\n  if (item.category === 'TMN') low_temperature  = item.fcstValue;\n  if (item.category === 'TMX') high_temperature = item.fcstValue;\n  if (item.category === 'SKY' && sky === '알 수 없음') sky = skyCode[item.fcstValue] ?? '알 수 없음';\n});\n\nreturn [{ low_temperature, high_temperature, sky }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2288,
+        -2992
+      ],
+      "id": "bb964e76-75c0-4899-b86c-8e44ee585587",
+      "name": "Code in JavaScript5"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "weather",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -2832
+      ],
+      "id": "f4104f96-9524-484f-8c31-7f722fec53a0",
+      "name": "날씨 입력",
+      "webhookId": "ad14deab-8a8b-4a6e-9348-c70980340d3f"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -928,
+        -2832
+      ],
+      "id": "f93e67ab-d7ec-4812-8c84-3bb7467b07b1",
+      "name": "날씨 출력"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1824,
+        -2240
+      ],
+      "id": "3f214985-db33-4031-8d56-fe3a8800fb26",
+      "name": "이메일 출력"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1984,
+        -2080
+      ],
+      "id": "e7e665fa-17f9-4491-9202-25bcaf89ea9e",
+      "name": "식사 출력"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1984,
+        -1728
+      ],
+      "id": "fe43df82-6650-4f3e-ab25-57336ccf6382",
+      "name": "일기 출력"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1984,
+        -1376
+      ],
+      "id": "e059409e-ae30-405e-80c6-8b1da5047407",
+      "name": "일정 출력"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1984,
+        -1024
+      ],
+      "id": "f958b45a-4165-4ea6-b4a6-e1ecd7928d3a",
+      "name": "체중 관리 출력"
+    },
+    {
+      "parameters": {
+        "tableId": "weight_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('체중 관리 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('체중 관리 입력').item.json.body.date }}"
+            },
+            {
+              "fieldId": "weight",
+              "fieldValue": "={{ JSON.parse($('WeightManageBOT').item.json.output).weight }}"
+            },
+            {
+              "fieldId": "bmi",
+              "fieldValue": "={{ JSON.parse($('WeightManageBOT').item.json.output).bmi }}"
+            },
+            {
+              "fieldId": "note",
+              "fieldValue": "={{ JSON.parse($('WeightManageBOT').item.json.output).note }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2480,
+        -1024
+      ],
+      "id": "cebfe6d6-6ff5-486e-ab97-b97b6c3019e8",
+      "name": "체중 관리 등록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "food_feedback",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "food_name",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.food_name }}"
+            },
+            {
+              "fieldId": "reaction",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.reaction }}"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.location }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.date }}"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $('피드백 입력').item.json.body.date }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        -352
+      ],
+      "id": "0a174152-42ed-4a89-b9df-d5fef45638b0",
+      "name": "음식 피드백",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.first().json.body || $input.first().json;\nconst message = body.message || '';\nconst userId = body.user_id || '';\nconst location = body.location || '탕정';\n\nconst stopwords = new Set([\n  '나','저','좀','을','를','이','가','은','는','에','의','도','로','으로',\n  '와','과','먹고','싶어','싶은데','먹을까','추천','해줘','해줘요','어때',\n  '뭐','있어','없어','가고','가자','정도','그냥','오늘','어디','뭔가',\n  '하고','싶다','할래','갈래','볼래','먹자','주세요','부탁'\n]);\n\nconst words = message\n  .replace(/[?!.,~]/g, '')\n  .split(/\\s+/)\n  .filter(w => w.length >= 2 && !stopwords.has(w));\n\nconst primaryKeyword = words[0] || message.slice(0, 5);\n\nreturn [{ json: {\n  message,\n  user_id: userId,\n  location,\n  keyword: primaryKeyword,\n  all_keywords: words\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3344,
+        -640
+      ],
+      "id": "04afcdba-d73e-441f-8db1-e7041768632b",
+      "name": "키워드 추출"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pref-001",
+              "name": "food_preferences",
+              "value": "={{ $('유저 정보1').item.json.food_preferences }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2928,
+        -640
+      ],
+      "id": "82ea9322-d757-4334-b483-32e3b7b62dad",
+      "name": "취향 정리"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "A",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b589ab2a-0cf7-4801-8278-9b6f091b4d2d"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "A경로"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "B",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5d324f03-da7d-40a7-b03e-f508b2cdaba1"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "B경로"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "d81173f6-3b6c-497f-b559-216d579db8d9",
+                    "leftValue": "={{ $json.path }}",
+                    "rightValue": "C",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "C경로"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -896,
+        -656
+      ],
+      "id": "bb697a60-6154-4552-abf9-be8b15cd0a55",
+      "name": "경로 분기"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $input.first().json;\nif (!d.restaurant_matches || d.restaurant_matches.length === 0) {\n  return [{ json: { path: 'A', message: '식당을 찾지 못했어요.', restaurants: [] } }];\n}\nconst r = d.restaurant_matches[0];\nreturn [{ json: {\n  path: 'A',\n  message: `${r.name} 메뉴예요!`,\n  restaurant_id: r.id,\n  food_name: r.name,\n  category: r.category,\n  location: r.address,\n  description: r.description,\n  phone: r.phone,\n  link: r.link,\n  menus: r.menus,\n  keyword: d.keyword,\n  user_id: d.user_id\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -864
+      ],
+      "id": "df6fc830-c14f-4cf8-b360-65b21f9afa51",
+      "name": "A: 응답 포맷"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -368,
+        -864
+      ],
+      "id": "44273091-5bff-4e15-bef7-92d5d5d0242b",
+      "name": "A: 음식 추천 출력"
+    },
+    {
+      "parameters": {
+        "jsCode": "const d = $('의도 분류').first().json;\nconst keyword = d.keyword;\nconst allRestaurants = $('식당 메뉴 연동1').first().json.restaurants;\n\nconst matched = allRestaurants.filter(r =>\n  r.menus && r.menus.some(m =>\n    (m.menu_name && m.menu_name.includes(keyword)) ||\n    (m.tags && m.tags.some(t => t.includes(keyword)))\n  )\n);\n\nreturn [{ json: {\n  path: 'B',\n  message: matched.length > 0\n    ? `\"${keyword}\" 메뉴를 파는 식당들이에요!`\n    : `\"${keyword}\" 메뉴를 파는 식당을 찾지 못했어요.`,\n  restaurants: matched.map(r => ({\n    restaurant_id: r.id,\n    food_name: r.name,\n    category: r.category,\n    location: r.address,\n    description: r.description,\n    phone: r.phone,\n    link: r.link,\n    reason: `${keyword} 메뉴를 판매해요`\n  })),\n  keyword: d.keyword,\n  user_id: d.user_id\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -592,
+        -640
+      ],
+      "id": "b8baba84-f570-4e75-9118-b3ddb85f1823",
+      "name": "B: 응답 포맷"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -368,
+        -640
+      ],
+      "id": "a6047b92-8c8f-4f4b-8209-082ad4a74333",
+      "name": "B: 음식 추천 출력"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        -416
+      ],
+      "id": "62c147de-4bff-47d1-971c-8bdd8ac35c68",
+      "name": "C: 음식 추천 출력"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -1424,
+        -464
+      ],
+      "id": "e8664072-d434-4547-8a08-7695e42d626d",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=다음 메시지를 A/B/C로 분류하세요.\n\n메시지: {{ $('음식 추천 입력').item.json.body.message }}\n\n분류 기준:\nB: 메시지에 특정 음식명이 포함된 경우 (짬뽕, 돈까스, 라면, 피자 등)\n   → 음식명이 하나라도 있으면 무조건 B\nC: 음식명 없이 막연하게 추천 요청하는 경우\n\nA 경로는 시스템이 별도로 처리하므로 A는 선택하지 마세요.\n\n반드시 B 또는 C 중 하나만 출력하세요.",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -1424,
+        -640
+      ],
+      "id": "f7b53c80-f0b2-4c65-9017-9479d18c1dce",
+      "name": "Decision"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output.trim();\nconst d = $('키워드 추출').first().json;\nconst restaurants = $('식당 메뉴 연동1').first().json.restaurants;\n\n// 식당 이름 매칭 (A경로용)\nconst matched = restaurants.find(r => \n  d.message.includes(r.name.replace(/ .*/, ''))\n);\n\nreturn [{\n  json: {\n    path: output,\n    message: d.message,\n    keyword: d.keyword,\n    user_id: d.user_id,\n    description: output === 'A' ? '식당 직접 지목' : output === 'B' ? '메뉴로 식당 검색' : '취향 기반 추천',\n    food_preferences: $('취향 정리').first().json.food_preferences,\n    restaurant_matches: matched ? [matched] : []\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1088,
+        -640
+      ],
+      "id": "885d51c7-4222-4030-a01a-685a7b2b862d",
+      "name": "의도 분류"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "users",
+        "limit": 1,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('키워드 추출').first().json.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3136,
+        -640
+      ],
+      "id": "e334b316-1528-428f-8135-d3643a66ea4f",
+      "name": "유저 정보1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "restaurants",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_active",
+              "condition": "eq",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        -640
+      ],
+      "id": "e7006f8b-d514-46fe-a4a6-f87888f97d2e",
+      "name": "식당1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const restaurants = $('식당1').all().map(r => r.json);\nconst menuItems = $('메뉴').all().map(m => m.json);\n\nconst merged = restaurants.map(restaurant => ({\n  ...restaurant,\n  menus: menuItems.filter(menu =>\n    menu.restaurant_id === restaurant.id &&\n    menu.is_available !== false\n  )\n}));\n\nconst filtered = merged.filter(r =>\n  r.is_active !== false && r.menus.length > 0\n);\n\nreturn [{ json: { restaurants: filtered } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1824,
+        -640
+      ],
+      "id": "f59a528c-c23d-4404-ba63-9cbfea90ca97",
+      "name": "식당 메뉴 연동1"
+    },
+    {
+      "parameters": {
+        "tableId": "restaurant_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "restaurant_id",
+              "fieldValue": "={{ $json.restaurant_id }}"
+            },
+            {
+              "fieldId": "reason",
+              "fieldValue": "={{ $json.reason }}"
+            },
+            {
+              "fieldId": "location",
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.location }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.matched_tags_text }}"
+            },
+            {
+              "fieldId": "matched_tags",
+              "fieldValue": "={{ JSON.parse($('취향 정리').item.json.food_preferences) }}"
+            },
+            {
+              "fieldId": "allergens",
+              "fieldValue": "={{ $json.allergens }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.date ?? $now.setZone('Asia/Seoul').format('yyyy-MM-dd') }}"
+            },
+            {
+              "fieldId": "menu_items",
+              "fieldValue": "={{ $json.menu_items_text }}"
+            },
+            {
+              "fieldId": "user_message",
+              "fieldValue": "={{ $('음식 추천 입력').item.json.body.message }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        960,
+        -256
+      ],
+      "id": "19d784ad-0a75-4784-bf64-5c700b0411cf",
+      "name": "추천된 가게 등록1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        672,
+        -272
+      ],
+      "id": "b3b534a8-be57-4663-99b6-4986beaa8491",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=당신은 탕정 지역 맛집을 추천해주는 음식 추천 AI입니다.\n\n[사용자 정보]\n선호 음식: {{ $('취향 정리').first().json.food_preferences }}\n요청 메시지: {{ $('음식 추천 입력').first().json.body.message }}\n\n[추천 가능한 식당 목록]\n{{ $('5개 출력').all().map(r =>\n  `- [${r.json.is_preferred ? '선호' : '랜덤'}] ${r.json.name} (${(r.json.category || []).join(', ')}): ${r.json.description || ''} | 주소: ${r.json.address} | 전화: ${r.json.phone || '없음'} | ID: ${r.json.id}`\n).join('\\n') }}\n\n[추천 규칙]\n- 위 목록의 5개 식당을 모두 추천\n- 반드시 5개 모두 추천\n- [선호] 식당 2개: reason에 \"선호 음식 기반 추천\" 명시\n- [랜덤] 식당 3개: reason에 \"오늘의 랜덤 추천\" 명시\n- 추천 이유는 사용자 입장에서 공감 가게 한 줄로 작성\n- 마크다운 코드블록 절대 사용 금지\n- 반드시 아래 JSON 형식으로만 출력\n\n[출력 형식]\n{\n  \"message\": \"오늘 이런 곳 어때요? 한 줄 요약\",\n  \"recommendations\": [\n    {\n      \"restaurant_id\": \"uuid\",\n      \"food_name\": \"가게이름\",\n      \"category\": [\"카테고리\"],\n      \"location\": \"주소\",\n      \"description\": \"가게 설명\",\n      \"phone\": \"전화번호\",\n      \"link\": \"링크\",\n      \"reason\": \"추천 이유\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        -160,
+        -416
+      ],
+      "id": "700e4ed3-573e-48eb-9bed-847747ac3d21",
+      "name": "Food"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "food",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -640
+      ],
+      "id": "7900d6dd-de9c-4572-95a8-c3f3b1cc6ce8",
+      "name": "음식 추천 입력",
+      "webhookId": "fd010001-food-webhook-0000-000000000001"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "feedback",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -352
+      ],
+      "id": "f9fff21b-97e3-4a77-bf65-acb3b04c2463",
+      "name": "피드백 입력",
+      "webhookId": "5152b752-2221-467a-b7ff-d7cbe9945eab"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json.output || '';\nlet parsed;\ntry {\n  parsed = JSON.parse(raw);\n} catch(e) {\n  const match = raw.match(/```(?:json)?\\n([\\s\\S]*?)\\n```/);\n  try {\n    parsed = match ? JSON.parse(match[1]) : { message: '추천 결과를 봐요!', recommendations: [] };\n  } catch(e2) {\n    parsed = { message: '추천 결과봐요!', recommendations: [] };\n  }\n}\n\n// 5개 출력에서 이미 menus가 포함된 식당 데이터 사용\nconst top5 = $('5개 출력').all();\nconst d = $('의도 분류').first().json;\n\nconst enriched = (parsed.recommendations || []).map(r => {\n  const match = top5.find(t => t.json.id === r.restaurant_id);\n  const menus = match ? (match.json.menus || []) : [];\n  return {\n    ...r,\n    menu_items_text: menus.map(m => m.menu_name).join(', ') || '정보 없음',\n    allergens: [...new Set(menus.flatMap(m => m.allergens || []))].join(', ') || '정보 없음',\n    matched_tags_text: [...new Set(menus.flatMap(m => m.tags || []))].join(', ') || '정보 없음',\n  };\n});\n\nreturn [{ json: {\n  path: 'C',\n  description: d.description,\n  message: parsed.message || '취향에 맞는 식당을 골랐어요!',\n  restaurants: enriched,\n  keyword: d.keyword,\n  user_id: d.user_id,\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -416
+      ],
+      "id": "daecf7ef-3a94-44c6-9907-0525a5cfc205",
+      "name": "C: 응답 포멧"
+    },
+    {
+      "parameters": {
+        "jsCode": "const weatherBotRaw = $('WeatherBOT').first().json.output || '{}';\nlet botData = {};\ntry { botData = JSON.parse(weatherBotRaw); } catch(e) {}\n\nconst raw = $('Code in JavaScript4').first().json;\n\nreturn [{ json: {\n  message: botData.summary || '날씨 정보를 확인했어요!',\n  weather: {\n    city: botData.city || $('Edit Fields').first().json.city,\n    temperature: raw.temperature,\n    low_temperature: raw.low_temperature,\n    high_temperature: raw.high_temperature,\n    sky: raw.sky,\n    rain: raw.rain,\n    humidity: raw.humidity,\n    windSpeed: raw.windSpeed,\n    pm10: raw.pm10,\n    pm25: raw.pm25,\n    pm10_grade: raw.pm10_grade,\n    pm25_grade: raw.pm25_grade,\n    condition: botData.condition,\n    dust_level: botData.dust_level,\n  }\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1168,
+        -2832
+      ],
+      "id": "4b531fdb-3b8e-486d-9350-457a7e3458c8",
+      "name": "날씨 응답 포멧"
+    },
+    {
+      "parameters": {
+        "jsCode": "const restaurants = $('Softmax').first().json.restaurants || []\nreturn restaurants.slice(0, 5).map(r => ({ json: r }))"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        -416
+      ],
+      "id": "0bc711c8-220f-46c2-89b2-4f00de139a61",
+      "name": "5개 출력"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -160,
+        -240
+      ],
+      "id": "fd1b4088-ff6c-4073-8a25-4a20cf4905cb",
+      "name": "OpenAI Chat Model9",
+      "credentials": {
+        "openAiApi": {
+          "id": "X1E7FW9bJRh1m0aC",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "restaurants",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        432,
+        -272
+      ],
+      "id": "9183093f-a91b-41b6-8b83-0a76c64fa573",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "menu_items",
+        "returnAll": true
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2064,
+        -640
+      ],
+      "id": "10a769c3-0648-45b3-b0b1-3d7868bf2775",
+      "name": "메뉴",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "{{ ($('키워드 추출').item.json.body || $('키워드 추출').item.json).user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        -640
+      ],
+      "id": "570110cf-1dc2-4ed7-8dbf-ff23f33c526b",
+      "name": "로짓 조회",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all()\nconst logit_map = {}, updated_at_map = {}\n\nitems.forEach(item => {\n  const { category, logit, updated_at } = item.json\n  if (category) {\n    logit_map[category]      = logit ?? 0\n    updated_at_map[category] = updated_at ?? null\n  }\n})\n\nreturn [{ json: { logit_map, updated_at_map } }]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2512,
+        -640
+      ],
+      "id": "f166e8bb-0034-416f-9e9d-2f34402afa73",
+      "name": "로짓 집계"
+    },
+    {
+      "parameters": {
+        "jsCode": "const T = 1.5, EPS = 0.10, GAMMA = 0.95, K = 7\nconst CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']\n\nconst logitData    = $('로짓 집계').first().json\nconst logitMap     = logitData.logit_map      || {}\nconst updatedAtMap = logitData.updated_at_map || {}\n\nconst today = new Date()\nconst effectiveLogits = {}\nCATS.forEach(cat => {\n  const daysSince = updatedAtMap[cat]\n    ? (today.getTime() - new Date(updatedAtMap[cat]).getTime()) / 86400000 : 0\n  effectiveLogits[cat] = (logitMap[cat] ?? 0) * Math.pow(GAMMA, daysSince)\n})\n\nlet expSum = 0\nconst expMap = {}\nCATS.forEach(cat => {\n  expMap[cat] = Math.exp((effectiveLogits[cat] || 0) / T)\n  expSum += expMap[cat]\n})\n\nconst probs = {}\nCATS.forEach(cat => {\n  probs[cat] = (1 - EPS) * (expMap[cat] / expSum) + EPS / K\n})\n\nconst restaurants = $input.first().json.restaurants || []\nconst sorted = [...restaurants]\n  .map(r => ({ ...r, _score: probs[r.category || '기타'] || (EPS / K) }))\n  .sort((a, b) => b._score - a._score)\n\nreturn [{ json: { restaurants: sorted } }]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1616,
+        -640
+      ],
+      "id": "64a9e037-1bd7-475c-9a1b-f8c1760ecc9f",
+      "name": "Softmax"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('피드백 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3136,
+        -352
+      ],
+      "id": "428ab61b-6566-4254-9470-1b0d250a3576",
+      "name": "피드백 현재 로직",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw    = $('피드백 입력').first().json\nconst body   = raw.body || raw\n\nconst userId   = body.user_id\nconst category = body.category\nconst reaction = body.reaction\n\nconst ALPHA  = 0.2\nconst delta  = reaction === 'like' ? ALPHA : -ALPHA\n\nconst allLogits    = $input.all()\nconst existing     = allLogits.find(i => i.json.category === category)\nconst currentLogit = existing ? (existing.json.logit ?? 0) : 0\nconst currentCount = existing ? (existing.json.sample_count ?? 0) : 0\n\nreturn [{\n  json: {\n    user_id:      userId,\n    category,\n    logit:        Math.round((currentLogit + delta) * 1000) / 1000,\n    sample_count: currentCount + 1,\n    updated_at:   new Date().toISOString(),\n    exists:       !!existing\n  }\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2928,
+        -352
+      ],
+      "id": "35f76805-1cfa-4c82-9cdb-2fa812b9bced",
+      "name": "피드백 로직 계산"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "user_preference_logits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            },
+            {
+              "keyName": "category",
+              "condition": "eq",
+              "keyValue": "={{ $json.category }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2512,
+        -448
+      ],
+      "id": "01481741-9cdb-4897-9bb4-d3874ed226de",
+      "name": "로직 업데이트",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "food/select",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        48
+      ],
+      "id": "4461b0c2-1703-48ae-8ed2-c2b0d1c4b4af",
+      "name": "메뉴 선택 입력",
+      "webhookId": "6f2e7809-9cd3-439e-a74d-60da1daa6c14"
+    },
+    {
+      "parameters": {
+        "tableId": "restaurant_log",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $('메뉴 선택 입력').item.json.body.user_id }}"
+            },
+            {
+              "fieldId": "restaurant_id",
+              "fieldValue": "={{ $('메뉴 선택 입력').item.json.body.restaurant_id }}"
+            },
+            {
+              "fieldId": "date",
+              "fieldValue": "={{ $('메뉴 선택 입력').item.json.body.date }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3360,
+        48
+      ],
+      "id": "2140f177-b559-4748-8be7-5b02c803b88c",
+      "name": "방문 기록 저장",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "menu_items",
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "restaurant_id",
+              "condition": "eq",
+              "keyValue": "={{ $('메뉴 선택 입력').item.json.body.restaurant_id }}"
+            },
+            {
+              "keyName": "menu_name",
+              "condition": "eq",
+              "keyValue": "={{ $('메뉴 선택 입력').item.json.body.menu_name }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3152,
+        48
+      ],
+      "id": "493df4bb-03a4-4b75-95bf-9e2bb8010224",
+      "name": "메뉴 키워드 조회",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('메뉴 선택 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2944,
+        48
+      ],
+      "id": "3e0ddd43-a883-4a52-8348-be4c72d5ed9c",
+      "name": "메뉴 선택 현재 로직",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "user_preference_logits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            },
+            {
+              "keyName": "category",
+              "condition": "eq",
+              "keyValue": "={{ $json.category }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        -48
+      ],
+      "id": "eff6dfc4-7f0e-44d6-a714-9e9f478d5308",
+      "name": "로직 업데이트1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1a3a6b6d-f6d4-4540-af08-0d031a9c9367",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "\tis true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2720,
+        -352
+      ],
+      "id": "81b4a1ae-e922-4c5b-9e00-07e409c4f0d0",
+      "name": "정보 수정 여부5"
+    },
+    {
+      "parameters": {
+        "tableId": "user_preference_logits",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2512,
+        -256
+      ],
+      "id": "9fe4be46-876f-4c73-b6fd-32106a0a7a12",
+      "name": "로직 생성",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, category: $json.category }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2304,
+        -352
+      ],
+      "id": "b5a431e2-737d-4125-a7eb-85e8f73ad31d",
+      "name": "피드백 확인"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, category: $json.category }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -2064,
+        48
+      ],
+      "id": "2f3bd7c7-b051-4c98-a7d7-3a78a69b8e10",
+      "name": "메뉴 로직 확인"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "user_preference_logits",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $json.user_id }}"
+            },
+            {
+              "keyName": "category",
+              "condition": "eq",
+              "keyValue": "={{ $json.category }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        368
+      ],
+      "id": "6b0b7bc2-1147-4bc1-a371-7ea2fd5767a0",
+      "name": "로직 업데이트2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1a3a6b6d-f6d4-4540-af08-0d031a9c9367",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "\tis true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2512,
+        464
+      ],
+      "id": "26bc5446-6e28-4279-ac52-05d35821afd1",
+      "name": "정보 수정 여부"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -1840,
+        464
+      ],
+      "id": "ef64ac80-4ed1-4079-b78f-a7493b760d62",
+      "name": "피드백 확인1"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "user_preference_logits",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('월드컵 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -3344,
+        464
+      ],
+      "id": "4d68f3fc-66c5-4409-9e73-f294c1b8f603",
+      "name": "월드컵 현재 로직",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw  = $('월드컵 입력').first().json\nconst body = raw.body || raw\nconst { user_id, champion = '', rounds = [] } = body\n\nconst CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']\n\nconst currentMap = {}\n$input.all().forEach(item => {\n  if (item.json.category) {\n    currentMap[item.json.category] = {\n      logit:        item.json.logit        ?? 0,\n      sample_count: item.json.sample_count ?? 0\n    }\n  }\n})\n\nconst deltaMap = {}\nCATS.forEach(c => { deltaMap[c] = 0 })\nrounds.forEach(r => {\n  if (r.winner_category && deltaMap[r.winner_category] !== undefined)\n    deltaMap[r.winner_category] += 0.3\n  if (r.loser_category && deltaMap[r.loser_category] !== undefined)\n    deltaMap[r.loser_category] -= 0.1\n})\n\nconst now = new Date().toISOString()\n\nconst categories_to_upsert = CATS.map(cat => ({\n  user_id,\n  category:     cat,\n  logit:        Math.max(-10, Math.min(10, Math.round(((currentMap[cat]?.logit ?? 0) + (deltaMap[cat] || 0)) * 1000) / 1000)),\n  sample_count: (currentMap[cat]?.sample_count ?? 0) + 1,\n  updated_at:   now,\n  exists:       !!currentMap[cat]\n}))\n\nconst T = 1.5, EPS = 0.1, K = 7\nlet expSum = 0\nconst expMap = {}\ncategories_to_upsert.forEach(c => {\n  expMap[c.category] = Math.exp(c.logit / T)\n  expSum += expMap[c.category]\n})\n\nconst top_categories = Object.entries(expMap)\n  .map(([cat, exp]) => ({ cat, p: (1 - EPS) * exp / expSum + EPS / K }))\n  .sort((a, b) => b.p - a.p)\n  .slice(0, 3)\n  .map(e => e.cat)\n\nreturn [{\n  json: { user_id, champion, rounds, top_categories, categories_to_upsert, created_at: now }\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -3136,
+        464
+      ],
+      "id": "824874e7-73bb-42c8-bd8e-5797ae13b090",
+      "name": "월드컵 로직 계산"
+    },
+    {
+      "parameters": {
+        "tableId": "worldcup_sessions",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "champion",
+              "fieldValue": "={{ $json.champion }}"
+            },
+            {
+              "fieldId": "rounds",
+              "fieldValue": "={{ JSON.stringify($json.rounds) }}"
+            },
+            {
+              "fieldId": "completed",
+              "fieldValue": "=true"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $json.created_at }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2928,
+        464
+      ],
+      "id": "d71e504b-f7fb-45af-ae06-023a442c16b8",
+      "name": "월드컵 기록",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const SKIP_KEYWORDS = [\n  '소주', '맥주', '사케', '막걸리', '청주', '모주',\n  '사이다', '콜라', '주스', '에이드', '식혜', '라떼', '뷔페'\n]\n\nconst CATEGORY_MAP = {\n  '국밥': '한식', '돼지국밥': '한식', '콩나물국밥': '한식',\n  '갈비탕': '한식', '삼계탕': '한식', '추어탕': '한식', '족발': '한식',\n  '매운탕': '한식', '내장탕': '한식', '김치찌개': '한식', '된장찌개': '한식',\n  '두부찌개': '한식', '부대찌개': '한식', '찌개': '한식', '전골': '한식',\n  '해장국': '한식', '삼겹살': '한식', '목살': '한식', '항정살': '한식',\n  '갈비살': '한식', '막창': '한식', '소갈비': '한식', '화로구이': '한식',\n  '보쌈': '한식', '순대': '한식', '곱창': '한식', '닭발': '한식',\n  '불고기': '한식', '대지볶음': '한식', '오징어볶음': '한식',\n  '비빔밥': '한식', '볶음밥': '한식', '냉면': '한식', '물냉면': '한식',\n  '비빔냉면': '한식', '칼국수': '한식', '수제비': '한식',\n  '만두': '한식', '군만두': '한식', '광어': '한식', '우럭': '한식',\n  '굴': '한식', '전복': '한식', '회': '한식', '오징어': '한식',\n  '구이': '한식', '고기': '한식', '탕': '한식', '밥': '한식',\n  '된장': '한식', '김치': '한식',\n  '버거': '양식', '햄버거': '양식', '불고기버거': '양식', '치즈버거': '양식',\n  '치킨버거': '양식', '치킨': '양식', '피자': '양식', '파스타': '양식',\n  '스테이크': '양식', '감자튀김': '양식', '핫도그': '양식', '샐러드': '양식',\n  '돈까스': '일식', '우동': '일식', '샤브샤브': '일식',\n  '새우튀김': '일식', '카레': '일식', '가라아게': '일식',\n  '라멘': '일식', '이자카야': '일식', '사시미': '일식',\n  '짜장면': '중식', '짬뽕': '중식', '마파두부': '중식',\n  '어묵': '분식', '간식': '분식',\n  '아이스크림': '디저트', '케이크': '디저트', '도넛': '디저트',\n  '파이': '디저트', '호떡': '디저트', '빙수': '디저트',\n}\n\nconst body = $('메뉴 선택 입력').first().json.body\nconst keywords = $('메뉴 키워드 조회').first().json.keywords || []\nconst allLogits = $('메뉴 선택 현재 로직').all()\n\nconst isSkipOnly = keywords.length > 0 && keywords.every(k => SKIP_KEYWORDS.includes(k))\nif (isSkipOnly) {\n  const existingSkip = allLogits.find(i => i.json.category === '_skip')\n  return [{ json: {\n    user_id: body.user_id,\n    category: '_skip',\n    logit: 0,\n    sample_count: 0,\n    updated_at: new Date().toISOString(),\n    exists: !!existingSkip\n  }}]\n}\n\nconst category = keywords.map(k => CATEGORY_MAP[k]).find(Boolean) || '기타'\n\nconst ALPHA = 0.1\nconst existing = allLogits.find(i => i.json.category === category)\n\nreturn [{\n  json: {\n    user_id: body.user_id,\n    category,\n    logit: Math.round(((existing?.json.logit ?? 0) + ALPHA) * 1000) / 1000,\n    sample_count: (existing?.json.sample_count ?? 0) + 1,\n    updated_at: new Date().toISOString(),\n    exists: !!existing\n  }\n}]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2736,
+        48
+      ],
+      "id": "4e02bc25-6dde-4d25-87cf-3d5f65a77918",
+      "name": "메뉴 선택 로직 계산"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('월드컵 로직 계산').first().json\nreturn data.categories_to_upsert.map(cat => ({ json: cat }))\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2720,
+        464
+      ],
+      "id": "b509b476-827c-4ef7-ae14-b00af40f5a94",
+      "name": "월드컵 응답"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1a3a6b6d-f6d4-4540-af08-0d031a9c9367",
+              "leftValue": "={{ $json.exists }}",
+              "rightValue": "\tis true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -2512,
+        48
+      ],
+      "id": "06738178-a00b-48db-aa8f-67e8678dd4c4",
+      "name": "정보 수정 여부1"
+    },
+    {
+      "parameters": {
+        "tableId": "user_preference_logits",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        144
+      ],
+      "id": "1cccb125-3be0-4723-a1c8-f2969d897d92",
+      "name": "로직 생성1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "user_preference_logits",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "logit",
+              "fieldValue": "={{ $json.logit }}"
+            },
+            {
+              "fieldId": "sample_count",
+              "fieldValue": "={{ $json.sample_count }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $json.updated_at }}"
+            },
+            {
+              "fieldId": "user_id",
+              "fieldValue": "={{ $json.user_id }}"
+            },
+            {
+              "fieldId": "category",
+              "fieldValue": "={{ $json.category }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2304,
+        560
+      ],
+      "id": "85d27004-eccb-4ea4-a5db-c50262f470b0",
+      "name": "로직 생성2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "worldcup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        464
+      ],
+      "id": "fbf53751-6a23-426c-bf46-a90ded5445e0",
+      "name": "월드컵 입력",
+      "webhookId": "88872e63-1a32-4a5a-963d-644e8c524dc7"
+    },
+    {
+      "parameters": {
+        "jsCode": "const Imap = require('imap');\nconst { simpleParser } = require('mailparser');\n\nconst provider = $('Edit Fields1').item.json.email_provider;\nconst address  = $('Edit Fields1').item.json.email_address;\nconst password = $('Edit Fields1').item.json.email_app_pw;\n\nconst hostMap = {\n  '구글': 'imap.gmail.com',\n  '네이버': 'imap.naver.com',\n  gmail: 'imap.gmail.com',\n  naver: 'imap.naver.com',\n};\nconst host = hostMap[provider] ?? 'imap.naver.com';\n\nreturn new Promise((resolve, reject) => {\n  const imap = new Imap({\n    user: address,\n    password,\n    host,\n    port: 993,\n    tls: true,\n    tlsOptions: { rejectUnauthorized: false }\n  });\n  const mails = [];\n\n  imap.once('ready', () => {\n    imap.openBox('INBOX', true, (err) => {\n      if (err) { imap.end(); return reject(err); }\n\n      imap.search(['UNSEEN'], (err, uids) => {\n        if (err || !uids.length) {\n          imap.end();\n          return resolve([{ json: { mails: [] } }]);\n        }\n\n        const recent = uids.slice(-5);\n        const f = imap.fetch(recent, { bodies: '' });\n\n        let pending = 0;\n        let fetchEnded = false;\n\n        f.on('message', msg => {\n          pending++;\n          msg.on('body', stream => {\n            simpleParser(stream, (err, parsed) => {\n              if (!err) mails.push({\n                from:    parsed.from?.text ?? '',\n                subject: parsed.subject ?? '',\n                text:    (parsed.text ?? '').slice(0, 300),\n              });\n              pending--;\n              if (pending === 0 && fetchEnded) imap.end();\n            });\n          });\n        });\n\n        f.once('end', () => {\n          fetchEnded = true;\n          if (pending === 0) imap.end();\n        });\n      });\n    });\n  });\n\n  imap.once('end',   () => resolve([{ json: { mails } }]));\n  imap.once('error', reject);\n  imap.connect();\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2928,
+        -2416
+      ],
+      "id": "4e0fd082-c485-4aae-8490-9179586488cd",
+      "name": "IMAP 읽기"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -2416
+      ],
+      "id": "5cc90634-26bb-40a8-a505-4b8fcf3b6801",
+      "name": "이메일 입력",
+      "webhookId": "eed75f8e-0911-4832-a36d-a7686bbbf187"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "meal",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -2080
+      ],
+      "id": "2c945394-98bc-4d5c-a43a-108db65151be",
+      "name": "식사 입력",
+      "webhookId": "86298aed-4e72-4ef6-acf3-023ce5890269"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "diary",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -1744
+      ],
+      "id": "eec48b68-9929-45c6-b9fb-690dcc280751",
+      "name": "일기 입력",
+      "webhookId": "05aff0e9-3457-4f07-9af1-625212fd2458"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "schedule",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -1392
+      ],
+      "id": "e2679919-e43e-4ecc-a228-c5ecf6a77321",
+      "name": "일정 입력",
+      "webhookId": "80b04d97-1aec-4bae-8036-9e0d6ed8469e"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "weight",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -3616,
+        -1024
+      ],
+      "id": "1788b3b1-7650-4464-8fa5-c7b19a94c5f6",
+      "name": "체중 관리 입력",
+      "webhookId": "7909b6f9-5b4c-4b3c-a223-b6d10229c9c3"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('월드컵 로직 계산').first().json\nreturn [{\n  json: {\n    message: `선호도 분석 완료! 👑 ${data.champion}이(가) 우승했어요`,\n    top_categories: data.top_categories\n  }\n}]"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        464
+      ],
+      "id": "232b285b-98ef-42e0-9fea-0cb7d8cafc03",
+      "name": "저장 응답"
+    },
+    {
+      "parameters": {
+        "jsCode": "const doc = $input.first().json.documents[0];\nconst lat = parseFloat(doc.y);\nconst lon = parseFloat(doc.x);\nconst today = $now.toFormat('yyyy-MM-dd');\n\n// 시도명 직접 추출\nconst sido = doc.address.region_1depth_name;\n\n// 기상청 격자 변환 공식 (WGS84 → nx/ny)\nconst RE = 6371.00877;\nconst GRID = 5.0;\nconst SLAT1 = 30.0;\nconst SLAT2 = 60.0;\nconst OLON = 126.0;\nconst OLAT = 38.0;\nconst XO = 43;\nconst YO = 136;\nconst DEGRAD = Math.PI / 180.0;\nconst re = RE / GRID;\nconst slat1 = SLAT1 * DEGRAD;\nconst slat2 = SLAT2 * DEGRAD;\nconst olon = OLON * DEGRAD;\nconst olat = OLAT * DEGRAD;\nlet sn = Math.tan(Math.PI * 0.25 + slat2 * 0.5) / Math.tan(Math.PI * 0.25 + slat1 * 0.5);\nsn = Math.log(Math.cos(slat1) / Math.cos(slat2)) / Math.log(sn);\nlet sf = Math.tan(Math.PI * 0.25 + slat1 * 0.5);\nsf = Math.pow(sf, sn) * Math.cos(slat1) / sn;\nlet ro = Math.tan(Math.PI * 0.25 + olat * 0.5);\nro = re * sf / Math.pow(ro, sn);\nconst ra = Math.tan(Math.PI * 0.25 + lat * DEGRAD * 0.5);\nconst raVal = re * sf / Math.pow(ra, sn);\nlet theta = lon * DEGRAD - olon;\nif (theta > Math.PI) theta -= 2.0 * Math.PI;\nif (theta < -Math.PI) theta += 2.0 * Math.PI;\ntheta *= sn;\nconst nx = Math.floor(raVal * Math.sin(theta) + XO + 0.5);\nconst ny = Math.floor(ro - raVal * Math.cos(theta) + YO + 0.5);\n\n// 날짜 형식 변환\nconst baseDate = today.replace(/-/g, '');\n\n// 전날 날짜 계산\nconst yesterdayDate = new Date(today);\nyesterdayDate.setDate(yesterdayDate.getDate() - 1);\nconst yesterday = yesterdayDate.getFullYear().toString() +\n  String(yesterdayDate.getMonth() + 1).padStart(2, '0') +\n  String(yesterdayDate.getDate()).padStart(2, '0');\n\n// WGS84 → TM 좌표 변환\nconst toRad = d => d * Math.PI / 180;\nconst a = 6378137.0;\nconst f = 1 / 298.257222101;\nconst b = a * (1 - f);\nconst e2 = 1 - (b * b) / (a * a);\nconst e = Math.sqrt(e2);\nconst k0 = 1.0;\nconst lon0 = toRad(127.0028902777778);\nconst lat0 = toRad(38.0);\nconst FE = 200000.0;\nconst FN = 500000.0;\nconst latR = toRad(lat);\nconst lonR = toRad(lon);\nconst N = a / Math.sqrt(1 - e2 * Math.sin(latR) ** 2);\nconst T = Math.tan(latR) ** 2;\nconst C = (e2 / (1 - e2)) * Math.cos(latR) ** 2;\nconst A = Math.cos(latR) * (lonR - lon0);\nconst M = a * (\n  (1 - e2/4 - 3*e2**2/64) * latR\n  - (3*e2/8 + 3*e2**2/32) * Math.sin(2*latR)\n  + (15*e2**2/256) * Math.sin(4*latR)\n);\nconst M0 = a * (\n  (1 - e2/4 - 3*e2**2/64) * lat0\n  - (3*e2/8 + 3*e2**2/32) * Math.sin(2*lat0)\n  + (15*e2**2/256) * Math.sin(4*lat0)\n);\nconst tmX = FE + k0 * N * (A + (1-T+C)*A**3/6);\nconst tmY = FN + k0 * (M - M0 + N*Math.tan(latR)*(A**2/2 + (5-T+9*C)*A**4/24));\n\nreturn [{\n  nx,\n  ny,\n  baseDate,\n  yesterday,\n  lat,\n  lon,\n  sido,\n  tmX: Math.round(tmX),\n  tmY: Math.round(tmY)\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2720,
+        -2832
+      ],
+      "id": "62bb2d4d-9e94-42af-b937-5cb71f9e0fce",
+      "name": "좌표 추출"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('EmailBOT').item.json.output\nlet parsed\ntry {\n  const cleaned = raw.replace(/^```json\\s*/, '').replace(/\\s*```$/, '').trim()\n  parsed = JSON.parse(cleaned)\n} catch {\n  parsed = { emails: [] }\n}\n\nconst emails = Array.isArray(parsed.emails) ? parsed.emails : []\n\nfunction extractEmail(str) {\n  const match = str?.match(/<([^>]+)>/)\n  return match ? match[1].toLowerCase() : (str ?? '').toLowerCase().trim()\n}\n\nconst existingKeys = new Set(\n  $('중첩 이메일 확인').all()\n    .filter(i => i.json.sender != null)\n    .map(i => `${extractEmail(i.json.sender)}|${i.json.subject}`)\n)\n\nconst markedEmails = emails.map(m => ({\n  ...m,\n  is_new: !existingKeys.has(`${extractEmail(m.sender)}|${m.subject}`)\n}))\n\nreturn [{ json: { emails: markedEmails } }]\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        -2240
+      ],
+      "id": "f4fc8a83-8e5d-4651-aa2c-c65371d6748c",
+      "name": "이메일 파싱"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $('EmailBOT').item.json.output\nlet parsed\ntry {\n  const cleaned = raw.replace(/^```json\\s*/, '').replace(/\\s*```$/, '').trim()\n  parsed = JSON.parse(cleaned)\n} catch {\n  parsed = { emails: [] }\n}\nconst emails = Array.isArray(parsed.emails) ? parsed.emails : []\nconst userId = $('이메일 입력').item.json.body.user_id\nconst today = new Date().toISOString().slice(0, 10)\n\nfunction extractEmail(str) {\n  const match = str?.match(/<([^>]+)>/)\n  return match ? match[1].toLowerCase() : (str ?? '').toLowerCase().trim()\n}\n\nconst existingKeys = new Set(\n  $('중첩 이메일 확인').all()\n    .filter(i => i.json.sender != null)\n    .map(i => `${extractEmail(i.json.sender)}|${i.json.subject}`)\n)\n\nconst newOnly = emails.filter(m =>\n  !existingKeys.has(`${extractEmail(m.sender)}|${m.subject}`)\n)\n\nif (newOnly.length === 0) return []\n\nreturn newOnly.map(m => ({\n  json: {\n    user_id: userId,\n    date: today,\n    sender: m.sender ?? null,\n    subject: m.subject ?? null,\n    summary: m.summary ?? null,\n    is_read: true,\n  }\n}))\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2064,
+        -2416
+      ],
+      "id": "20218f50-4ac9-4473-a8a1-960da1fb76d2",
+      "name": "이메일 분류"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "email_log",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "user_id",
+              "condition": "eq",
+              "keyValue": "={{ $('이메일 입력').item.json.body.user_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -2720,
+        -2416
+      ],
+      "id": "743828e1-224b-4a4b-ad9e-3f58ab9dbd92",
+      "name": "중첩 이메일 확인",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "ZoISfiUUHP5TJ825",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "날씨": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "식사": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이메일": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "일기": {
+      "main": [
+        [
+          {
+            "node": "정보 수정 여부3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "일정": {
+      "main": [
+        [
+          {
+            "node": "ScheduleBOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model4": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "WeatherBOT",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model5": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "EmailBOT",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "체중 관리": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model7": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "MealBOT",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model6": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ScheduleBOT",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model8": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "WeightManageBOT",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "정보 수정 여부3": {
+      "main": [
+        [
+          {
+            "node": "기존 일기 수정",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "새 일기 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "정보 수정 여부4": {
+      "main": [
+        [
+          {
+            "node": "기존 일정 수정",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "새 일정 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "카카오 좌표",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "IMAP 읽기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "MealBOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "WeightManageBOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WeatherBOT": {
+      "main": [
+        [
+          {
+            "node": "새 날씨 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EmailBOT": {
+      "main": [
+        [
+          {
+            "node": "이메일 분류",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "이메일 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MealBOT": {
+      "main": [
+        [
+          {
+            "node": "새 식사 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ScheduleBOT": {
+      "main": [
+        [
+          {
+            "node": "정보 수정 여부4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WeightManageBOT": {
+      "main": [
+        [
+          {
+            "node": "체중 관리 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "새 날씨 등록": {
+      "main": [
+        [
+          {
+            "node": "날씨 응답 포멧",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "새 이메일 등록": {
+      "main": [
+        []
+      ]
+    },
+    "새 식사 등록": {
+      "main": [
+        [
+          {
+            "node": "식사 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "기존 일기 수정": {
+      "main": [
+        [
+          {
+            "node": "일기 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "기존 일정 수정": {
+      "main": [
+        [
+          {
+            "node": "일정 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "새 일기 등록": {
+      "main": [
+        [
+          {
+            "node": "일기 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "새 일정 등록": {
+      "main": [
+        [
+          {
+            "node": "일정 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "미세먼지": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "카카오 좌표": {
+      "main": [
+        [
+          {
+            "node": "좌표 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "측정소": {
+      "main": [
+        [
+          {
+            "node": "미세먼지",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "초단기실황": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "최저최고기온": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript4": {
+      "main": [
+        [
+          {
+            "node": "WeatherBOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript5": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "날씨 입력": {
+      "main": [
+        [
+          {
+            "node": "날씨",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "체중 관리 등록": {
+      "main": [
+        [
+          {
+            "node": "체중 관리 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "음식 피드백": {
+      "main": [
+        [
+          {
+            "node": "피드백 현재 로직",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "키워드 추출": {
+      "main": [
+        [
+          {
+            "node": "유저 정보1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "취향 정리": {
+      "main": [
+        [
+          {
+            "node": "로짓 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "경로 분기": {
+      "main": [
+        [
+          {
+            "node": "A: 응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "B: 응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "5개 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "A: 응답 포맷": {
+      "main": [
+        [
+          {
+            "node": "A: 음식 추천 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "B: 응답 포맷": {
+      "main": [
+        [
+          {
+            "node": "B: 음식 추천 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Decision",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decision": {
+      "main": [
+        [
+          {
+            "node": "의도 분류",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "의도 분류": {
+      "main": [
+        [
+          {
+            "node": "경로 분기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "유저 정보1": {
+      "main": [
+        [
+          {
+            "node": "취향 정리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "식당1": {
+      "main": [
+        [
+          {
+            "node": "메뉴",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "식당 메뉴 연동1": {
+      "main": [
+        [
+          {
+            "node": "Softmax",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [],
+        [
+          {
+            "node": "추천된 가게 등록1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Food": {
+      "main": [
+        [
+          {
+            "node": "C: 응답 포멧",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "음식 추천 입력": {
+      "main": [
+        [
+          {
+            "node": "키워드 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 입력": {
+      "main": [
+        [
+          {
+            "node": "음식 피드백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "C: 응답 포멧": {
+      "main": [
+        [
+          {
+            "node": "C: 음식 추천 출력",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "날씨 응답 포멧": {
+      "main": [
+        [
+          {
+            "node": "날씨 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5개 출력": {
+      "main": [
+        [
+          {
+            "node": "Food",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model9": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Food",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "추천된 가게 등록1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴": {
+      "main": [
+        [
+          {
+            "node": "식당 메뉴 연동1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 조회": {
+      "main": [
+        [
+          {
+            "node": "로짓 집계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로짓 집계": {
+      "main": [
+        [
+          {
+            "node": "식당1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Softmax": {
+      "main": [
+        [
+          {
+            "node": "Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 현재 로직": {
+      "main": [
+        [
+          {
+            "node": "피드백 로직 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "피드백 로직 계산": {
+      "main": [
+        [
+          {
+            "node": "정보 수정 여부5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 업데이트": {
+      "main": [
+        [
+          {
+            "node": "피드백 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴 선택 입력": {
+      "main": [
+        [
+          {
+            "node": "방문 기록 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "방문 기록 저장": {
+      "main": [
+        [
+          {
+            "node": "메뉴 키워드 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴 키워드 조회": {
+      "main": [
+        [
+          {
+            "node": "메뉴 선택 현재 로직",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴 선택 현재 로직": {
+      "main": [
+        [
+          {
+            "node": "메뉴 선택 로직 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 업데이트1": {
+      "main": [
+        [
+          {
+            "node": "메뉴 로직 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "정보 수정 여부5": {
+      "main": [
+        [
+          {
+            "node": "로직 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "로직 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 생성": {
+      "main": [
+        [
+          {
+            "node": "피드백 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 업데이트2": {
+      "main": [
+        [
+          {
+            "node": "저장 응답",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "정보 수정 여부": {
+      "main": [
+        [
+          {
+            "node": "로직 업데이트2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "로직 생성2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "월드컵 현재 로직": {
+      "main": [
+        [
+          {
+            "node": "월드컵 로직 계산",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "월드컵 로직 계산": {
+      "main": [
+        [
+          {
+            "node": "월드컵 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "월드컵 기록": {
+      "main": [
+        [
+          {
+            "node": "월드컵 응답",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "메뉴 선택 로직 계산": {
+      "main": [
+        [
+          {
+            "node": "정보 수정 여부1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "월드컵 응답": {
+      "main": [
+        [
+          {
+            "node": "정보 수정 여부",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "정보 수정 여부1": {
+      "main": [
+        [
+          {
+            "node": "로직 업데이트1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "로직 생성1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 생성1": {
+      "main": [
+        [
+          {
+            "node": "메뉴 로직 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "로직 생성2": {
+      "main": [
+        [
+          {
+            "node": "저장 응답",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "월드컵 입력": {
+      "main": [
+        [
+          {
+            "node": "월드컵 현재 로직",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IMAP 읽기": {
+      "main": [
+        [
+          {
+            "node": "중첩 이메일 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이메일 입력": {
+      "main": [
+        [
+          {
+            "node": "이메일",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "식사 입력": {
+      "main": [
+        [
+          {
+            "node": "식사",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "일기 입력": {
+      "main": [
+        [
+          {
+            "node": "일기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "일정 입력": {
+      "main": [
+        [
+          {
+            "node": "일정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "체중 관리 입력": {
+      "main": [
+        [
+          {
+            "node": "체중 관리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "저장 응답": {
+      "main": [
+        [
+          {
+            "node": "피드백 확인1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "좌표 추출": {
+      "main": [
+        [
+          {
+            "node": "최저최고기온",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "측정소",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "초단기실황",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이메일 파싱": {
+      "main": [
+        [
+          {
+            "node": "이메일 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이메일 분류": {
+      "main": [
+        [
+          {
+            "node": "새 이메일 등록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "중첩 이메일 확인": {
+      "main": [
+        [
+          {
+            "node": "EmailBOT",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "fa151558-65f1-4ed1-9a46-450de3b52e51",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1e89c42f09ae18961e007576e3ff5ec17adf8c82e2ed99be8798b7043a1a4e8c"
+  },
+  "id": "TVTEOt7U9qrdkh13",
+  "tags": []
+}

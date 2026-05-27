@@ -23,6 +23,11 @@ export default function Meal() {
   const [logs, setLogs] = useState<MealLog[]>([])
   const [loading, setLoading] = useState(true)
 
+  async function deleteLog(id: string) {
+    setLogs(prev => prev.filter(l => l.id !== id))
+    await supabase.from('meal_log').delete().eq('id', id)
+  }
+
   useEffect(() => {
     if (!user) return
     const load = async () => {
@@ -78,7 +83,13 @@ export default function Meal() {
                         </span>
                         <span style={{ color: 'var(--text)', fontSize: 'var(--fs-base)' }}>{item.food_name}</span>
                       </div>
-                      <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{item.calories} kcal</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--sp-3)' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)' }}>{item.calories} kcal</span>
+                        <button
+                          onClick={() => deleteLog(item.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-faint)', fontSize: 16, padding: '2px 4px' }}
+                        >🗑️</button>
+                      </div>
                     </div>
                   ))}
                 </div>
