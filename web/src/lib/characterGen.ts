@@ -105,22 +105,27 @@ export async function resumeOrStartGeneration(userId: string, topCategory: strin
   let eatingUrl = rec?.eating_url ?? null
 
   try {
+    const delay = () => new Promise(r => setTimeout(r, 3000))
+
     if (!normalUrl) {
-      const b64 = await genFromPrompt(promptBase)
-      normalUrl = await uploadToStorage(userId, 'normal', b64)
+      const url = await genFromPrompt(promptBase)
+      normalUrl = await uploadToStorage(userId, 'normal', url)
       await saveGen(userId, { normal_url: normalUrl, status: 'partial_1', prompt_base: promptBase })
+      await delay()
     }
 
     if (!happyUrl) {
       const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.happy))
       happyUrl = await uploadToStorage(userId, 'happy', url)
       await saveGen(userId, { happy_url: happyUrl, status: 'partial_2' })
+      await delay()
     }
 
     if (!tiredUrl) {
       const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.tired))
       tiredUrl = await uploadToStorage(userId, 'tired', url)
       await saveGen(userId, { tired_url: tiredUrl, status: 'partial_3' })
+      await delay()
     }
 
     if (!eatingUrl) {
