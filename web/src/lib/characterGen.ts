@@ -73,18 +73,6 @@ async function genFromPrompt(prompt: string): Promise<string> {
   return res.data[0].url
 }
 
-async function genFromReference(referenceUrl: string, prompt: string): Promise<string> {
-  const blob = await fetch(referenceUrl).then(r => r.blob())
-  const file = new File([blob], 'ref.png', { type: 'image/png' })
-  const res = await openai.images.edit({
-    model: IMAGE_MODEL,
-    image: file,
-    prompt,
-    n: 1,
-    size: '1024x1024',
-  } as Parameters<typeof openai.images.edit>[0]) as { data: { url: string }[] }
-  return res.data[0].url
-}
 
 async function saveGen(userId: string, patch: Partial<CharacterGen>) {
   await supabase.from('character_generations').upsert(
