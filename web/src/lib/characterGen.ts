@@ -69,8 +69,8 @@ async function genFromPrompt(prompt: string): Promise<string> {
     prompt,
     n: 1,
     size: '1024x1024',
-  } as Parameters<typeof openai.images.generate>[0])
-  return res.data[0].url!
+  } as Parameters<typeof openai.images.generate>[0]) as { data: { url: string }[] }
+  return res.data[0].url
 }
 
 async function genFromReference(referenceUrl: string, prompt: string): Promise<string> {
@@ -82,8 +82,8 @@ async function genFromReference(referenceUrl: string, prompt: string): Promise<s
     prompt,
     n: 1,
     size: '1024x1024',
-  } as Parameters<typeof openai.images.edit>[0])
-  return res.data[0].url!
+  } as Parameters<typeof openai.images.edit>[0]) as { data: { url: string }[] }
+  return res.data[0].url
 }
 
 async function saveGen(userId: string, patch: Partial<CharacterGen>) {
