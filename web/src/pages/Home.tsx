@@ -19,7 +19,7 @@ import {
   type CombinedResponse,
 } from '../lib/n8n'
 import { supabase } from '../lib/supabase'
-import { getTodayDiary } from '../lib/db'
+import { getTodayDiary, computeTamagotchiStats } from '../lib/db'
 
 // ── 타입 ──────────────────────────────────────────────────────────
 
@@ -129,8 +129,7 @@ export default function Home() {
 
   useEffect(() => {
     if (!user) return
-    supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setTamagotchi(data) })
+    computeTamagotchiStats(user.id).then(setTamagotchi)
 
     ;(async () => {
       const { data: session } = await supabase
@@ -265,8 +264,7 @@ export default function Home() {
       }
 
       if (user) {
-        supabase.from('tamagotchi').select('*').eq('user_id', user.id).maybeSingle()
-          .then(({ data }) => { if (data) setTamagotchi(data) })
+        computeTamagotchiStats(user.id).then(setTamagotchi)
       }
     } catch {
       setMessages(prev => [...prev, { id: Date.now() + 1, role: 'bot', text: '앗, 뭔가 잘못됐어 😥 다시 말해줄래?' }])

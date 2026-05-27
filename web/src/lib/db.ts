@@ -51,6 +51,18 @@ export async function updateUserProfile(userId: string, updates: Record<string, 
   if (error) throw error
 }
 
+export async function computeTamagotchiStats(userId: string): Promise<{ hp: number; hunger: number; mood: number }> {
+  const today = new Date().toISOString().slice(0, 10)
+  const [{ count }, { data: diary }] = await Promise.all([
+    supabase.from('meal_log').select('*', { count: 'exact', head: true }).eq('user_id', userId).eq('date', today),
+    supabase.from('diary').select('id').eq('user_id', userId).eq('date', today).maybeSingle(),
+  ])
+  const meals = count ?? 0
+  const hunger = meals === 0 ? 85 : meals === 1 ? 55 : meals === 2 ? 35 : 15
+  const mood = diary ? 75 : 55
+  return { hp: 100, hunger, mood }
+}
+
 export async function getTodayDiary(
   userId: string,
   date: string,
