@@ -11,13 +11,7 @@ interface Food {
   image: string
 }
 
-interface RoundResult {
-  round: number
-  winner: string
-  loser: string
-  winner_category: string
-  loser_category: string
-}
+type RoundResult = WorldcupRound
 
 type TournamentSize = 16 | 32 | 64
 
@@ -225,71 +219,13 @@ export default function Worldcup() {
     if (!profile) { navigate('/'); return }
     setSubmitting(true)
     try {
-      const userId = profile.user_id
-      const CATS = ['한식', '중식', '양식', '분식', '일식', '디저트', '기타']
-
-      const { data: currentLogits } = await supabase
-        .from('user_preference_logits')
-        .select('category, logit, sample_count')
-        .eq('user_id', userId)
-
-      const currentMap: Record<string, { logit: number; sample_count: number }> = {}
-      currentLogits?.forEach(r => {
-        currentMap[r.category] = { logit: r.logit ?? 0, sample_count: r.sample_count ?? 0 }
+      const data = await sendWorldcupResult({
+        user_id: profile.user_id,
+        champion: champ.name,
+        rounds: results,
       })
-
-      // 초기 데이터 수집용이므로 낮은 점수 적용: 승리 +0.3, 탈락 -0.1
-      const deltaMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
-      const matchCountMap: Record<string, number> = Object.fromEntries(CATS.map(c => [c, 0]))
-      results.forEach(r => {
-        if (r.winner_category in deltaMap) {
-          deltaMap[r.winner_category] += 0.3
-          matchCountMap[r.winner_category] += 1
-        }
-        if (r.loser_category in deltaMap) {
-          deltaMap[r.loser_category] -= 0.1
-          matchCountMap[r.loser_category] += 1
-        }
-      })
-
-      const now = new Date().toISOString()
-      const rows = CATS.map(cat => {
-        const raw = (currentMap[cat]?.logit ?? 0) + deltaMap[cat]
-        return {
-          user_id: userId,
-          category: cat,
-          logit: Math.max(-10, Math.min(10, Math.round(raw * 1000) / 1000)),
-          sample_count: (currentMap[cat]?.sample_count ?? 0) + matchCountMap[cat],
-          updated_at: now,
-        }
-      })
-
-      const [logitResult, sessionResult] = await Promise.all([
-        supabase.from('user_preference_logits').upsert(rows, { onConflict: 'user_id,category' }),
-        supabase.from('worldcup_sessions').insert({
-          user_id: userId,
-          champion: champ.name,
-          rounds: results,
-          completed: true,
-        }),
-      ])
-
-      if (logitResult.error) throw new Error(`점수 저장 실패: ${logitResult.error.message}`)
-      if (sessionResult.error) throw new Error(`결과 저장 실패: ${sessionResult.error.message}`)
-
-      const T = 1.5, EPS = 0.1, K = 7
-      let expSum = 0
-      const expMap: Record<string, number> = {}
-      rows.forEach(r => { expMap[r.category] = Math.exp(r.logit / T); expSum += expMap[r.category] })
-      const top = Object.entries(expMap)
-        .map(([cat, exp]) => ({ cat, p: (1 - EPS) * exp / expSum + EPS / K }))
-        .sort((a, b) => b.p - a.p)
-        .slice(0, 3)
-        .map(e => e.cat)
-
-      setTopCategories(top)
-
-      const gen = await getCharacterGen(userId)
+      setTopCategories(data.top_categories ?? [])
+      const gen = await getCharacterGen(profile.user_id)
       setCharGen(gen)
     } catch (e) {
       console.error('[Worldcup] 저장 오류:', e)
