@@ -124,20 +124,20 @@ export async function resumeOrStartGeneration(userId: string, topCategory: strin
     }
 
     if (!happyUrl) {
-      const b64 = await genFromReference(normalUrl!, buildPrompt(topCategory, STATE_EXPRESSIONS.happy))
-      happyUrl = await uploadToStorage(userId, 'happy', b64)
+      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.happy))
+      happyUrl = await uploadToStorage(userId, 'happy', url)
       await saveGen(userId, { happy_url: happyUrl, status: 'partial_2' })
     }
 
     if (!tiredUrl) {
-      const b64 = await genFromReference(normalUrl!, buildPrompt(topCategory, STATE_EXPRESSIONS.tired))
-      tiredUrl = await uploadToStorage(userId, 'tired', b64)
+      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.tired))
+      tiredUrl = await uploadToStorage(userId, 'tired', url)
       await saveGen(userId, { tired_url: tiredUrl, status: 'partial_3' })
     }
 
     if (!eatingUrl) {
-      const b64 = await genFromReference(normalUrl!, buildPrompt(topCategory, STATE_EXPRESSIONS.eating))
-      eatingUrl = await uploadToStorage(userId, 'eating', b64)
+      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.eating))
+      eatingUrl = await uploadToStorage(userId, 'eating', url)
       await saveGen(userId, { eating_url: eatingUrl, status: 'done' })
     }
   } catch (err: unknown) {
