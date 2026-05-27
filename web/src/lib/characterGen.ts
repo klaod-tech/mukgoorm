@@ -6,7 +6,7 @@ const openai = new OpenAI({
   dangerouslyAllowBrowser: true,
 })
 
-const IMAGE_MODEL = 'gpt-image-1' // gpt-image-2 출시 확정 후 변경
+const IMAGE_MODEL = 'gpt-image-2'
 
 const CATEGORY_STYLES: Record<string, { hair: string; palette: string; vibe: string }> = {
   '한식':   { hair: 'warm chestnut brown',       palette: 'warm orange and earthy brown', vibe: 'cozy and heartwarming' },
