@@ -5,8 +5,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     proxy: {
-      '/webhook': 'http://localhost:5678',
-      '/webhook-test': 'http://localhost:5678',
+      '/webhook': 'https://n8n-production-9774.up.railway.app',
+      '/webhook-test': 'https://n8n-production-9774.up.railway.app',
     },
   },
 })

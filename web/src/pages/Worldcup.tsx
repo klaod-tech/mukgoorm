@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { supabase } from '../lib/supabase'
 import { sendWorldcupResult, type WorldcupRound } from '../lib/n8n'
-import { getCharacterGen, type CharacterGen } from '../lib/characterGen'
+import { getCharacterGen, resumeOrStartGeneration, type CharacterGen } from '../lib/characterGen'
 
 interface Food {
   name: string
@@ -144,6 +144,7 @@ export default function Worldcup() {
   const [checking, setChecking] = useState(true)
   const [alreadyCompleted, setAlreadyCompleted] = useState(false)
   const [previousChampion, setPreviousChampion] = useState<string | null>(null)
+  const [previousTopCategory, setPreviousTopCategory] = useState<string>('기타')
 
   const [tournamentSize, setTournamentSize] = useState<TournamentSize | null>(null)
   const [pairs, setPairs] = useState<Food[][]>([])
@@ -168,6 +169,14 @@ export default function Worldcup() {
       if (data && data.length > 0) {
         setAlreadyCompleted(true)
         setPreviousChampion(data[0].champion)
+        const { data: logits } = await supabase
+          .from('user_preference_logits')
+          .select('category, logit')
+          .eq('user_id', profile!.user_id)
+        if (logits && logits.length > 0) {
+          const top = logits.sort((a, b) => b.logit - a.logit)[0].category
+          setPreviousTopCategory(top)
+        }
       }
       setChecking(false)
     }
@@ -225,6 +234,7 @@ export default function Worldcup() {
         rounds: results,
       })
       setTopCategories(data.top_categories ?? [])
+      resumeOrStartGeneration(profile.user_id, data.top_categories?.[0] ?? '기타')
       const gen = await getCharacterGen(profile.user_id)
       setCharGen(gen)
     } catch (e) {
@@ -261,7 +271,10 @@ export default function Worldcup() {
             </div>
           </div>
           <button
-            onClick={() => navigate('/')}
+            onClick={() => {
+              resumeOrStartGeneration(profile!.user_id, previousTopCategory)
+              navigate('/')
+            }}
             style={{
               background: 'var(--accent)', border: 'none', borderRadius: 'var(--radius-pill)',
               padding: 'var(--sp-4) var(--sp-10)', color: 'var(--text-on-accent)',
