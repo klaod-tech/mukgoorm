@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/webhook/:path*",
+      "destination": "https://n8n-production-9774.up.railway.app/webhook/:path*"
+    },
+    {
+      "source": "/webhook-test/:path*",
+      "destination": "https://n8n-production-9774.up.railway.app/webhook-test/:path*"
+    }
+  ]
+}
