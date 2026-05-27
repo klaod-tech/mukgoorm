@@ -323,3 +323,32 @@ export async function selectFood(params: {
   await axios.post('/webhook/food/select', params, { timeout: 5000 })
 }
 
+// ── 월드컵 ────────────────────────────────────────────────────
+
+export interface WorldcupRound {
+  round: number
+  winner: string
+  loser: string
+  winner_category: string
+  loser_category: string
+}
+
+export interface WorldcupResponse {
+  message: string
+  top_categories: string[]
+}
+
+/** 월드컵 결과 전송 — n8n이 logit 계산·저장·worldcup_sessions 기록 모두 처리 */
+export async function sendWorldcupResult(params: {
+  user_id: string
+  champion: string
+  rounds: WorldcupRound[]
+}): Promise<WorldcupResponse> {
+  const res = await axios.post<WorldcupResponse>(
+    '/webhook/worldcup',
+    params,
+    { timeout: 30000 },
+  )
+  return res.data
+}
+

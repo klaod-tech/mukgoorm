@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useUser } from '../hooks/useUser'
 import { supabase } from '../lib/supabase'
+import { sendWorldcupResult, type WorldcupRound } from '../lib/n8n'
 import { getCharacterGen, type CharacterGen } from '../lib/characterGen'
 
 interface Food {
