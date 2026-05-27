@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useUser } from '../hooks/useUser'
 import { selectCharacterImage } from '../lib/image'
-import { getCharacterGen, resumeOrStartGeneration, type CharacterGen } from '../lib/characterGen'
+import { getCharacterGen, type CharacterGen } from '../lib/characterGen'
 import {
   classifyMessage,
   dispatchToWebhooks,
