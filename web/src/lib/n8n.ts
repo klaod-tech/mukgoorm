@@ -75,7 +75,7 @@ const BOT_WEBHOOK: Record<string, string> = {
 
 const DEFAULT_TIMEOUT = 15000
 const BOT_TIMEOUT: Record<string, number> = {
-  이메일: 60000,
+  이메일: 300000,
 }
 
 const FEEDBACK_WEBHOOK = '/webhook/feedback'
