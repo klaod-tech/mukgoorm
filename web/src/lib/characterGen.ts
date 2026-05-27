@@ -53,8 +53,8 @@ function buildPrompt(topCategory: string, expression: string): string {
   ].join(' ')
 }
 
-async function uploadToStorage(userId: string, state: string, b64: string): Promise<string> {
-  const blob = await fetch(`data:image/png;base64,${b64}`).then(r => r.blob())
+async function uploadToStorage(userId: string, state: string, imageUrl: string): Promise<string> {
+  const blob = await fetch(imageUrl).then(r => r.blob())
   const path = `${userId}/${state}.png`
   await supabase.storage.from('character-images').upload(path, blob, {
     contentType: 'image/png',
@@ -69,9 +69,8 @@ async function genFromPrompt(prompt: string): Promise<string> {
     prompt,
     n: 1,
     size: '1024x1024',
-    response_format: 'b64_json',
   } as Parameters<typeof openai.images.generate>[0])
-  return (res.data[0] as { b64_json: string }).b64_json
+  return res.data[0].url!
 }
 
 async function genFromReference(referenceUrl: string, prompt: string): Promise<string> {
@@ -83,9 +82,8 @@ async function genFromReference(referenceUrl: string, prompt: string): Promise<s
     prompt,
     n: 1,
     size: '1024x1024',
-    response_format: 'b64_json',
   } as Parameters<typeof openai.images.edit>[0])
-  return (res.data[0] as { b64_json: string }).b64_json
+  return res.data[0].url!
 }
 
 async function saveGen(userId: string, patch: Partial<CharacterGen>) {
