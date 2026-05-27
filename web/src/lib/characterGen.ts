@@ -89,55 +89,13 @@ export async function getCharacterGen(userId: string): Promise<CharacterGen | nu
   return data as CharacterGen | null
 }
 
-// 앱 시작 시 호출 — 이미 완료됐으면 바로 반환, 중간에 끊겼으면 이어서 생성
 export async function resumeOrStartGeneration(userId: string, topCategory: string): Promise<void> {
   const rec = await getCharacterGen(userId)
+  if (rec && rec.status !== 'pending') return  // done / partial_* → do not re-trigger
 
-  if (rec?.status === 'done') return
-  if (rec?.status === 'failed' && (rec.retry_count ?? 0) >= 3) return
-
-  const promptBase = rec?.prompt_base ?? buildPrompt(topCategory, STATE_EXPRESSIONS.normal)
-
-  let normalUrl = rec?.normal_url ?? null
-  let happyUrl  = rec?.happy_url  ?? null
-  let tiredUrl  = rec?.tired_url  ?? null
-  let eatingUrl = rec?.eating_url ?? null
-
-  try {
-    const delay = () => new Promise(r => setTimeout(r, 3000))
-
-    if (!normalUrl) {
-      const url = await genFromPrompt(promptBase)
-      normalUrl = await uploadToStorage(userId, 'normal', url)
-      await saveGen(userId, { normal_url: normalUrl, status: 'partial_1', prompt_base: promptBase })
-      await delay()
-    }
-
-    if (!happyUrl) {
-      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.happy))
-      happyUrl = await uploadToStorage(userId, 'happy', url)
-      await saveGen(userId, { happy_url: happyUrl, status: 'partial_2' })
-      await delay()
-    }
-
-    if (!tiredUrl) {
-      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.tired))
-      tiredUrl = await uploadToStorage(userId, 'tired', url)
-      await saveGen(userId, { tired_url: tiredUrl, status: 'partial_3' })
-      await delay()
-    }
-
-    if (!eatingUrl) {
-      const url = await genFromPrompt(buildPrompt(topCategory, STATE_EXPRESSIONS.eating))
-      eatingUrl = await uploadToStorage(userId, 'eating', url)
-      await saveGen(userId, { eating_url: eatingUrl, status: 'done' })
-    }
-  } catch (err: unknown) {
-    const status = (err as { status?: number })?.status
-    await saveGen(userId, {
-      status: 'failed',
-      error_msg: status === 429 ? 'rate_limit' : 'api_error',
-      retry_count: (rec?.retry_count ?? 0) + 1,
-    })
-  }
+  await fetch('/webhook/generate-character', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ user_id: userId, top_category: topCategory }),
+  })
 }

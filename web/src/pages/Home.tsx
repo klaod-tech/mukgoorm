@@ -151,19 +151,6 @@ export default function Home() {
         setEvoState('evolved')
       } else {
         setEvoState('cube')
-        const { data: logits } = await supabase
-          .from('user_preference_logits')
-          .select('category, logit')
-          .eq('user_id', user.id)
-          .order('logit', { ascending: false })
-          .limit(1)
-        const topCategory = logits?.[0]?.category ?? '한식'
-
-        resumeOrStartGeneration(user.id, topCategory).then(async () => {
-          const updated = await getCharacterGen(user.id)
-          setCharGen(updated)
-          if (updated?.status === 'done') setEvoState('evolved')
-        })
       }
     })()
   }, [user])
